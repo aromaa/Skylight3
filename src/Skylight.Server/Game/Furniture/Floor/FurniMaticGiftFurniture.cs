@@ -1,0 +1,11 @@
+﻿using Skylight.API.Game.Furniture.Floor;
+
+namespace Skylight.Server.Game.Furniture.Floor;
+
+internal sealed class FurniMaticGiftFurniture : FloorFurniture, IFurniMaticGiftFurniture
+{
+	public FurniMaticGiftFurniture(int id, int width, int length, double height)
+		: base(id, width, length, height)
+	{
+	}
+}

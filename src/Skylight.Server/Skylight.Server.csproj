@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<EnablePreviewFeatures>true</EnablePreviewFeatures>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.HighPerformance" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="7.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="7.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
+		<PackageReference Include="StackExchange.Redis" Version="2.6.80" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Skylight.API\Skylight.API.csproj" />
+		<ProjectReference Include="..\Skylight.Infrastructure\Skylight.Infrastructure.csproj" />
+		<ProjectReference Include="..\submodules\Skylight.Protocol\src\Skylight.Protocol\Skylight.Protocol.csproj" />
+		<ProjectReference Include="..\submodules\Skylight.Protocol\src\submodules\Net\Net.Collections\Net.Collections.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="$(AssemblyName).Tests" />
+	</ItemGroup>
+
+</Project>

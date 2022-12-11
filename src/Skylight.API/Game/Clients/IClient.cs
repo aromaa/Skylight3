@@ -1,0 +1,19 @@
+﻿using Net.Sockets;
+using Skylight.API.Game.Users;
+using Skylight.API.Net;
+
+namespace Skylight.API.Game.Clients;
+
+public interface IClient : IPacketSender
+{
+	public ISocket Socket { get; }
+
+	public IUser? User { get; }
+
+	public void Authenticate(IUser user);
+
+	public bool ScheduleTask<T>(in T task)
+		where T : IClientTask;
+
+	public void Disconnect();
+}

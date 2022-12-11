@@ -1,0 +1,3 @@
+[submodule "src/submodules/Skylight.Protocol"]
+	path = src/submodules/Skylight.Protocol
+	url = https://github.com/aromaa/Skylight.Protocol
