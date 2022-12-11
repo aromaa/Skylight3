@@ -40,13 +40,13 @@ Typical appsettings.json would look something like:
     "ConnectionString": "Host=localhost;User ID=<USER>;Password=<PASSWORD>;Database=skylight"
   },
   "Network": {
-	  "Listeners":
-	  [
-		  {
-			  "EndPoint": "127.0.0.1:30000",
-			  "Revision": "WIN63-202111081545-75921380"
-		  }
-	  ]
+    "Listeners":
+    [
+      {
+        "EndPoint": "127.0.0.1:30000",
+        "Revision": "WIN63-202111081545-75921380"
+      }
+    ]
   }
 }
 ```
