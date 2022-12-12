@@ -6,6 +6,7 @@ using Skylight.Domain.Navigator;
 using Skylight.Domain.Recycler.FurniMatic;
 using Skylight.Domain.Rooms;
 using Skylight.Domain.Rooms.Layout;
+using Skylight.Domain.Rooms.Sound;
 using Skylight.Domain.Server;
 using Skylight.Domain.Users;
 using Skylight.Infrastructure.EntityConfigurations.Catalog;
@@ -15,6 +16,7 @@ using Skylight.Infrastructure.EntityConfigurations.Navigator;
 using Skylight.Infrastructure.EntityConfigurations.Recycler.FurniMatic;
 using Skylight.Infrastructure.EntityConfigurations.Room;
 using Skylight.Infrastructure.EntityConfigurations.Room.Layout;
+using Skylight.Infrastructure.EntityConfigurations.Room.Sound;
 using Skylight.Infrastructure.EntityConfigurations.Server;
 using Skylight.Infrastructure.EntityConfigurations.Users;
 
@@ -41,6 +43,8 @@ public sealed class SkylightContext : DbContext
 	public DbSet<FurniMaticPrizeLevelEntity> FurniMaticPrizeLevels { get; init; } = null!;
 
 	public DbSet<RoomLayoutEntity> RoomLayouts { get; init; } = null!;
+
+	public DbSet<SongEntity> Songs { get; init; } = null!;
 
 	public DbSet<RoomEntity> Rooms { get; init; } = null!;
 
@@ -79,6 +83,8 @@ public sealed class SkylightContext : DbContext
 		modelBuilder.ApplyConfiguration(new FurniMaticPrizeLevelEntityTypeConfiguration());
 
 		modelBuilder.ApplyConfiguration(new RoomLayoutEntityTypeConfiguration());
+
+		modelBuilder.ApplyConfiguration(new SongEntityEntityTypeConfiguration());
 
 		modelBuilder.ApplyConfiguration(new RoomEntityTypeConfiguration());
 

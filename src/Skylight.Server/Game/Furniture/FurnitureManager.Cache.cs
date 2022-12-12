@@ -1,4 +1,5 @@
-﻿using Skylight.API.Game.Furniture.Floor;
+﻿using System.Collections.Immutable;
+using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Furniture.Wall;
 using Skylight.Domain.Furniture;
 using Skylight.Server.Game.Furniture.Floor;
@@ -54,11 +55,20 @@ internal partial class FurnitureManager
 						//Todo: Factory
 						"sticky_note_pole" => new StickyNotePoleFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
 						"furnimatic_gift" => new FurniMaticGiftFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
+						"sound_machine" => new SoundMachineFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
+						"sound_set" => CreateSoundSet(entity),
 
 						_ => new BasicFloorFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0])
 					};
 
 					floorFurnitures.Add(item.Id, item);
+
+					static SoundSetFurniture CreateSoundSet(FloorFurnitureEntity entity)
+					{
+						int soundSetId = int.Parse(entity.ClassName.AsSpan(entity.ClassName.LastIndexOf('_') + 1));
+
+						return new SoundSetFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0], soundSetId, Enumerable.Range((soundSetId * 9) - 8, 9).ToImmutableHashSet());
+					}
 				}
 
 				foreach (WallFurnitureEntity entity in this.wallFurnitures.Values)

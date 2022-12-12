@@ -20,6 +20,7 @@ using Skylight.Server.Game.Catalog.Recycler.FurniMatic;
 using Skylight.Server.Game.Clients;
 using Skylight.Server.Game.Furniture;
 using Skylight.Server.Game.Inventory.Items;
+using Skylight.Server.Game.Inventory.Items.Floor.Factory;
 using Skylight.Server.Game.Inventory.Items.Wall.Factory;
 using Skylight.Server.Game.Navigator;
 using Skylight.Server.Game.Rooms;
@@ -82,6 +83,8 @@ public static class HostBuilderExtensions
 
 				services.AddSingleton<IFurnitureInventoryItemStrategy, FurnitureInventoryItemStrategy>();
 				services.AddSingleton<IFurnitureInventoryItemFactory, StickyNoteInventoryItemFactory>();
+				services.AddSingleton<IFurnitureInventoryItemFactory, FurniMaticGiftInventoryItemFactory>();
+				services.AddSingleton<IFurnitureInventoryItemFactory, SoundSetInventoryItemFactory>();
 
 				services.AddSingleton<IRoomManager, RoomManager>();
 				services.AddSingleton<IRoomItemInteractionManager, RoomItemInteractionManager>();
@@ -91,6 +94,7 @@ public static class HostBuilderExtensions
 				services.AddSingleton<IFloorRoomItemFactory, BasicFloorRoomItemFactory>();
 				services.AddSingleton<IFloorRoomItemFactory, FurniMaticGiftRoomItemFactory>();
 				services.AddSingleton<IFloorRoomItemFactory, StickyNotePoleRoomItemFactory>();
+				services.AddSingleton<IFloorRoomItemFactory, SoundMachineRoomItemFactory>();
 
 				services.AddSingleton<IWallRoomItemStrategy, WallRoomItemStrategy>();
 				services.AddSingleton<IWallRoomItemFactory, BasicWallRoomItemFactory>();

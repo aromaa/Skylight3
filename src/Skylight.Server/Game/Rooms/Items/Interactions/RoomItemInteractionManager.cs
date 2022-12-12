@@ -17,7 +17,8 @@ internal sealed class RoomItemInteractionManager : IRoomItemInteractionManager
 	{
 		Dictionary<Type, IRoomItemInteractionHandler> handlers = new()
 		{
-			[typeof(IStickyNoteInteractionHandler)] = new StickyNoteInteractionHandler()
+			[typeof(IStickyNoteInteractionHandler)] = new StickyNoteInteractionHandler(),
+			[typeof(ISoundMachineInteractionManager)] = new SoundMachineInteractionHandler()
 		};
 
 		return handlers;

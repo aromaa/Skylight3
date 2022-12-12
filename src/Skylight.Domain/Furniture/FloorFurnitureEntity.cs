@@ -4,6 +4,8 @@ public class FloorFurnitureEntity
 {
 	public int Id { get; init; }
 
+	public string ClassName { get; init; } = null!;
+
 	public int Width { get; set; }
 	public int Length { get; set; }
 	public List<double> Height { get; set; } = null!;
