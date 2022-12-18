@@ -39,10 +39,12 @@ public sealed class SkylightContext : DbContext
 
 	public DbSet<RoomFlatCatEntity> FlatCats { get; init; } = null!;
 
+	public DbSet<FurniMaticFloorItemEntity> FurniMaticFloorItems { get; init; } = null!;
 	public DbSet<FurniMaticGiftEntity> FurniMaticGifts { get; init; } = null!;
 	public DbSet<FurniMaticItemEntity> FurniMaticItems { get; init; } = null!;
 	public DbSet<FurniMaticPrizeEntity> FurniMaticPrizes { get; init; } = null!;
 	public DbSet<FurniMaticPrizeLevelEntity> FurniMaticPrizeLevels { get; init; } = null!;
+	public DbSet<FurniMaticWallItemEntity> FurniMaticWallItems { get; init; } = null!;
 
 	public DbSet<RoomLayoutEntity> RoomLayouts { get; init; } = null!;
 
@@ -81,10 +83,12 @@ public sealed class SkylightContext : DbContext
 
 		modelBuilder.ApplyConfiguration(new RoomFlatCatEntityTypeConfiguration());
 
+		modelBuilder.ApplyConfiguration(new FurniMaticFloorItemEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new FurniMaticGiftEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new FurniMaticItemEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new FurniMaticPrizeEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new FurniMaticPrizeLevelEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new FurniMaticWallItemEntityTypeConfiguration());
 
 		modelBuilder.ApplyConfiguration(new RoomLayoutEntityTypeConfiguration());
 

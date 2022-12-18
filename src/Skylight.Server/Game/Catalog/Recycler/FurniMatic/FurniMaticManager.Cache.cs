@@ -61,26 +61,26 @@ internal partial class FurniMaticManager
 						ImmutableArray<IFurniture>.Builder prizeItems = ImmutableArray.CreateBuilder<IFurniture>(prize.Items.Count);
 						foreach (FurniMaticItemEntity item in prize.Items)
 						{
-							if (item.FloorFurnitureId is { } floorFurnitureId)
+							if (item is FurniMaticFloorItemEntity floorItem)
 							{
-								if (furnitures.TryGetFloorFurniture(floorFurnitureId, out IFloorFurniture? furniture))
+								if (furnitures.TryGetFloorFurniture(floorItem.FurnitureId, out IFloorFurniture? furniture))
 								{
 									prizeItems.Add(furniture);
 								}
 								else
 								{
-									throw new InvalidOperationException($"The prize item {item.Id} is referring to non-existent floor item {floorFurnitureId}!");
+									throw new InvalidOperationException($"The prize item {item.Id} is referring to non-existent floor item {floorItem.FurnitureId}!");
 								}
 							}
-							else if (item.WallFurnitureId is { } wallFurnitureId)
+							else if (item is FurniMaticWallItemEntity wallItem)
 							{
-								if (furnitures.TryGetWallFurniture(wallFurnitureId, out IWallFurniture? furniture))
+								if (furnitures.TryGetWallFurniture(wallItem.FurnitureId, out IWallFurniture? furniture))
 								{
 									prizeItems.Add(furniture);
 								}
 								else
 								{
-									throw new InvalidOperationException($"The prize item {item.Id} is referring to non-existent wall item {wallFurnitureId}!");
+									throw new InvalidOperationException($"The prize item {item.Id} is referring to non-existent wall item {wallItem.FurnitureId}!");
 								}
 							}
 							else
