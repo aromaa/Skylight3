@@ -84,20 +84,20 @@ internal partial class CatalogManager
 					ImmutableArray<ICatalogProduct>.Builder products = ImmutableArray.CreateBuilder<ICatalogProduct>(offerEntity.Products!.Count);
 					foreach (CatalogProductEntity productEntity in offerEntity.Products)
 					{
-						if (productEntity.FloorFurnitureId is { } floorFurnitureId)
+						if (productEntity is CatalogFloorProductEntity floorProduct)
 						{
-							if (!furnitures.TryGetFloorFurniture(floorFurnitureId, out IFloorFurniture? furniture))
+							if (!furnitures.TryGetFloorFurniture(floorProduct.FurnitureId, out IFloorFurniture? furniture))
 							{
-								throw new InvalidOperationException($"The product {productEntity.Id} is referring to non-existent floor item {floorFurnitureId}!");
+								throw new InvalidOperationException($"The product {productEntity.Id} is referring to non-existent floor item {floorProduct.FurnitureId}!");
 							}
 
 							products.Add(new CatalogProductFloorItem(furniture, productEntity.Amount));
 						}
-						else if (productEntity.WallFurnitureId is { } wallFurnitureId)
+						else if (productEntity is CatalogWallProductEntity wallProduct)
 						{
-							if (!furnitures.TryGetWallFurniture(wallFurnitureId, out IWallFurniture? furniture))
+							if (!furnitures.TryGetWallFurniture(wallProduct.FurnitureId, out IWallFurniture? furniture))
 							{
-								throw new InvalidOperationException($"The product {productEntity.Id} is referring to non-existent wall item {wallFurnitureId}!");
+								throw new InvalidOperationException($"The product {productEntity.Id} is referring to non-existent wall item {wallProduct.FurnitureId}!");
 							}
 
 							//TODO: Factory?

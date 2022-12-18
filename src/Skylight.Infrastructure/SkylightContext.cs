@@ -24,9 +24,11 @@ namespace Skylight.Infrastructure;
 
 public sealed class SkylightContext : DbContext
 {
+	public DbSet<CatalogFloorProductEntity> CatalogFloorProducts { get; set; } = null!;
 	public DbSet<CatalogOfferEntity> CatalogOffers { get; init; } = null!;
 	public DbSet<CatalogPageEntity> CatalogPages { get; init; } = null!;
 	public DbSet<CatalogProductEntity> CatalogProducts { get; init; } = null!;
+	public DbSet<CatalogWallProductEntity> CatalogWallProducts { get; set; } = null!;
 
 	public DbSet<FloorFurnitureEntity> FloorFurniture { get; init; } = null!;
 	public DbSet<WallFurnitureEntity> WallFurniture { get; init; } = null!;
@@ -64,9 +66,11 @@ public sealed class SkylightContext : DbContext
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
+		modelBuilder.ApplyConfiguration(new CatalogFloorProductEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogOfferEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogPageEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogProductEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new CatalogWallProductEntityTypeConfiguration());
 
 		modelBuilder.ApplyConfiguration(new FloorFurnitureEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new WallFurnitureEntityTypeConfiguration());

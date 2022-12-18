@@ -8,7 +8,7 @@ internal sealed class CatalogProductEntityTypeConfiguration : IEntityTypeConfigu
 {
 	public void Configure(EntityTypeBuilder<CatalogProductEntity> builder)
 	{
-		builder.ToTable("catalog_products");
+		builder.UseTpcMappingStrategy();
 
 		builder.HasKey(p => p.Id);
 
@@ -21,13 +21,5 @@ internal sealed class CatalogProductEntityTypeConfiguration : IEntityTypeConfigu
 		builder.HasOne(p => p.Offer)
 			.WithMany(o => o.Products)
 			.HasForeignKey(p => p.OfferId);
-
-		builder.HasOne(p => p.FloorFurniture)
-			.WithMany()
-			.HasForeignKey(p => p.FloorFurnitureId);
-
-		builder.HasOne(p => p.WallFurniture)
-			.WithMany()
-			.HasForeignKey(p => p.WallFurnitureId);
 	}
 }
