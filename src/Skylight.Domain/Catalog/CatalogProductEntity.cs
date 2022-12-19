@@ -6,8 +6,4 @@ public abstract class CatalogProductEntity
 
 	public int OfferId { get; set; }
 	public CatalogOfferEntity? Offer { get; set; }
-
-	public int Amount { get; set; }
-
-	public string ExtraData { get; set; } = null!;
 }

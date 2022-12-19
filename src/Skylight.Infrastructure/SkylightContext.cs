@@ -24,6 +24,7 @@ namespace Skylight.Infrastructure;
 
 public sealed class SkylightContext : DbContext
 {
+	public DbSet<CatalogBadgeProductEntity> CatalogBadgeProducts { get; set; } = null!;
 	public DbSet<CatalogFloorProductEntity> CatalogFloorProducts { get; set; } = null!;
 	public DbSet<CatalogOfferEntity> CatalogOffers { get; init; } = null!;
 	public DbSet<CatalogPageEntity> CatalogPages { get; init; } = null!;
@@ -68,6 +69,7 @@ public sealed class SkylightContext : DbContext
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
+		modelBuilder.ApplyConfiguration(new CatalogBadgeProductEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogFloorProductEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogOfferEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogPageEntityTypeConfiguration());

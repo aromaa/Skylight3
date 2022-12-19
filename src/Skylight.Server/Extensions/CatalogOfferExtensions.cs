@@ -3,6 +3,7 @@ using Skylight.API.Game.Catalog.Products;
 using Skylight.API.Game.Furniture.Floor;
 using Skylight.Protocol.Packets.Data.Catalog;
 using Skylight.Protocol.Packets.Data.Room.Object;
+using Skylight.Server.Game.Catalog.Products;
 
 namespace Skylight.Server.Extensions;
 
@@ -24,6 +25,10 @@ internal static class CatalogOfferExtensions
 					ProductCount = furnitureProduct.Amount,
 					Expiration = -1
 				});
+			}
+			else if (product is IBadgeCatalogProduct badgeProduct)
+			{
+				products.Add(new CatalogProductData(FurnitureType.Badge, 0, badgeProduct.BadgeCode, 0, 0));
 			}
 		}
 

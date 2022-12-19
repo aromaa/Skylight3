@@ -91,7 +91,7 @@ internal partial class CatalogManager
 								throw new InvalidOperationException($"The product {productEntity.Id} is referring to non-existent floor item {floorProduct.FurnitureId}!");
 							}
 
-							products.Add(new CatalogProductFloorItem(furniture, productEntity.Amount));
+							products.Add(new CatalogProductFloorItem(furniture, floorProduct.Amount));
 						}
 						else if (productEntity is CatalogWallProductEntity wallProduct)
 						{
@@ -103,12 +103,16 @@ internal partial class CatalogManager
 							//TODO: Factory?
 							if (furniture is IStickyNoteFurniture postItFurniture)
 							{
-								products.Add(new CatalogProductStickyNote(postItFurniture, productEntity.Amount));
+								products.Add(new CatalogProductStickyNote(postItFurniture, wallProduct.Amount));
 							}
 							else
 							{
-								products.Add(new CatalogProductWallItem(furniture, productEntity.Amount));
+								products.Add(new CatalogProductWallItem(furniture, wallProduct.Amount));
 							}
+						}
+						else if (productEntity is CatalogBadgeProductEntity badgeProduct)
+						{
+							products.Add(new CatalogProductBadge(badgeProduct.BadgeCode));
 						}
 						else
 						{
