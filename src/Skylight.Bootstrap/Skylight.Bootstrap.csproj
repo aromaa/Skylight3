@@ -8,6 +8,7 @@
 		<UserSecretsId>cc2c8427-3173-434a-9cb5-3a511fb8b81f</UserSecretsId>
 		<EnablePreviewFeatures>true</EnablePreviewFeatures>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -17,5 +18,23 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Skylight.Server\Skylight.Server.csproj" />
 	</ItemGroup>
+
+	<ItemGroup Condition="'$(BuildingInsideVisualStudio)' == 'true'">
+		<ProtocolReference Include="RELEASE39-200910220522-22363" />
+		<ProtocolReference Include="RELEASE63-201211141113-913728051" />
+		<ProtocolReference Include="WIN63-202111081545-75921380" />
+	</ItemGroup>
+
+	<Target Name="BuildProtocols" AfterTargets="BeforeCompile" Condition="'@(ProtocolReference)' != ''">
+		<ItemGroup>
+			<ProtocolProjectReference Include="..\submodules\Skylight.Protocol\src\Skylight.Protocol.X\Skylight.Protocol.%(ProtocolReference.Identity)\Skylight.Protocol.%(ProtocolReference.Identity).csproj" />
+		</ItemGroup>
+
+		<MSBuild Projects="@(ProtocolProjectReference)" BuildInParallel="true" Targets="Build" Properties="Configuration=$(Configuration);Platform=$(Platform)">
+			<Output TaskParameter="TargetOutputs" ItemName="ProtocolAssemblies" />
+		</MSBuild>
+
+		<Copy SourceFiles="@(ProtocolAssemblies)" DestinationFolder="$(OutputPath)\Protocol" SkipUnchangedFiles="true" />
+	</Target>
 
 </Project>

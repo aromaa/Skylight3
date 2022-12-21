@@ -36,6 +36,11 @@ internal sealed class PacketManagerCache
 
 			foreach (AssemblyName assemblyName in library.GetDefaultAssemblyNames(DependencyContext.Default))
 			{
+				if (!assemblyName.FullName.StartsWith(protocolLibraryName))
+				{
+					continue;
+				}
+
 				AssemblyLoadContext.Default.LoadFromAssemblyName(assemblyName);
 			}
 		}
