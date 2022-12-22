@@ -18,8 +18,7 @@ internal sealed class RequestFurniInventoryPacketHandler<T> : UserPacketHandler<
 	internal override void Handle(IUser user, in T packet)
 	{
 		List<IFurnitureInventoryItem[]> fragments = user.Inventory.FloorItems
-			.Cast<IFurnitureInventoryItem>()
-			.Concat(user.Inventory.WallItems)
+			.Concat<IFurnitureInventoryItem>(user.Inventory.WallItems)
 			.Chunk(2500)
 			.ToList();
 
@@ -37,6 +36,11 @@ internal sealed class RequestFurniInventoryPacketHandler<T> : UserPacketHandler<
 				FragmentId = i++,
 				Fragment = list
 			});
+		}
+
+		if (i == 0)
+		{
+			user.SendAsync(new FurniListOutgoingPacket(1, 0, Array.Empty<InventoryItemData>()));
 		}
 	}
 }
