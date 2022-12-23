@@ -4,7 +4,7 @@ using Skylight.Protocol.Packets.Incoming.Marketplace;
 using Skylight.Protocol.Packets.Manager;
 using Skylight.Protocol.Packets.Outgoing.Marketplace;
 
-namespace Skylight.Server.Game.Communication.Room.Chat;
+namespace Skylight.Server.Game.Communication.Marketplace;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
 internal sealed class GetMarketplaceConfigurationPacketHandler<T> : UserPacketHandler<T>
