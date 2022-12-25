@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Skylight.API.Game.Navigator;
 using Skylight.API.Game.Rooms;
-using Skylight.Domain.Rooms;
 using Skylight.Infrastructure;
 
 namespace Skylight.Server.Game.Rooms;

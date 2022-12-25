@@ -22,6 +22,9 @@ public interface IRoomItemManager
 	public void AddItem(IFloorRoomItem floorItem);
 	public void AddItem(IWallRoomItem wallItem);
 
+	public void MoveItem(IFloorRoomItem floorItem, Point2D location) => this.MoveItem(floorItem, location, floorItem.Direction);
+	public void MoveItem(IFloorRoomItem floorItem, Point2D location, int direction);
+
 	public void MoveItem(IFloorRoomItem floorItem, Point3D position) => this.MoveItem(floorItem, position, floorItem.Direction);
 	public void MoveItem(IFloorRoomItem floorItem, Point3D position, int direction);
 

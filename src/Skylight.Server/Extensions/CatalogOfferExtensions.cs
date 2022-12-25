@@ -3,7 +3,6 @@ using Skylight.API.Game.Catalog.Products;
 using Skylight.API.Game.Furniture.Floor;
 using Skylight.Protocol.Packets.Data.Catalog;
 using Skylight.Protocol.Packets.Data.Room.Object;
-using Skylight.Server.Game.Catalog.Products;
 
 namespace Skylight.Server.Extensions;
 

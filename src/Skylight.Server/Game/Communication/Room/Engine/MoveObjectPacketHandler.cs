@@ -54,7 +54,7 @@ internal sealed class MoveObjectPacketHandler<T> : UserPacketHandler<T>
 				return;
 			}
 
-			room.ItemManager.MoveItem(item, new Point3D(this.Location, room.ItemManager.GetPlacementHeight(item.Furniture, this.Location)), this.Direction);
+			room.ItemManager.MoveItem(item, this.Location, this.Direction);
 		}
 	}
 }

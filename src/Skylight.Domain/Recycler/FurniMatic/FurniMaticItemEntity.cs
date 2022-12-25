@@ -1,6 +1,4 @@
-﻿using Skylight.Domain.Furniture;
-
-namespace Skylight.Domain.Recycler.FurniMatic;
+﻿namespace Skylight.Domain.Recycler.FurniMatic;
 
 public abstract class FurniMaticItemEntity
 {

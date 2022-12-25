@@ -2,7 +2,6 @@
 using Skylight.API.Game.Clients;
 using Skylight.API.Game.Users;
 using Skylight.Protocol.Packets.Incoming;
-using Skylight.Protocol.Packets.Outgoing;
 
 namespace Skylight.Server.Game.Communication;
 

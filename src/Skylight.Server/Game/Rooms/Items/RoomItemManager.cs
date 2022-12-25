@@ -117,7 +117,9 @@ internal sealed class RoomItemManager : IRoomItemManager
 	{
 		this.floorItems.Add(item.Id, item);
 
-		this.AddItemInternal(item);
+		this.AddItemToTile(item);
+
+		item.OnPlace();
 
 		this.room.SendAsync(new ObjectAddOutgoingPacket(new ObjectData(item.Id, item.Furniture.Id, item.Position.X, item.Position.Y, item.Position.Z, 0, 0, 0, item.GetItemData()), item.Owner.Username));
 	}
@@ -126,7 +128,9 @@ internal sealed class RoomItemManager : IRoomItemManager
 	{
 		this.wallItems.Add(item.Id, item);
 
-		this.AddItemInternal(item);
+		this.AddItemToTile(item);
+
+		item.OnPlace();
 
 		this.room.SendAsync(new ItemAddOutgoingPacket(new ItemData(item.Id, item.Furniture.Id, new WallPosition(item.Location.X, item.Location.Y, item.Position.X, item.Position.Y), item.GetItemData()), item.Owner.Username));
 	}
@@ -187,7 +191,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 		return z;
 	}
 
-	private void AddItemInternal(IFloorRoomItem item)
+	private void AddItemToTile(IFloorRoomItem item)
 	{
 		Point2D location = item.Position.XY;
 
@@ -195,28 +199,36 @@ internal sealed class RoomItemManager : IRoomItemManager
 		{
 			this.room.Map.GetTile(location + point).AddItem(item);
 		}
-
-		item.OnPlace();
 	}
 
-	private void AddItemInternal(IWallRoomItem item)
+	private void AddItemToTile(IWallRoomItem item)
 	{
-		item.OnPlace();
+	}
+
+	public void MoveItem(IFloorRoomItem item, Point2D location, int direction)
+	{
+		this.RemoveItemFromTile(item);
+
+		Point3D position = new(location, this.GetPlacementHeight(item.Furniture, location));
+
+		this.MoveItemInternal(item, position, direction);
+
+		this.room.SendAsync(new ObjectUpdateOutgoingPacket(new ObjectData(item.Id, item.Furniture.Id, position.X, position.Y, position.Z, direction, 0, 0, item.GetItemData())));
 	}
 
 	public void MoveItem(IFloorRoomItem item, Point3D position, int direction)
 	{
-		this.RemoveItemInternal(item);
+		this.RemoveItemFromTile(item);
 		this.MoveItemInternal(item, position, direction);
+
+		this.room.SendAsync(new ObjectUpdateOutgoingPacket(new ObjectData(item.Id, item.Furniture.Id, position.X, position.Y, position.Z, direction, 0, 0, item.GetItemData())));
 	}
 
 	private void MoveItemInternal(IFloorRoomItem item, Point3D position, int direction)
 	{
 		item.OnMove(position, direction);
 
-		this.AddItemInternal(item);
-
-		this.room.SendAsync(new ObjectUpdateOutgoingPacket(new ObjectData(item.Id, item.Furniture.Id, position.X, position.Y, position.Z, direction, 0, 0, item.GetItemData())));
+		this.AddItemToTile(item);
 	}
 
 	public void RemoveItem(IFloorRoomItem item)
@@ -226,7 +238,9 @@ internal sealed class RoomItemManager : IRoomItemManager
 			return;
 		}
 
-		this.RemoveItemInternal(item);
+		this.RemoveItemFromTile(item);
+
+		item.OnRemove();
 
 		this.room.SendAsync(new ObjectRemoveOutgoingPacket(item.Id, false, 0, 0));
 	}
@@ -238,12 +252,14 @@ internal sealed class RoomItemManager : IRoomItemManager
 			return;
 		}
 
-		this.RemoveItemInternal(item);
+		this.RemoveItemFromTile(item);
+
+		item.OnRemove();
 
 		this.room.SendAsync(new ItemRemoveOutgoingPacket(item.Id, 0));
 	}
 
-	private void RemoveItemInternal(IFloorRoomItem item)
+	private void RemoveItemFromTile(IFloorRoomItem item)
 	{
 		Point2D location = item.Position.XY;
 
@@ -251,13 +267,10 @@ internal sealed class RoomItemManager : IRoomItemManager
 		{
 			this.room.Map.GetTile(location + point).RemoveItem(item);
 		}
-
-		item.OnRemove();
 	}
 
-	private void RemoveItemInternal(IWallRoomItem item)
+	private void RemoveItemFromTile(IWallRoomItem item)
 	{
-		item.OnRemove();
 	}
 
 	public bool TryGetFloorItem(int id, [NotNullWhen(true)] out IFloorRoomItem? item) => this.floorItems.TryGetValue(id, out item);

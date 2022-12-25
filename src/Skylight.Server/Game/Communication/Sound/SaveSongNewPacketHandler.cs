@@ -1,7 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Xml.Linq;
 using Microsoft.EntityFrameworkCore;
 using Net.Communication.Attributes;
 using Skylight.API.Game.Clients;
@@ -14,7 +13,6 @@ using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Incoming.Sound;
 using Skylight.Protocol.Packets.Manager;
 using Skylight.Protocol.Packets.Outgoing.Sound;
-using Skylight.Server.Game.Users;
 
 namespace Skylight.Server.Game.Communication.Sound;
 
