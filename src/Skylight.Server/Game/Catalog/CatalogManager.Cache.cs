@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using Skylight.API.Game.Badges;
 using Skylight.API.Game.Catalog;
 using Skylight.API.Game.Catalog.Products;
 using Skylight.API.Game.Furniture;
@@ -49,7 +50,7 @@ internal partial class CatalogManager
 				}
 			}
 
-			internal Cache ToImmutable(IFurnitureSnapshot furnitures)
+			internal Cache ToImmutable(IBadgeSnapshot badges, IFurnitureSnapshot furnitures)
 			{
 				Dictionary<int, ICatalogPage> catalogPages = new();
 				Dictionary<int, ICatalogOffer> catalogOffers = new();
@@ -112,7 +113,12 @@ internal partial class CatalogManager
 						}
 						else if (productEntity is CatalogBadgeProductEntity badgeProduct)
 						{
-							products.Add(new CatalogProductBadge(badgeProduct.BadgeCode));
+							if (!badges.TryGetBadge(badgeProduct.BadgeCode, out IBadge? badge))
+							{
+								throw new InvalidOperationException($"The product {productEntity.Id} is referring to non-existent badge {badgeProduct.BadgeCode}!");
+							}
+
+							products.Add(new CatalogProductBadge(badge));
 						}
 						else
 						{

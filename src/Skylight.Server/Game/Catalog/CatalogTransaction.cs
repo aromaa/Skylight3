@@ -2,14 +2,17 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore.Storage;
+using Skylight.API.Game.Badges;
 using Skylight.API.Game.Catalog;
 using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Furniture.Wall;
 using Skylight.API.Game.Inventory.Items;
 using Skylight.API.Game.Users;
+using Skylight.Domain.Badges;
 using Skylight.Domain.Items;
 using Skylight.Infrastructure;
+using Skylight.Server.Game.Inventory.Items.Badges;
 
 namespace Skylight.Server.Game.Catalog;
 
@@ -24,6 +27,8 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 	private readonly IUser user;
 
 	public string ExtraData { get; }
+
+	private List<IBadge>? badges;
 
 	private List<FloorItemEntity>? floorItems;
 	private List<WallItemEntity>? wallItems;
@@ -42,6 +47,24 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 	}
 
 	public DbTransaction Transaction => this.transaction.GetDbTransaction();
+
+	public void AddBadge(IBadge badge)
+	{
+		if (this.user.Inventory.HasBadge(badge.Code))
+		{
+			return;
+		}
+
+		UserBadgeEntity entity = new()
+		{
+			UserId = this.user.Profile.Id,
+			BadgeCode = badge.Code
+		};
+
+		this.badges ??= new List<IBadge>();
+		this.badges.Add(badge);
+		this.dbContext.Add(entity);
+	}
 
 	public void AddFloorItem(IFloorFurniture furniture, JsonDocument? extraData)
 	{
@@ -91,6 +114,14 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 		await this.transaction.DisposeAsync().ConfigureAwait(false);
 
 		List<IInventoryItem> items = new();
+		if (this.badges is not null)
+		{
+			foreach (IBadge badge in this.badges)
+			{
+				items.Add(new BadgeInventoryItem(badge, this.user.Profile));
+			}
+		}
+
 		if (this.floorItems is not null)
 		{
 			foreach (FloorItemEntity item in this.floorItems)

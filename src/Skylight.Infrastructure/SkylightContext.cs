@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Skylight.Domain.Badges;
 using Skylight.Domain.Catalog;
 using Skylight.Domain.Furniture;
 using Skylight.Domain.Items;
@@ -9,6 +10,7 @@ using Skylight.Domain.Rooms.Layout;
 using Skylight.Domain.Rooms.Sound;
 using Skylight.Domain.Server;
 using Skylight.Domain.Users;
+using Skylight.Infrastructure.EntityConfigurations.Badges;
 using Skylight.Infrastructure.EntityConfigurations.Catalog;
 using Skylight.Infrastructure.EntityConfigurations.Furniture;
 using Skylight.Infrastructure.EntityConfigurations.Items;
@@ -24,12 +26,15 @@ namespace Skylight.Infrastructure;
 
 public sealed class SkylightContext : DbContext
 {
-	public DbSet<CatalogBadgeProductEntity> CatalogBadgeProducts { get; set; } = null!;
-	public DbSet<CatalogFloorProductEntity> CatalogFloorProducts { get; set; } = null!;
+	public DbSet<BadgeEntity> Badges { get; init; } = null!;
+	public DbSet<UserBadgeEntity> UserBadges { get; init; } = null!;
+
+	public DbSet<CatalogBadgeProductEntity> CatalogBadgeProducts { get; init; } = null!;
+	public DbSet<CatalogFloorProductEntity> CatalogFloorProducts { get; init; } = null!;
 	public DbSet<CatalogOfferEntity> CatalogOffers { get; init; } = null!;
 	public DbSet<CatalogPageEntity> CatalogPages { get; init; } = null!;
 	public DbSet<CatalogProductEntity> CatalogProducts { get; init; } = null!;
-	public DbSet<CatalogWallProductEntity> CatalogWallProducts { get; set; } = null!;
+	public DbSet<CatalogWallProductEntity> CatalogWallProducts { get; init; } = null!;
 
 	public DbSet<FloorFurnitureEntity> FloorFurniture { get; init; } = null!;
 	public DbSet<WallFurnitureEntity> WallFurniture { get; init; } = null!;
@@ -69,6 +74,9 @@ public sealed class SkylightContext : DbContext
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
+		modelBuilder.ApplyConfiguration(new BadgeEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new UserBadgeEntityTypeConfiguration());
+
 		modelBuilder.ApplyConfiguration(new CatalogBadgeProductEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogFloorProductEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogOfferEntityTypeConfiguration());

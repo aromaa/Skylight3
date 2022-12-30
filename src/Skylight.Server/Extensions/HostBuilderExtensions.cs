@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Skylight.API.Game.Badges;
 using Skylight.API.Game.Catalog;
 using Skylight.API.Game.Clients;
 using Skylight.API.Game.Furniture;
@@ -15,6 +16,7 @@ using Skylight.API.Game.Rooms.Items.Wall;
 using Skylight.API.Game.Users;
 using Skylight.API.Game.Users.Authentication;
 using Skylight.Infrastructure;
+using Skylight.Server.Game.Badges;
 using Skylight.Server.Game.Catalog;
 using Skylight.Server.Game.Catalog.Recycler.FurniMatic;
 using Skylight.Server.Game.Clients;
@@ -75,6 +77,8 @@ public static class HostBuilderExtensions
 				services.AddSingleton<IClientManager, ClientManager>();
 				services.AddSingleton<PacketManagerCache>();
 				services.AddSingleton<NetworkManager>();
+
+				services.AddSingleton<IBadgeManager, BadgeManager>();
 
 				services.AddSingleton<IFurnitureManager, FurnitureManager>();
 				services.AddSingleton<ICatalogManager, CatalogManager>();

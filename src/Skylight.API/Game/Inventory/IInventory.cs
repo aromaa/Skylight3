@@ -2,7 +2,7 @@
 
 namespace Skylight.API.Game.Inventory;
 
-public interface IInventory : IFloorInventory, IWallInventory
+public interface IInventory : IFloorInventory, IWallInventory, IBadgeInventory
 {
 	public void AddUnseenItems(IEnumerable<IInventoryItem> items);
 }

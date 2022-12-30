@@ -27,7 +27,7 @@ internal static class CatalogOfferExtensions
 			}
 			else if (product is IBadgeCatalogProduct badgeProduct)
 			{
-				products.Add(new CatalogProductData(FurnitureType.Badge, 0, badgeProduct.BadgeCode, 0, 0));
+				products.Add(new CatalogProductData(FurnitureType.Badge, 0, badgeProduct.Badge.Code, 0, 0));
 			}
 		}
 

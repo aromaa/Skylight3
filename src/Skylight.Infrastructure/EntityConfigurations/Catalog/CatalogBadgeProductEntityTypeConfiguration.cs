@@ -12,5 +12,10 @@ internal sealed class CatalogBadgeProductEntityTypeConfiguration : IEntityTypeCo
 
 		builder.Property(p => p.BadgeCode)
 			.HasMaxLength(64);
+
+		builder.HasOne(b => b.Badge)
+			.WithMany()
+			.HasForeignKey(b => b.BadgeCode)
+			.HasPrincipalKey(b => b.Code);
 	}
 }

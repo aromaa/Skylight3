@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Skylight.API.Game.Badges;
 using Skylight.API.Game.Clients;
 using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Furniture.Floor;
@@ -6,8 +7,10 @@ using Skylight.API.Game.Furniture.Wall;
 using Skylight.API.Game.Inventory.Items;
 using Skylight.API.Game.Users;
 using Skylight.API.Game.Users.Authentication;
+using Skylight.Domain.Badges;
 using Skylight.Domain.Items;
 using Skylight.Infrastructure;
+using Skylight.Server.Game.Inventory.Items.Badges;
 using StackExchange.Redis;
 
 namespace Skylight.Server.Game.Users.Authentication;
@@ -22,16 +25,22 @@ internal sealed class UserAuthentication : IUserAuthentication
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
 
 	private readonly IUserManager userManager;
+
+	private readonly IBadgeManager badgeManager;
+
 	private readonly IFurnitureManager furnitureManager;
 	private readonly IFurnitureInventoryItemStrategy furnitureInventoryItemFactory;
 
-	public UserAuthentication(IConnectionMultiplexer redis, IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager, IFurnitureManager furnitureManager, IFurnitureInventoryItemStrategy furnitureInventoryItemFactory)
+	public UserAuthentication(IConnectionMultiplexer redis, IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager, IBadgeManager badgeManager, IFurnitureManager furnitureManager, IFurnitureInventoryItemStrategy furnitureInventoryItemFactory)
 	{
 		this.redis = redis.GetDatabase();
 
 		this.dbContextFactory = dbContextFactory;
 
 		this.userManager = userManager;
+
+		this.badgeManager = badgeManager;
+
 		this.furnitureManager = furnitureManager;
 		this.furnitureInventoryItemFactory = furnitureInventoryItemFactory;
 	}
@@ -62,6 +71,7 @@ internal sealed class UserAuthentication : IUserAuthentication
 
 		await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
 		{
+			IBadgeSnapshot badges = this.badgeManager.Current;
 			IFurnitureSnapshot furnitures = this.furnitureManager.Current;
 
 			await foreach (FloorItemEntity item in dbContext.FloorItems
@@ -90,6 +100,20 @@ internal sealed class UserAuthentication : IUserAuthentication
 				}
 
 				user.Inventory.TryAddWallItem(this.furnitureInventoryItemFactory.CreateFurnitureItem(item.Id, profile, furniture, item.ExtraData));
+			}
+
+			await foreach (UserBadgeEntity entity in dbContext.UserBadges
+							   .AsNoTracking()
+							   .Where(b => b.UserId == profile.Id)
+							   .AsAsyncEnumerable()
+							   .WithCancellation(cancellationToken))
+			{
+				if (!badges.TryGetBadge(entity.BadgeCode, out IBadge? badge))
+				{
+					continue;
+				}
+
+				user.Inventory.TryAddBadge(new BadgeInventoryItem(badge, profile));
 			}
 		}
 

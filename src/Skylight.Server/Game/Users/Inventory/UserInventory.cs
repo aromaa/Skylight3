@@ -1,12 +1,14 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using Skylight.API.Game.Inventory;
+using Skylight.API.Game.Inventory.Badges;
 using Skylight.API.Game.Inventory.Items;
 using Skylight.API.Game.Inventory.Items.Floor;
 using Skylight.API.Game.Inventory.Items.Wall;
 using Skylight.Protocol.Packets.Data.Inventory.Furni;
 using Skylight.Protocol.Packets.Data.Notifications;
 using Skylight.Protocol.Packets.Data.Room.Object;
+using Skylight.Protocol.Packets.Outgoing.Inventory.Badges;
 using Skylight.Protocol.Packets.Outgoing.Inventory.Furni;
 using Skylight.Protocol.Packets.Outgoing.Notifications;
 using Skylight.Server.Extensions;
@@ -17,6 +19,8 @@ internal sealed class UserInventory : IInventory
 {
 	private readonly User user;
 
+	private readonly ConcurrentDictionary<string, IBadgeInventoryItem> badges;
+
 	private readonly ConcurrentDictionary<int, IFloorInventoryItem> floorItems;
 	private readonly ConcurrentDictionary<int, IWallInventoryItem> wallItems;
 
@@ -24,9 +28,13 @@ internal sealed class UserInventory : IInventory
 	{
 		this.user = user;
 
+		this.badges = new ConcurrentDictionary<string, IBadgeInventoryItem>();
+
 		this.floorItems = new ConcurrentDictionary<int, IFloorInventoryItem>();
 		this.wallItems = new ConcurrentDictionary<int, IWallInventoryItem>();
 	}
+
+	public IEnumerable<IBadgeInventoryItem> Badges => this.badges.Values;
 
 	public IEnumerable<IFloorInventoryItem> FloorItems => this.floorItems.Values;
 	public IEnumerable<IWallInventoryItem> WallItems => this.wallItems.Values;
@@ -34,6 +42,18 @@ internal sealed class UserInventory : IInventory
 	public void RefreshFurniture()
 	{
 		//TODO: Refresh from DB
+	}
+
+	public bool TryAddBadge(IBadgeInventoryItem badge)
+	{
+		if (this.badges.TryAdd(badge.Badge.Code, badge))
+		{
+			this.user.SendAsync(new BadgeReceivedOutgoingPacket(badge.Badge.Id, badge.Badge.Code));
+
+			return true;
+		}
+
+		return false;
 	}
 
 	public bool TryAddFloorItem(IFloorInventoryItem item)
@@ -68,8 +88,8 @@ internal sealed class UserInventory : IInventory
 
 	public void AddUnseenItems(IEnumerable<IInventoryItem> items)
 	{
-		List<int>? floorIds = null;
-		List<int>? wallIds = null;
+		List<int>? badgeIds = null;
+		List<int>? furnitureIds = null;
 
 		foreach (IInventoryItem item in items)
 		{
@@ -77,22 +97,29 @@ internal sealed class UserInventory : IInventory
 			{
 				this.TryAddFloorItem(floorItem);
 
-				floorIds ??= new List<int>();
-				floorIds.Add(floorItem.Id);
+				furnitureIds ??= new List<int>();
+				furnitureIds.Add(floorItem.StripId);
 			}
 			else if (item is IWallInventoryItem wallItem)
 			{
 				this.TryAddWallItem(wallItem);
 
-				wallIds ??= new List<int>();
-				wallIds.Add(wallItem.Id);
+				furnitureIds ??= new List<int>();
+				furnitureIds.Add(wallItem.StripId);
+			}
+			else if (item is IBadgeInventoryItem badgeItem)
+			{
+				this.TryAddBadge(badgeItem);
+
+				badgeIds ??= new List<int>();
+				badgeIds.Add(badgeItem.Badge.Id);
 			}
 		}
 
 		this.user.SendAsync(new UnseenItemsOutgoingPacket(new List<UnseenItemData>
 		{
-			new(1, floorIds is not null ? floorIds : Array.Empty<int>()),
-			new(2, wallIds is not null ? wallIds : Array.Empty<int>())
+			new(1, furnitureIds is not null ? furnitureIds : Array.Empty<int>()),
+			new(4, badgeIds is not null ? badgeIds : Array.Empty<int>())
 		}));
 	}
 
@@ -102,7 +129,7 @@ internal sealed class UserInventory : IInventory
 
 		this.user.SendAsync(new UnseenItemsOutgoingPacket(new List<UnseenItemData>(1)
 		{
-			new(1, new List<int>(1) { item.Id })
+			new(1, new List<int>(1) { item.StripId })
 		}));
 	}
 
@@ -145,6 +172,10 @@ internal sealed class UserInventory : IInventory
 			throw new ArgumentException($"Unknown item type {item.GetType()}", nameof(item));
 		}
 	}
+
+	public bool HasBadge(string badgeCode) => this.badges.ContainsKey(badgeCode);
+
+	public bool TryGetBadge(string badgeCode, [NotNullWhen(true)] out IBadgeInventoryItem? badge) => this.badges.TryGetValue(badgeCode, out badge);
 
 	public bool TryGetFloorItem(int id, [NotNullWhen(true)] out IFloorInventoryItem? item) => this.floorItems.TryGetValue(id, out item);
 	public bool TryGetWallItem(int id, [NotNullWhen(true)] out IWallInventoryItem? item) => this.wallItems.TryGetValue(id, out item);

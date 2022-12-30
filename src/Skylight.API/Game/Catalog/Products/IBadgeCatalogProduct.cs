@@ -1,6 +1,8 @@
-﻿namespace Skylight.API.Game.Catalog.Products;
+﻿using Skylight.API.Game.Badges;
+
+namespace Skylight.API.Game.Catalog.Products;
 
 public interface IBadgeCatalogProduct : ICatalogProduct
 {
-	public string BadgeCode { get; }
+	public IBadge Badge { get; }
 }
