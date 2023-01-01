@@ -2,9 +2,11 @@
 Implementation for Skylight.Protocol with focus on high performance.
 
 ## Features
+- Badges
 - Catalog
 	- Show catalog pages and offers
 	- Purchase items
+	- Purchase badges
 	- FurniMatic
 - Items
 	- Load inventory
@@ -12,9 +14,10 @@ Implementation for Skylight.Protocol with focus on high performance.
 	- Pickup room items
 	- Move items
 	- Item interactions
+		- FurniMatic gift
 		- Sticky note
 		- Sticky note pole
-		- FurniMatic gift
+		- Traxmachine
 - Navigator
 	- Create room
 	- Show own rooms
@@ -30,8 +33,15 @@ Implementation for Skylight.Protocol with focus on high performance.
 ## Requirements
 The server is written in C# and requires .NET 7 to be run. Additionally Redis is used for SSO login and Postgres as the database.
 
+## Setup
+1. Clone the repository recursively. `git clone --recursive https://github.com/aromaa/Skylight3.git`
+2. If you do not have [dotnet ef](https://learn.microsoft.com/en-us/ef/core/cli/dotnet) tool installed already, you can install it using `dotnet tool install --global dotnet-ef`
+3. To get the initial database run `dotnet ef dbcontext script` on `src/Skylight.Infrastructure`
+4. Open the project in Visual Studio and set the `Skylight.Bootstrap` as the startup project if it isn't already.
+5. Upon launching the project from Visual Studio, protocols defined with `ProtocolReference` inside `Skylight.Bootstrap.csproj` are automatically compiled and moved to the `Protocol` folder.
+
 ## Configuration
-The configuration uses the standard [IConfiguration](https://learn.microsoft.com/en-us/dotnet/core/extensions/configuration) for all of its basic settings. Additionally, the `settings` table is read from the database.
+The configuration uses the standard [IConfiguration](https://learn.microsoft.com/en-us/dotnet/core/extensions/configuration) for all of its basic settings. Additionally, the `settings` table is read from the database which has the highest priority.
 
 Typical appsettings.json would look something like:
 ```json
