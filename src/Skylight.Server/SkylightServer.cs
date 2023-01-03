@@ -43,13 +43,14 @@ internal sealed class SkylightServer : IServer
 
 	public async Task StartAsync(CancellationToken cancellationToken)
 	{
-		await this.badgeManager.LoadAsync(cancellationToken).ConfigureAwait(false);
-
-		await this.furnitureManager.LoadAsync(cancellationToken).ConfigureAwait(false);
-		await this.catalogManager.LoadAsync(cancellationToken).ConfigureAwait(false);
-		await this.furniMaticManager.LoadAsync(cancellationToken).ConfigureAwait(false);
-
-		await this.navigatorManager.LoadAsync(cancellationToken).ConfigureAwait(false);
+		await new SimpleParallelLoader(cancellationToken)
+			.Execute(this.badgeManager.LoadAsync)
+			.Execute(this.furnitureManager.LoadAsync)
+			.Execute(this.catalogManager.LoadAsync, typeof(IBadgeSnapshot), typeof(IFurnitureSnapshot))
+			.Execute(this.furniMaticManager.LoadAsync, typeof(IFurnitureSnapshot))
+			.Execute(this.navigatorManager.LoadAsync)
+			.WaitAsync()
+			.ConfigureAwait(false);
 
 		this.packetManagerCache.ScanAppDomain();
 		this.packetManagerCache.Load(this.hostEnvironment.ContentRootFileProvider.GetDirectoryContents("Protocol"));
@@ -62,5 +63,43 @@ internal sealed class SkylightServer : IServer
 		//TODO: More graceful shutdown
 
 		return Task.CompletedTask;
+	}
+
+	private readonly struct SimpleParallelLoader
+	{
+		private readonly CancellationToken cancellationToken;
+
+		private readonly Dictionary<Type, Task> tasks;
+
+		internal SimpleParallelLoader(CancellationToken cancellationToken)
+		{
+			this.cancellationToken = cancellationToken;
+
+			this.tasks = new Dictionary<Type, Task>();
+		}
+
+		internal SimpleParallelLoader Execute<T>(Func<CancellationToken, Task<T>> action, params Type[] dependencies)
+		{
+			if (dependencies.Length == 0)
+			{
+				this.tasks.Add(typeof(T), action(this.cancellationToken));
+			}
+			else
+			{
+				Task[] dependencyTasks = new Task[dependencies.Length];
+				for (int i = 0; i < dependencies.Length; i++)
+				{
+					dependencyTasks[i] = this.tasks[dependencies[i]];
+				}
+
+				CancellationToken cancellationToken = this.cancellationToken;
+
+				this.tasks.Add(typeof(T), Task.WhenAll(dependencyTasks).ContinueWith(_ => action(cancellationToken), cancellationToken));
+			}
+
+			return this;
+		}
+
+		internal Task WaitAsync() => Task.WhenAll(this.tasks.Values);
 	}
 }

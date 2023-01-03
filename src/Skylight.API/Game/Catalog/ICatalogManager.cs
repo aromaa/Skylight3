@@ -4,5 +4,5 @@ public interface ICatalogManager : ICatalogSnapshot
 {
 	public ICatalogSnapshot Current { get; }
 
-	public Task LoadAsync(CancellationToken cancellationToken = default);
+	public Task<ICatalogSnapshot> LoadAsync(CancellationToken cancellationToken = default);
 }

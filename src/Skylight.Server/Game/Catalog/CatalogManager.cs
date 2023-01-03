@@ -32,7 +32,7 @@ internal sealed partial class CatalogManager : ICatalogManager
 
 	public ICatalogSnapshot Current => this.snapshot;
 
-	public async Task LoadAsync(CancellationToken cancellationToken)
+	public async Task<ICatalogSnapshot> LoadAsync(CancellationToken cancellationToken)
 	{
 		Cache.Builder builder = Cache.CreateBuilder();
 
@@ -51,6 +51,6 @@ internal sealed partial class CatalogManager : ICatalogManager
 			}
 		}
 
-		this.snapshot = new Snapshot(this, builder.ToImmutable(this.badgeManager.Current, this.furnitureManager.Current));
+		return this.snapshot = new Snapshot(this, builder.ToImmutable(this.badgeManager.Current, this.furnitureManager.Current));
 	}
 }

@@ -35,7 +35,7 @@ internal sealed partial class NavigatorManager : INavigatorManager
 
 	public INavigatorSnapshot Current => this.snapshot;
 
-	public async Task LoadAsync(CancellationToken cancellationToken)
+	public async Task<INavigatorSnapshot> LoadAsync(CancellationToken cancellationToken)
 	{
 		Cache.Builder builder = Cache.CreateBuilder();
 
@@ -58,7 +58,7 @@ internal sealed partial class NavigatorManager : INavigatorManager
 			}
 		}
 
-		this.snapshot = new Snapshot(this, builder.ToImmutable());
+		return this.snapshot = new Snapshot(this, builder.ToImmutable());
 	}
 
 	public ValueTask<IRoomInfo?> GetRoomDataAsync(int id, CancellationToken cancellationToken)

@@ -20,21 +20,22 @@ internal sealed partial class BadgeManager : IBadgeManager
 
 	public IBadgeSnapshot Current => this.snapshot;
 
-	public async Task LoadAsync(CancellationToken cancellationToken = default)
+	public async Task<IBadgeSnapshot> LoadAsync(CancellationToken cancellationToken = default)
 	{
 		Cache.Builder builder = Cache.CreateBuilder();
 
-		await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
-
-		await foreach (BadgeEntity badge in dbContext.Badges
-						   .AsNoTracking()
-						   .AsAsyncEnumerable()
-						   .WithCancellation(cancellationToken)
-						   .ConfigureAwait(false))
+		await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
 		{
-			builder.AddBadge(badge);
+			await foreach (BadgeEntity badge in dbContext.Badges
+							   .AsNoTracking()
+							   .AsAsyncEnumerable()
+							   .WithCancellation(cancellationToken)
+							   .ConfigureAwait(false))
+			{
+				builder.AddBadge(badge);
+			}
 		}
 
-		this.snapshot = new Snapshot(builder.ToImmutable());
+		return this.snapshot = new Snapshot(builder.ToImmutable());
 	}
 }

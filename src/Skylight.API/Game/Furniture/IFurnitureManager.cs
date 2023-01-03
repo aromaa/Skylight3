@@ -4,5 +4,5 @@ public interface IFurnitureManager : IFurnitureSnapshot
 {
 	public IFurnitureSnapshot Current { get; }
 
-	public Task LoadAsync(CancellationToken cancellationToken = default);
+	public Task<IFurnitureSnapshot> LoadAsync(CancellationToken cancellationToken = default);
 }

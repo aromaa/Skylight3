@@ -20,7 +20,7 @@ internal sealed partial class FurnitureManager : IFurnitureManager
 
 	public IFurnitureSnapshot Current => this.snapshot;
 
-	public async Task LoadAsync(CancellationToken cancellationToken)
+	public async Task<IFurnitureSnapshot> LoadAsync(CancellationToken cancellationToken)
 	{
 		Cache.Builder builder = Cache.CreateBuilder();
 
@@ -43,6 +43,6 @@ internal sealed partial class FurnitureManager : IFurnitureManager
 			}
 		}
 
-		this.snapshot = new Snapshot(builder.ToImmutable());
+		return this.snapshot = new Snapshot(builder.ToImmutable());
 	}
 }

@@ -4,5 +4,5 @@ public interface IFurniMaticManager : IFurniMaticSnapshot
 {
 	public IFurniMaticSnapshot Current { get; }
 
-	public Task LoadAsync(CancellationToken cancellationToken = default);
+	public Task<IFurniMaticSnapshot> LoadAsync(CancellationToken cancellationToken = default);
 }

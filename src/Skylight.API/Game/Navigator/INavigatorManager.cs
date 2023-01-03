@@ -6,7 +6,7 @@ public interface INavigatorManager : INavigatorSnapshot
 {
 	public INavigatorSnapshot Current { get; }
 
-	public Task LoadAsync(CancellationToken cancellationToken = default);
+	public Task<INavigatorSnapshot> LoadAsync(CancellationToken cancellationToken = default);
 
 	public ValueTask<IRoomInfo?> GetRoomDataAsync(int roomId, CancellationToken cancellationToken = default);
 }
