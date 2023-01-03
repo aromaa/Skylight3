@@ -18,13 +18,17 @@ internal sealed class NetworkManager
 
 	private readonly IServiceProvider serviceProvider;
 
+	private readonly ILogger<NetworkManager> logger;
+
 	private readonly NetworkSettings settings;
 
 	private readonly PacketManagerCache packetManagerCache;
 
-	public NetworkManager(IServiceProvider serviceProvider, IOptions<NetworkSettings> settings, PacketManagerCache packetManagerCache)
+	public NetworkManager(IServiceProvider serviceProvider, ILogger<NetworkManager> logger, IOptions<NetworkSettings> settings, PacketManagerCache packetManagerCache)
 	{
 		this.serviceProvider = serviceProvider;
+
+		this.logger = logger;
 
 		this.settings = settings.Value;
 
@@ -35,8 +39,10 @@ internal sealed class NetworkManager
 	{
 		foreach (NetworkSettings.ListenerSettings listenerSettings in this.settings.Listeners)
 		{
-			if (!this.packetManagerCache.TryCreatePacketManager(listenerSettings.Revision, out AbstractGamePacketManager? packetManager))
+			if (!this.packetManagerCache.TryCreatePacketManager(listenerSettings.Revision, out Lazy<AbstractGamePacketManager>? packetManagerHolder))
 			{
+				this.logger.LogWarning($"Did not find a packet manager for revision {listenerSettings.Revision}.");
+
 				continue;
 			}
 
@@ -48,6 +54,7 @@ internal sealed class NetworkManager
 
 					socket.Pipeline.AddHandlerFirst(new LeftOverHandler());
 
+					AbstractGamePacketManager packetManager = packetManagerHolder.Value;
 					if (packetManager.Modern)
 					{
 						socket.Pipeline.AddHandlerFirst(new PacketHeaderHandler(packetManager));

@@ -97,13 +97,13 @@ internal sealed class PacketManagerCache
 		}
 	}
 
-	internal bool TryCreatePacketManager(string version, [NotNullWhen(true)] out AbstractGamePacketManager? packetManager)
+	internal bool TryCreatePacketManager(string version, [NotNullWhen(true)] out Lazy<AbstractGamePacketManager>? packetManager)
 	{
 		if (this.protocolAssemblies.TryGetValue(version, out Assembly? assembly))
 		{
 			GameProtocolManagerAttribute? attribute = assembly.GetCustomAttribute<GameProtocolManagerAttribute>();
 
-			packetManager = attribute!.CreatePacketManager(this.serviceProvider);
+			packetManager = new Lazy<AbstractGamePacketManager>(() => attribute!.CreatePacketManager(this.serviceProvider));
 			return true;
 		}
 
