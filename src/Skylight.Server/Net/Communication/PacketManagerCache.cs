@@ -64,23 +64,29 @@ internal sealed class PacketManagerCache
 				continue;
 			}
 
-			string symbolsFileName = $"{Path.GetFileNameWithoutExtension(file.Name)}.pdb";
-
 			Assembly assembly;
-
-			IFileInfo? symbolsFile = protocolDirectory.FirstOrDefault(symbolsFile => symbolsFile.Name == symbolsFileName);
-			if (symbolsFile is not null)
+			if (file.PhysicalPath is not null)
 			{
-				using Stream stream = file.CreateReadStream();
-				using Stream symbolsStream = symbolsFile.CreateReadStream();
-
-				assembly = AssemblyLoadContext.Default.LoadFromStream(stream, symbolsStream);
+				assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(file.PhysicalPath);
 			}
 			else
 			{
-				using Stream stream = file.CreateReadStream();
+				string symbolsFileName = $"{Path.GetFileNameWithoutExtension(file.Name)}.pdb";
 
-				assembly = AssemblyLoadContext.Default.LoadFromStream(stream);
+				IFileInfo? symbolsFile = protocolDirectory.FirstOrDefault(symbolsFile => symbolsFile.Name == symbolsFileName);
+				if (symbolsFile is not null)
+				{
+					using Stream stream = file.CreateReadStream();
+					using Stream symbolsStream = symbolsFile.CreateReadStream();
+
+					assembly = AssemblyLoadContext.Default.LoadFromStream(stream, symbolsStream);
+				}
+				else
+				{
+					using Stream stream = file.CreateReadStream();
+
+					assembly = AssemblyLoadContext.Default.LoadFromStream(stream);
+				}
 			}
 
 			GameProtocolAttribute? attribute = assembly.GetCustomAttribute<GameProtocolAttribute>();
