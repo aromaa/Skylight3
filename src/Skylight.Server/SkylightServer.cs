@@ -94,7 +94,7 @@ internal sealed class SkylightServer : IServer
 
 				CancellationToken cancellationToken = this.cancellationToken;
 
-				this.tasks.Add(typeof(T), Task.WhenAll(dependencyTasks).ContinueWith(_ => action(cancellationToken), cancellationToken));
+				this.tasks.Add(typeof(T), Task.WhenAll(dependencyTasks).ContinueWith(_ => action(cancellationToken), cancellationToken).Unwrap());
 			}
 
 			return this;
