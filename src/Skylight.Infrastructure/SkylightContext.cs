@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Skylight.Domain.Achievements;
 using Skylight.Domain.Badges;
 using Skylight.Domain.Catalog;
 using Skylight.Domain.Furniture;
@@ -10,6 +11,7 @@ using Skylight.Domain.Rooms.Layout;
 using Skylight.Domain.Rooms.Sound;
 using Skylight.Domain.Server;
 using Skylight.Domain.Users;
+using Skylight.Infrastructure.EntityConfigurations.Achievements;
 using Skylight.Infrastructure.EntityConfigurations.Badges;
 using Skylight.Infrastructure.EntityConfigurations.Catalog;
 using Skylight.Infrastructure.EntityConfigurations.Furniture;
@@ -26,6 +28,9 @@ namespace Skylight.Infrastructure;
 
 public sealed class SkylightContext : DbContext
 {
+	public DbSet<AchievementEntity> Achievements { get; init; } = null!;
+	public DbSet<AchievementLevelEntity> AchievementLevels { get; init; } = null!;
+
 	public DbSet<BadgeEntity> Badges { get; init; } = null!;
 	public DbSet<UserBadgeEntity> UserBadges { get; init; } = null!;
 
@@ -74,6 +79,9 @@ public sealed class SkylightContext : DbContext
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
+		modelBuilder.ApplyConfiguration(new AchievementEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new AchievementLevelEntityTypeConfiguration());
+
 		modelBuilder.ApplyConfiguration(new BadgeEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new UserBadgeEntityTypeConfiguration());
 

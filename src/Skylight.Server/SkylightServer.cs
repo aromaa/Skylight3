@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Hosting;
+using Skylight.API.Game.Achievements;
 using Skylight.API.Game.Badges;
 using Skylight.API.Game.Catalog;
 using Skylight.API.Game.Furniture;
@@ -15,6 +16,7 @@ internal sealed class SkylightServer : IServer
 	private readonly IHostEnvironment hostEnvironment;
 
 	private readonly IBadgeManager badgeManager;
+	private readonly IAchievementManager achievementManager;
 
 	private readonly IFurnitureManager furnitureManager;
 	private readonly ICatalogManager catalogManager;
@@ -25,11 +27,12 @@ internal sealed class SkylightServer : IServer
 	private readonly PacketManagerCache packetManagerCache;
 	private readonly NetworkManager networkManager;
 
-	public SkylightServer(IHostEnvironment hostEnvironment, IBadgeManager badgeManager, IFurnitureManager furnitureManager, ICatalogManager catalogManager, IFurniMaticManager furniMaticManager, INavigatorManager navigatorManager, PacketManagerCache packetManagerCache, NetworkManager networkManager)
+	public SkylightServer(IHostEnvironment hostEnvironment, IBadgeManager badgeManager, IAchievementManager achievementManager, IFurnitureManager furnitureManager, ICatalogManager catalogManager, IFurniMaticManager furniMaticManager, INavigatorManager navigatorManager, PacketManagerCache packetManagerCache, NetworkManager networkManager)
 	{
 		this.hostEnvironment = hostEnvironment;
 
 		this.badgeManager = badgeManager;
+		this.achievementManager = achievementManager;
 
 		this.furnitureManager = furnitureManager;
 		this.catalogManager = catalogManager;
@@ -45,6 +48,7 @@ internal sealed class SkylightServer : IServer
 	{
 		await new SimpleParallelLoader(cancellationToken)
 			.Execute(this.badgeManager.LoadAsync)
+			.Execute(this.achievementManager.LoadAsync, typeof(IBadgeSnapshot))
 			.Execute(this.furnitureManager.LoadAsync)
 			.Execute(this.catalogManager.LoadAsync, typeof(IBadgeSnapshot), typeof(IFurnitureSnapshot))
 			.Execute(this.furniMaticManager.LoadAsync, typeof(IFurnitureSnapshot))
