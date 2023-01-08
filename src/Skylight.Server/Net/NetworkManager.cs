@@ -64,7 +64,7 @@ internal sealed class NetworkManager
 					{
 						socket.Pipeline.AddHandlerFirst(new Base64PacketHeaderHandler(this.serviceProvider.GetRequiredService<ILogger<Base64PacketHeaderHandler>>(), packetManager, BigInteger.Parse(listenerSettings.CryptoPrime!), BigInteger.Parse(listenerSettings.CryptoGenerator!)));
 					}
-				});
+				}, this.serviceProvider);
 			}
 		}
 	}
