@@ -51,10 +51,6 @@ internal sealed class PacketHeaderHandler : IncomingBytesHandler, IOutgoingObjec
 			{
 				Console.WriteLine($"Packet has stuff left: {header} ({reader.Remaining})");
 			}
-			else
-			{
-				Console.WriteLine($"Handled packet: {header}");
-			}
 		}
 		else
 		{
