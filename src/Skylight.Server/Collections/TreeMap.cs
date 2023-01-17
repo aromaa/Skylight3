@@ -14,6 +14,17 @@ internal sealed class TreeMap<TKey, TValue>
 
 	internal int Count => this.backer.Count;
 
+	internal IEnumerable<TValue> Values
+	{
+		get
+		{
+			foreach ((_, TValue value) in this.backer)
+			{
+				yield return value;
+			}
+		}
+	}
+
 	internal (TKey Key, TValue Value) Max => this.backer.Max;
 
 	internal bool Add(TKey key, TValue value)

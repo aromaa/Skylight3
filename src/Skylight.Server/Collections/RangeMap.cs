@@ -23,10 +23,43 @@ internal sealed class RangeMap<TKey, TValue>
 		this.reservedSlices = new TreeMap<Slice, SortedSet<TValue>>(SliceComparer.Instance);
 	}
 
+	internal IEnumerable<TValue> Values
+	{
+		get
+		{
+			foreach (SortedSet<TValue> values in this.reservedSlices.Values)
+			{
+				foreach (TValue value in values)
+				{
+					yield return value;
+				}
+			}
+		}
+	}
+
 	internal TValue? Max => this.reservedSlices.Max.Value is { } value ? value.Max : default;
+
+	internal IEnumerable<TValue> GetViewBetween(TKey min, TKey max)
+	{
+		foreach ((Slice slice, SortedSet<TValue> items) in this.reservedSlices.GetViewBetween(new Slice(min, min), new Slice(max, max)))
+		{
+			//Don't count the items the range is on top of
+			if (slice.Max == min)
+			{
+				continue;
+			}
+
+			foreach (TValue value in items)
+			{
+				yield return value;
+			}
+		}
+	}
 
 	internal void Add(TKey min, TKey max, TValue value)
 	{
+		Debug.Assert(min >= TKey.Zero);
+
 		List<Slice> slicesToRemove = new();
 		List<Slice> slicesToAdd = new();
 		foreach (Slice freeSlice in this.slices.GetViewBetween(new Slice(min, min), new Slice(max, max)))
@@ -69,16 +102,22 @@ internal sealed class RangeMap<TKey, TValue>
 			this.reservedSlices.Add(slice, values);
 		}
 
-		values.Add(value);
+		bool added = values.Add(value);
+
+		Debug.Assert(added);
 	}
 
 	internal void Remove(TKey min, TKey max, TValue value)
 	{
+		Debug.Assert(min >= TKey.Zero);
+
 		Slice slice = new(min, max);
 
 		if (this.reservedSlices.TryGetValue(slice, out SortedSet<TValue>? values))
 		{
-			values.Remove(value);
+			bool removed = values.Remove(value);
+
+			Debug.Assert(removed);
 
 			if (values.Count > 0)
 			{
@@ -127,6 +166,8 @@ internal sealed class RangeMap<TKey, TValue>
 			{
 				this.slices.Remove(sliceToRemove);
 			}
+
+			Debug.Assert(min >= TKey.Zero);
 
 			this.slices.Add(sliceToAdd);
 		}

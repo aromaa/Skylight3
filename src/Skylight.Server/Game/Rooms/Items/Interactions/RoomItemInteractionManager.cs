@@ -18,7 +18,8 @@ internal sealed class RoomItemInteractionManager : IRoomItemInteractionManager
 		Dictionary<Type, IRoomItemInteractionHandler> handlers = new()
 		{
 			[typeof(IStickyNoteInteractionHandler)] = new StickyNoteInteractionHandler(),
-			[typeof(ISoundMachineInteractionManager)] = new SoundMachineInteractionHandler()
+			[typeof(ISoundMachineInteractionManager)] = new SoundMachineInteractionHandler(),
+			[typeof(IRollerInteractionHandler)] = new RollerInteractionHandler(room)
 		};
 
 		return handlers;
@@ -30,6 +31,18 @@ internal sealed class RoomItemInteractionManager : IRoomItemInteractionManager
 		if (furniture is IStickyNotePoleFurniture or IStickyNoteFurniture)
 		{
 			handler = typeof(IStickyNoteInteractionHandler);
+
+			return true;
+		}
+		else if (furniture is ISoundMachineFurniture)
+		{
+			handler = typeof(ISoundMachineInteractionManager);
+
+			return true;
+		}
+		else if (furniture is IRollerFurniture)
+		{
+			handler = typeof(IRollerInteractionHandler);
 
 			return true;
 		}

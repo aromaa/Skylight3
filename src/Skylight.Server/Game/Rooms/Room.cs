@@ -34,6 +34,7 @@ internal sealed class Room : IRoom
 	private SpinLock scheduledTasksLock; //Note: mutating struct
 
 	private readonly Channel<IRoomTask> scheduledTasks;
+	private readonly Queue<IRoomTask> scheduledUpdateTasks;
 
 	private readonly SocketCollection roomClients;
 
@@ -43,10 +44,6 @@ internal sealed class Room : IRoom
 	{
 		this.Info = roomData;
 
-		this.Map = new RoomTileMap(this, roomData.Layout);
-		this.UnitManager = new RoomUnitManager(this);
-		this.ItemManager = new RoomItemManager(this, dbContextFactory, furnitureManager, floorRoomItemStrategy, wallRoomItemStrategy, itemInteractionManager, userManager);
-
 		this.tickingLock = new SpinLock(enableThreadOwnerTracking: false);
 		this.scheduledTasksLock = new SpinLock(enableThreadOwnerTracking: false);
 
@@ -54,6 +51,12 @@ internal sealed class Room : IRoom
 		{
 			SingleReader = true
 		});
+
+		this.scheduledUpdateTasks = new Queue<IRoomTask>();
+
+		this.Map = new RoomTileMap(this, roomData.Layout);
+		this.UnitManager = new RoomUnitManager(this);
+		this.ItemManager = new RoomItemManager(this, dbContextFactory, furnitureManager, floorRoomItemStrategy, wallRoomItemStrategy, itemInteractionManager, userManager);
 
 		this.roomClients = new SocketCollection();
 
@@ -63,6 +66,8 @@ internal sealed class Room : IRoom
 		};
 		this.thread.Start();
 	}
+
+	public int GameTime => 0;
 
 	internal int UserCount => this.roomClients.Count;
 
@@ -100,6 +105,19 @@ internal sealed class Room : IRoom
 		//Tick room inside the lock!
 		using (this.tickingLock.Enter())
 		{
+			IRoomTask[] tasks;
+			lock (this.scheduledUpdateTasks)
+			{
+				tasks = this.scheduledUpdateTasks.ToArray();
+
+				this.scheduledUpdateTasks.Clear();
+			}
+
+			foreach (IRoomTask roomTask in tasks)
+			{
+				roomTask.Execute(this);
+			}
+
 			this.UnitManager.Tick();
 
 			//After everything is done, run the tasks we received while ticking
@@ -138,6 +156,14 @@ internal sealed class Room : IRoom
 		else
 		{
 			this.ScheduleTaskSlow(task);
+		}
+	}
+
+	public void ScheduleUpdateTask(IRoomTask task)
+	{
+		lock (this.scheduledUpdateTasks)
+		{
+			this.scheduledUpdateTasks.Enqueue(task);
 		}
 	}
 

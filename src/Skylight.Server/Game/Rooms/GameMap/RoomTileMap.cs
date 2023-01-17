@@ -30,7 +30,7 @@ internal sealed class RoomTileMap : IRoomMap
 		{
 			for (int y = 0; y < layout.Size.Y; y++)
 			{
-				builder[x, y] = new RoomTile(new Point2D(x, y), ((RoomLayout)layout).Tiles[x, y]);
+				builder[x, y] = new RoomTile(this, new Point2D(x, y), ((RoomLayout)layout).Tiles[x, y]);
 			}
 		}
 
@@ -38,6 +38,8 @@ internal sealed class RoomTileMap : IRoomMap
 	}
 
 	public bool IsValidLocation(Point2D point) => point.X < this.Layout.Size.X && point.Y < this.Layout.Size.Y;
+
+	public IRoomTile GetTile(int x, int y) => this.tiles[x, y];
 	public IRoomTile GetTile(Point2D point) => this.tiles[point.X, point.Y];
 
 	public Stack<Point2D> PathfindTo(Point2D start, Point2D target, IRoomUnit unit)
