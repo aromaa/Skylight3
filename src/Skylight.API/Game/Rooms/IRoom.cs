@@ -14,6 +14,8 @@ public interface IRoom
 	public IRoomItemManager ItemManager { get; }
 	public IRoomUnitManager UnitManager { get; }
 
+	public int GameTime { get; }
+
 	public Task LoadAsync(CancellationToken cancellationToken = default);
 
 	public void Enter(IUser user);
@@ -21,6 +23,9 @@ public interface IRoom
 
 	public void ScheduleTask<T>(in T task)
 		where T : IRoomTask;
+
 	public ValueTask<TOut> ScheduleTaskAsync<TTask, TOut>(in TTask task)
 		where TTask : IRoomTask<TOut>;
+
+	public void ScheduleUpdateTask(IRoomTask task);
 }

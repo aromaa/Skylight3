@@ -4,12 +4,15 @@ using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Numerics;
 using Skylight.Server.Collections;
+using Skylight.Server.Game.Rooms.Items;
 using Skylight.Server.Game.Rooms.Layout;
 
 namespace Skylight.Server.Game.Rooms.GameMap;
 
 internal sealed class RoomTile : IRoomTile
 {
+	public IRoomMap Map { get; }
+
 	private readonly RangeMap<double, IFloorRoomItem> heightMap;
 
 	private readonly Dictionary<int, IRoomUnit> roomUnits;
@@ -19,9 +22,11 @@ internal sealed class RoomTile : IRoomTile
 
 	internal RoomLayoutTile LayoutTile { get; }
 
-	internal RoomTile(Point2D location, RoomLayoutTile layoutTile)
+	internal RoomTile(IRoomMap map, Point2D location, RoomLayoutTile layoutTile)
 	{
-		this.heightMap = new RangeMap<double, IFloorRoomItem>(SortItemsByZAndHeight.Instance);
+		this.Map = map;
+
+		this.heightMap = new RangeMap<double, IFloorRoomItem>(RoomItemHeightComparer.Instance);
 
 		this.roomUnits = new Dictionary<int, IRoomUnit>();
 
@@ -32,6 +37,11 @@ internal sealed class RoomTile : IRoomTile
 
 	public bool IsHole => this.LayoutTile.IsHole;
 	public bool HasRoomUnit => this.roomUnits.Count > 0;
+
+	public IEnumerable<IFloorRoomItem> FloorItems => this.heightMap.Values;
+	public IEnumerable<IRoomUnit> Units => this.roomUnits.Values;
+
+	public IEnumerable<IFloorRoomItem> GetFloorItemsBetween(double minZ, double maxZ) => this.heightMap.GetViewBetween(minZ, maxZ);
 
 	public double GetStepHeight(double z)
 	{
@@ -70,30 +80,5 @@ internal sealed class RoomTile : IRoomTile
 		bool result = this.roomUnits.TryAdd(unit.Id, unit);
 
 		Debug.Assert(result);
-	}
-
-	private sealed class SortItemsByZAndHeight : IComparer<IFloorRoomItem>
-	{
-		internal static readonly SortItemsByZAndHeight Instance = new();
-
-		public int Compare(IFloorRoomItem? x, IFloorRoomItem? y)
-		{
-			//Item with highest Z
-			int result = x!.Position.Z.CompareTo(y!.Position.Z);
-			if (result != 0)
-			{
-				return result;
-			}
-
-			//Item with highest height
-			result = x.Furniture.Height.CompareTo(y.Furniture.Height);
-			if (result != 0)
-			{
-				return result;
-			}
-
-			//Last resort, the most recently purchased item
-			return x.Id.CompareTo(y.Id);
-		}
 	}
 }

@@ -57,6 +57,7 @@ internal partial class FurnitureManager
 						"furnimatic_gift" => new FurniMaticGiftFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
 						"sound_machine" => new SoundMachineFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
 						"sound_set" => CreateSoundSet(entity),
+						"roller" => new RollerFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
 
 						_ => new BasicFloorFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0])
 					};
