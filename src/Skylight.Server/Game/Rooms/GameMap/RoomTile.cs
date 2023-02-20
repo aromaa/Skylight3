@@ -43,9 +43,10 @@ internal sealed class RoomTile : IRoomTile
 
 	public IEnumerable<IFloorRoomItem> GetFloorItemsBetween(double minZ, double maxZ) => this.heightMap.GetViewBetween(minZ, maxZ);
 
-	public double GetStepHeight(double z)
+	public double GetStepHeight(double z) => this.GetStepHeight(z, 2, 2);
+	internal double GetStepHeight(double z, double range, double emptySpace)
 	{
-		SortedSet<IFloorRoomItem>? values = this.heightMap.FindNearestValues(z, 2, 2);
+		SortedSet<IFloorRoomItem>? values = this.heightMap.FindNearestValues(z, range, emptySpace);
 		if (values?.Max is { } topItem)
 		{
 			return topItem.Position.Z + topItem.Furniture.Height;
