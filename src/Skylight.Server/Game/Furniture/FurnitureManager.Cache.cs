@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Frozen;
 using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Furniture.Wall;
 using Skylight.Domain.Furniture;
@@ -11,13 +11,13 @@ internal partial class FurnitureManager
 {
 	private sealed class Cache
 	{
-		internal Dictionary<int, IFloorFurniture> FloorFurnitures { get; }
-		internal Dictionary<int, IWallFurniture> WallFurnitures { get; }
+		internal FrozenDictionary<int, IFloorFurniture> FloorFurnitures { get; }
+		internal FrozenDictionary<int, IWallFurniture> WallFurnitures { get; }
 
 		internal Cache(Dictionary<int, IFloorFurniture> floorFurnitures, Dictionary<int, IWallFurniture> wallFurnitures)
 		{
-			this.FloorFurnitures = floorFurnitures;
-			this.WallFurnitures = wallFurnitures;
+			this.FloorFurnitures = floorFurnitures.ToFrozenDictionary(optimizeForReading: true);
+			this.WallFurnitures = wallFurnitures.ToFrozenDictionary(optimizeForReading: true);
 		}
 
 		internal static Builder CreateBuilder() => new();
@@ -68,7 +68,7 @@ internal partial class FurnitureManager
 					{
 						int soundSetId = int.Parse(entity.ClassName.AsSpan(entity.ClassName.LastIndexOf('_') + 1));
 
-						return new SoundSetFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0], soundSetId, Enumerable.Range((soundSetId * 9) - 8, 9).ToImmutableHashSet());
+						return new SoundSetFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0], soundSetId, Enumerable.Range((soundSetId * 9) - 8, 9).ToFrozenSet(optimizeForReading: true));
 					}
 				}
 

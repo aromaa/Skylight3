@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Frozen;
+using System.Collections.Immutable;
 using Skylight.API.Game.Badges;
 using Skylight.API.Game.Catalog;
 using Skylight.API.Game.Catalog.Products;
@@ -16,8 +17,8 @@ internal partial class CatalogManager
 	{
 		internal IFurnitureSnapshot Furnitures { get; }
 
-		internal Dictionary<int, ICatalogPage> Pages { get; }
-		internal Dictionary<int, ICatalogOffer> Offers { get; }
+		internal FrozenDictionary<int, ICatalogPage> Pages { get; }
+		internal FrozenDictionary<int, ICatalogOffer> Offers { get; }
 
 		internal ImmutableArray<ICatalogPage> RootPages { get; }
 
@@ -25,8 +26,8 @@ internal partial class CatalogManager
 		{
 			this.Furnitures = furnitures;
 
-			this.Pages = pages;
-			this.Offers = offers;
+			this.Pages = pages.ToFrozenDictionary(optimizeForReading: true);
+			this.Offers = offers.ToFrozenDictionary(optimizeForReading: true);
 
 			this.RootPages = rootPages;
 		}

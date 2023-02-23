@@ -1,4 +1,5 @@
-﻿using Skylight.API.Game.Badges;
+﻿using System.Collections.Frozen;
+using Skylight.API.Game.Badges;
 using Skylight.Domain.Badges;
 
 namespace Skylight.Server.Game.Badges;
@@ -7,11 +8,11 @@ internal partial class BadgeManager
 {
 	private sealed class Cache
 	{
-		internal Dictionary<string, IBadge> Badges { get; }
+		internal FrozenDictionary<string, IBadge> Badges { get; }
 
 		private Cache(Dictionary<string, IBadge> badges)
 		{
-			this.Badges = badges;
+			this.Badges = badges.ToFrozenDictionary(optimizeForReading: true);
 		}
 
 		internal static Builder CreateBuilder() => new();

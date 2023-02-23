@@ -1,4 +1,5 @@
-﻿using Skylight.API.Game.Rooms;
+﻿using System.Collections.Frozen;
+using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Map;
 using Skylight.Domain.Navigator;
 using Skylight.Domain.Rooms.Layout;
@@ -11,13 +12,13 @@ internal partial class NavigatorManager
 {
 	private sealed class Cache
 	{
-		internal Dictionary<string, IRoomLayout> Layouts { get; }
-		internal Dictionary<int, IRoomFlatCat> FlatCats { get; }
+		internal FrozenDictionary<string, IRoomLayout> Layouts { get; }
+		internal FrozenDictionary<int, IRoomFlatCat> FlatCats { get; }
 
 		private Cache(Dictionary<string, IRoomLayout> layouts, Dictionary<int, IRoomFlatCat> flatCats)
 		{
-			this.Layouts = layouts;
-			this.FlatCats = flatCats;
+			this.Layouts = layouts.ToFrozenDictionary(optimizeForReading: true);
+			this.FlatCats = flatCats.ToFrozenDictionary(optimizeForReading: true);
 		}
 
 		internal static Builder CreateBuilder() => new();

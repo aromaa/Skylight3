@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Frozen;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using Skylight.API.Game.Recycler.FurniMatic;
 using Skylight.Server.Collections.Immutable;
@@ -14,7 +15,7 @@ internal sealed class FurniMaticPrizes : IFurniMaticPrizes
 
 	private readonly ImmutableWeightedTable<IFurniMaticPrize> prizeTable;
 
-	private readonly Dictionary<int, IFurniMaticPrize> prizes;
+	private readonly FrozenDictionary<int, IFurniMaticPrize> prizes;
 
 	internal FurniMaticPrizes(ImmutableArray<IFurniMaticPrizeLevel> levels)
 	{
@@ -22,7 +23,7 @@ internal sealed class FurniMaticPrizes : IFurniMaticPrizes
 
 		this.prizeTable = FurniMaticPrizes.CreatePrizeTable(levels);
 
-		this.prizes = levels.SelectMany(x => x.Prizes).ToDictionary(x => x.Id);
+		this.prizes = levels.SelectMany(x => x.Prizes).ToDictionary(x => x.Id).ToFrozenDictionary(optimizeForReading: true);
 	}
 
 	internal IFurniMaticPrize? RollRandomPrice() => this.prizeTable.Next();

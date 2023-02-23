@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Frozen;
+using System.Collections.Immutable;
 using System.Text.RegularExpressions;
 using CommunityToolkit.HighPerformance;
 using Skylight.API.Game.Achievements;
@@ -11,15 +12,15 @@ internal partial class AchievementManager
 {
 	private sealed partial class Cache
 	{
-		internal Dictionary<int, IAchievement> Achievements { get; }
+		internal FrozenDictionary<int, IAchievement> Achievements { get; }
 
-		internal Dictionary<string, int> BadgePointLimits { get; }
+		internal FrozenDictionary<string, int> BadgePointLimits { get; }
 
 		internal Cache(Dictionary<int, IAchievement> achievements, Dictionary<string, int> badgePointLimits)
 		{
-			this.Achievements = achievements;
+			this.Achievements = achievements.ToFrozenDictionary(optimizeForReading: true);
 
-			this.BadgePointLimits = badgePointLimits;
+			this.BadgePointLimits = badgePointLimits.ToFrozenDictionary(optimizeForReading: true);
 		}
 
 		internal static Builder CreateBuilder() => new();
