@@ -46,25 +46,28 @@ internal sealed class NetworkManager
 				continue;
 			}
 
-			if (IPEndPoint.TryParse(listenerSettings.EndPoint, out IPEndPoint? ipEndPoint))
+			foreach (string endPoint in listenerSettings.EndPoints)
 			{
-				IListener.CreateTcpListener(ipEndPoint, socket =>
+				if (IPEndPoint.TryParse(endPoint, out IPEndPoint? ipEndPoint))
 				{
-					socket.Metadata.Set(NetworkManager.GameClientMetadataKey, new Client(socket));
-
-					socket.Pipeline.AddHandlerFirst(new LeftOverHandler());
-
-					AbstractGamePacketManager packetManager = packetManagerHolder.Value;
-					if (packetManager.Modern)
+					IListener.CreateTcpListener(ipEndPoint, socket =>
 					{
-						socket.Pipeline.AddHandlerFirst(new PacketHeaderHandler(packetManager));
-						socket.Pipeline.AddHandlerFirst(FlashSocketPolicyRequestHandler.Instance);
-					}
-					else
-					{
-						socket.Pipeline.AddHandlerFirst(new Base64PacketHeaderHandler(this.serviceProvider.GetRequiredService<ILogger<Base64PacketHeaderHandler>>(), packetManager, BigInteger.Parse(listenerSettings.CryptoPrime!), BigInteger.Parse(listenerSettings.CryptoGenerator!)));
-					}
-				}, this.serviceProvider);
+						socket.Metadata.Set(NetworkManager.GameClientMetadataKey, new Client(socket));
+
+						socket.Pipeline.AddHandlerFirst(new LeftOverHandler());
+
+						AbstractGamePacketManager packetManager = packetManagerHolder.Value;
+						if (packetManager.Modern)
+						{
+							socket.Pipeline.AddHandlerFirst(new PacketHeaderHandler(packetManager));
+							socket.Pipeline.AddHandlerFirst(FlashSocketPolicyRequestHandler.Instance);
+						}
+						else
+						{
+							socket.Pipeline.AddHandlerFirst(new Base64PacketHeaderHandler(this.serviceProvider.GetRequiredService<ILogger<Base64PacketHeaderHandler>>(), packetManager, BigInteger.Parse(listenerSettings.CryptoPrime!), BigInteger.Parse(listenerSettings.CryptoGenerator!)));
+						}
+					}, this.serviceProvider);
+				}
 			}
 		}
 	}

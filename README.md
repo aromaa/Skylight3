@@ -50,10 +50,9 @@ Typical appsettings.json would look something like:
     "ConnectionString": "Host=localhost;User ID=<USER>;Password=<PASSWORD>;Database=skylight"
   },
   "Network": {
-    "Listeners":
-    [
+    "Listeners": [
       {
-        "EndPoint": "127.0.0.1:30000",
+        "EndPoints": ["127.0.0.1:30000"],
         "Revision": "WIN63-202111081545-75921380"
       }
     ]
@@ -65,18 +64,18 @@ Note: By default, no revisions are included with the server. Instead on load the
 
 All of the configuration nobs:
 - Database
-	- ConnectionString - The connection string for Postgres
+	- ConnectionString - The connection string for Postgres.
 - FurniMatic
-	- ItemsRequired - How many items are required to recyclate?
-	- GiftFurnitureId - The furniture id used for the gift
+	- ItemsRequired - How many items are required to recyclate.
+	- GiftFurnitureId - The furniture id used for the gift.
 - Network
 	- Listeners
-		- EndPoint - The end point that accepts the connection
+		- EndPoints - The end points that accept the connection.
 		- Revision - The revision that is required.
 		- CryptoPrime - The RC4 prime for encryption, if used.
 		- CryptoGenerator - The RC4 generator for encryption, if used.
 - Redis
-	- ConnectionString - The connection string for Redis
+	- ConnectionString - The connection string for Redis.
 
 ## RC4 encryption
 - RELEASE39-200910220522-22363:

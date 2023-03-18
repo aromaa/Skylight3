@@ -6,7 +6,7 @@ internal sealed class NetworkSettings
 
 	internal sealed class ListenerSettings
 	{
-		public required string EndPoint { get; set; }
+		public required List<string> EndPoints { get; set; }
 
 		public required string Revision { get; set; }
 
