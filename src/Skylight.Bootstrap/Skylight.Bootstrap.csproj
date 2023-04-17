@@ -30,7 +30,7 @@
 			<ProtocolProjectReference Include="..\submodules\Skylight.Protocol\src\Skylight.Protocol.X\Skylight.Protocol.%(ProtocolReference.Identity)\Skylight.Protocol.%(ProtocolReference.Identity).csproj" />
 		</ItemGroup>
 
-		<MSBuild Projects="@(ProtocolProjectReference)" BuildInParallel="true" Targets="Build" Properties="Configuration=$(Configuration);Platform=$(Platform)">
+		<MSBuild Projects="@(ProtocolProjectReference)" BuildInParallel="true" Targets="Restore;Build" Properties="Configuration=$(Configuration);Platform=$(Platform)">
 			<Output TaskParameter="TargetOutputs" ItemName="ProtocolAssemblies" />
 		</MSBuild>
 
