@@ -1,10 +1,7 @@
-﻿using System.Runtime.InteropServices;
-using Net.Communication.Attributes;
+﻿using Net.Communication.Attributes;
 using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Inventory.Items.Floor;
-using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Interactions;
-using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.Protocol.Packets.Data.Sound;
 using Skylight.Protocol.Packets.Incoming.Sound;
@@ -24,21 +21,9 @@ internal sealed class NewSongPacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		unit.Room.ScheduleTask(new NewSongTask
+		unit.Room.ScheduleTask(static (room, roomUnit) =>
 		{
-			Unit = unit
-		});
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-
-	private readonly struct NewSongTask : IRoomTask
-	{
-		internal IUserRoomUnit Unit { get; init; }
-
-		public void Execute(IRoom room)
-		{
-			if (!this.Unit.InRoom || !this.Unit.Room.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
+			if (!roomUnit.InRoom || !roomUnit.Room.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
 			{
 				return;
 			}
@@ -49,10 +34,10 @@ internal sealed class NewSongPacketHandler<T> : UserPacketHandler<T>
 				filledSlots.Add(new SoundSetData(slot, soundSet.SoundSetId, soundSet.Samples));
 			}
 
-			this.Unit.User.SendAsync(new TraxSoundPackagesOutgoingPacket(soundMachine.Furniture.SoundSetSlotCount, filledSlots));
+			roomUnit.User.SendAsync(new TraxSoundPackagesOutgoingPacket(soundMachine.Furniture.SoundSetSlotCount, filledSlots));
 
 			List<int> soundSets = new();
-			foreach (IFloorInventoryItem item in this.Unit.User.Inventory.FloorItems)
+			foreach (IFloorInventoryItem item in roomUnit.User.Inventory.FloorItems)
 			{
 				if (item is not ISoundSetInventoryItem soundSet)
 				{
@@ -67,7 +52,7 @@ internal sealed class NewSongPacketHandler<T> : UserPacketHandler<T>
 				soundSets.Add(soundSet.Furniture.SoundSetId);
 			}
 
-			this.Unit.User.SendAsync(new UserSoundPackagesOutgoingPacket(soundSets));
-		}
+			roomUnit.User.SendAsync(new UserSoundPackagesOutgoingPacket(soundSets));
+		}, unit);
 	}
 }

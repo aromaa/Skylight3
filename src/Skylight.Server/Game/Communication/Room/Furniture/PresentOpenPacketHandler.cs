@@ -3,7 +3,6 @@ using Net.Communication.Attributes;
 using Skylight.API.Game.Clients;
 using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Recycler.FurniMatic;
-using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
@@ -43,7 +42,7 @@ internal sealed class PresentOpenPacketHandler<T> : UserPacketHandler<T>
 	}
 
 	[StructLayout(LayoutKind.Auto)]
-	private readonly struct OpenPresentTask : IClientTask, IRoomTask, IRoomTask<IFloorRoomItem?>
+	private readonly struct OpenPresentTask : IClientTask
 	{
 		internal IFurniMaticSnapshot FurniMaticSnapshot { get; init; }
 
@@ -53,7 +52,15 @@ internal sealed class PresentOpenPacketHandler<T> : UserPacketHandler<T>
 
 		public async Task ExecuteAsync(IClient client)
 		{
-			IFloorRoomItem? present = await this.Unit.Room.ScheduleTaskAsync<OpenPresentTask, IFloorRoomItem?>(this).ConfigureAwait(false);
+			IFloorRoomItem? present = await this.Unit.Room.ScheduleTaskAsync(static (room, state) =>
+			{
+				if (state.Unit.InRoom && room.ItemManager.TryGetFloorItem(state.ItemId, out IFloorRoomItem? item))
+				{
+					return item;
+				}
+
+				return null;
+			}, (this.Unit, this.ItemId)).ConfigureAwait(false);
 
 			if (present is IFurniMaticGiftRoomItem roomItem)
 			{
@@ -65,26 +72,14 @@ internal sealed class PresentOpenPacketHandler<T> : UserPacketHandler<T>
 
 				client.SendAsync(new PresentOpenedOutgoingPacket(prize.Name, prize.Furnitures[0] is IFloorFurniture ? FurnitureType.Floor : FurnitureType.Wall, prize.Furnitures[0].Id, false, 0, FurnitureType.Floor, string.Empty));
 
-				this.Unit.Room.ScheduleTask(this);
+				this.Unit.Room.ScheduleTask(static (room, itemId) =>
+				{
+					if (room.ItemManager.TryGetFloorItem(itemId, out IFloorRoomItem? item))
+					{
+						room.ItemManager.RemoveItem(item);
+					}
+				}, this.ItemId);
 			}
-		}
-
-		public void Execute(IRoom room)
-		{
-			if (room.ItemManager.TryGetFloorItem(this.ItemId, out IFloorRoomItem? item))
-			{
-				room.ItemManager.RemoveItem(item);
-			}
-		}
-
-		IFloorRoomItem? IRoomTask<IFloorRoomItem?>.Execute(IRoom room)
-		{
-			if (this.Unit.InRoom && room.ItemManager.TryGetFloorItem(this.ItemId, out IFloorRoomItem? item))
-			{
-				return item;
-			}
-
-			return null;
 		}
 	}
 }

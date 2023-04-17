@@ -7,7 +7,6 @@ using Skylight.API.Game.Clients;
 using Skylight.API.Game.Inventory.Items;
 using Skylight.API.Game.Inventory.Items.Floor;
 using Skylight.API.Game.Inventory.Items.Wall;
-using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Wall;
@@ -149,7 +148,7 @@ internal sealed class PlaceObjectPacketHandler<T> : UserPacketHandler<T>
 	}
 
 	[StructLayout(LayoutKind.Auto)]
-	private readonly struct PlaceFloorItemTask : IClientTask, IRoomTask<Point3D?>
+	private readonly struct PlaceFloorItemTask : IClientTask
 	{
 		internal IDbContextFactory<SkylightContext> DbContextFactory { get; init; }
 
@@ -164,7 +163,23 @@ internal sealed class PlaceObjectPacketHandler<T> : UserPacketHandler<T>
 
 		public async Task ExecuteAsync(IClient client)
 		{
-			Point3D? position = await this.RoomUnit.Room.ScheduleTaskAsync<PlaceFloorItemTask, Point3D?>(this).ConfigureAwait(false);
+			Point3D? position = await this.RoomUnit.Room.ScheduleTaskAsync(static (room, state) =>
+			{
+				Point3D position = new(state.Location, room.ItemManager.GetPlacementHeight(state.Item.Furniture, state.Location));
+
+				if (!state.RoomUnit.InRoom || !room.ItemManager.CanPlaceItem(state.Item.Furniture, position)
+										   || !state.RoomUnit.User.Inventory.TryRemoveFloorItem(state.Item))
+				{
+					return default(Point3D?);
+				}
+
+				IFloorRoomItem item = state.FloorRoomItemStrategy.CreateFloorItem(room, state.Item, position, state.Direction);
+
+				room.ItemManager.AddItem(item);
+
+				return position;
+			}, (this.FloorRoomItemStrategy, this.RoomUnit, this.Item, this.Location, this.Direction)).ConfigureAwait(false);
+
 			if (position is null)
 			{
 				return;
@@ -187,27 +202,10 @@ internal sealed class PlaceObjectPacketHandler<T> : UserPacketHandler<T>
 
 			await dbContext.SaveChangesAsync().ConfigureAwait(false);
 		}
-
-		public Point3D? Execute(IRoom room)
-		{
-			Point3D position = new(this.Location, room.ItemManager.GetPlacementHeight(this.Item.Furniture, this.Location));
-
-			if (!this.RoomUnit.InRoom || !room.ItemManager.CanPlaceItem(this.Item.Furniture, position)
-									  || !this.RoomUnit.User.Inventory.TryRemoveFloorItem(this.Item))
-			{
-				return null;
-			}
-
-			IFloorRoomItem item = this.FloorRoomItemStrategy.CreateFloorItem(room, this.Item, position, this.Direction);
-
-			room.ItemManager.AddItem(item);
-
-			return position;
-		}
 	}
 
 	[StructLayout(LayoutKind.Auto)]
-	private readonly struct PlaceWallItemTask : IClientTask, IRoomTask<(Point2D, Point2D)?>
+	private readonly struct PlaceWallItemTask : IClientTask
 	{
 		internal IDbContextFactory<SkylightContext> DbContextFactory { get; init; }
 
@@ -222,7 +220,21 @@ internal sealed class PlaceObjectPacketHandler<T> : UserPacketHandler<T>
 
 		public async Task ExecuteAsync(IClient client)
 		{
-			(Point2D Location, Point2D Position)? result = await this.RoomUnit.Room.ScheduleTaskAsync<PlaceWallItemTask, (Point2D, Point2D)?>(this).ConfigureAwait(false);
+			(Point2D Location, Point2D Position)? result = await this.RoomUnit.Room.ScheduleTaskAsync(static (room, state) =>
+			{
+				if (!state.RoomUnit.InRoom || !room.ItemManager.CanPlaceItem(state.Item.Furniture, state.Location, state.Position)
+										   || !state.RoomUnit.User.Inventory.TryRemoveWallItem(state.Item))
+				{
+					return default;
+				}
+
+				IWallRoomItem item = state.WallRoomItemStrategy.CreateWallItem(room, state.Item, state.Location, state.Position);
+
+				room.ItemManager.AddItem(item);
+
+				return (item.Location, item.Position);
+			}, (this.RoomUnit, this.Location, this.Position, this.Item, this.WallRoomItemStrategy)).ConfigureAwait(false);
+
 			if (result is null)
 			{
 				return;
@@ -245,21 +257,6 @@ internal sealed class PlaceObjectPacketHandler<T> : UserPacketHandler<T>
 			item.PositionY = result.Value.Position.Y;
 
 			await dbContext.SaveChangesAsync().ConfigureAwait(false);
-		}
-
-		public (Point2D, Point2D)? Execute(IRoom room)
-		{
-			if (!this.RoomUnit.InRoom || !room.ItemManager.CanPlaceItem(this.Item.Furniture, this.Location, this.Position)
-									  || !this.RoomUnit.User.Inventory.TryRemoveWallItem(this.Item))
-			{
-				return null;
-			}
-
-			IWallRoomItem item = this.WallRoomItemStrategy.CreateWallItem(room, this.Item, this.Location, this.Position);
-
-			room.ItemManager.AddItem(item);
-
-			return (item.Location, item.Position);
 		}
 	}
 }

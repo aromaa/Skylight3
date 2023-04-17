@@ -4,7 +4,6 @@ using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Net.Communication.Attributes;
 using Skylight.API.Game.Clients;
-using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Interactions;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
@@ -82,7 +81,7 @@ internal sealed partial class SaveSongNewPacketHandler<T> : UserPacketHandler<T>
 	private static partial Regex ParseSongData();
 
 	[StructLayout(LayoutKind.Auto)]
-	private readonly struct SaveSongTask : IClientTask, IRoomTask<int>
+	private readonly struct SaveSongTask : IClientTask
 	{
 		internal IDbContextFactory<SkylightContext> DbContextFactory { get; init; }
 
@@ -94,7 +93,16 @@ internal sealed partial class SaveSongNewPacketHandler<T> : UserPacketHandler<T>
 
 		public async Task ExecuteAsync(IClient client)
 		{
-			int soundMachineId = await this.Unit.Room.ScheduleTaskAsync<SaveSongTask, int>(this).ConfigureAwait(false);
+			int soundMachineId = await this.Unit.Room.ScheduleTaskAsync(static (room, roomUnit) =>
+			{
+				if (!roomUnit.InRoom || !room.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
+				{
+					return 0;
+				}
+
+				return soundMachine.Id;
+			}, this.Unit).ConfigureAwait(false);
+
 			if (soundMachineId == 0)
 			{
 				return;
@@ -118,16 +126,6 @@ internal sealed partial class SaveSongNewPacketHandler<T> : UserPacketHandler<T>
 			await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
 			client.SendAsync(new NewSongOutgoingPacket(songEntity.Id, this.Name));
-		}
-
-		public int Execute(IRoom room)
-		{
-			if (!this.Unit.InRoom || !this.Unit.Room.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
-			{
-				return 0;
-			}
-
-			return soundMachine.Id;
 		}
 	}
 }

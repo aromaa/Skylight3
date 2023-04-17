@@ -1,6 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Threading.Channels;
 using CommunityToolkit.HighPerformance;
 using Microsoft.EntityFrameworkCore;
 using Net.Collections;
@@ -15,9 +13,9 @@ using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Outgoing;
-using Skylight.Server.Extensions;
 using Skylight.Server.Game.Rooms.GameMap;
 using Skylight.Server.Game.Rooms.Items;
+using Skylight.Server.Game.Rooms.Scheduler;
 using Skylight.Server.Game.Rooms.Units;
 
 namespace Skylight.Server.Game.Rooms;
@@ -30,10 +28,10 @@ internal sealed class Room : IRoom
 	public IRoomUnitManager UnitManager { get; }
 	public IRoomItemManager ItemManager { get; }
 
-	private SpinLock tickingLock; //Note: Mutating struct
-	private SpinLock scheduledTasksLock; //Note: mutating struct
+	internal RoomTaskScheduler RoomTaskScheduler { get; }
 
-	private readonly Channel<IRoomTask> scheduledTasks;
+	private SpinLock tickingLock; //Note: Mutating struct
+
 	private readonly Queue<IRoomTask> scheduledUpdateTasks;
 
 	private readonly SocketCollection roomClients;
@@ -45,12 +43,8 @@ internal sealed class Room : IRoom
 		this.Info = roomData;
 
 		this.tickingLock = new SpinLock(enableThreadOwnerTracking: false);
-		this.scheduledTasksLock = new SpinLock(enableThreadOwnerTracking: false);
 
-		this.scheduledTasks = Channel.CreateUnbounded<IRoomTask>(new UnboundedChannelOptions
-		{
-			SingleReader = true
-		});
+		this.RoomTaskScheduler = new RoomTaskScheduler(this);
 
 		this.scheduledUpdateTasks = new Queue<IRoomTask>();
 
@@ -66,6 +60,8 @@ internal sealed class Room : IRoom
 		};
 		this.thread.Start();
 	}
+
+	internal ref SpinLock TickingLock => ref this.tickingLock;
 
 	public int GameTime => 0;
 
@@ -121,43 +117,24 @@ internal sealed class Room : IRoom
 			this.UnitManager.Tick();
 
 			//After everything is done, run the tasks we received while ticking
-			using (this.scheduledTasksLock.Enter())
-			{
-				this.ExecuteTasksNoLock();
-			}
+			this.RoomTaskScheduler.ExecuteTasks();
 		}
 	}
 
-	private void ExecuteTasksNoLock()
-	{
-		while (this.scheduledTasks.Reader.TryRead(out IRoomTask? task))
-		{
-			task.Execute(this);
-		}
-	}
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public void ScheduleTask<T>(in T task)
-		where T : IRoomTask
-	{
-		//If we can grab the ticking lock, we can just execute
-		//the task without needing to worry about threading
-		if (this.tickingLock.TryEnter())
-		{
-			try
-			{
-				task.Execute(this);
-			}
-			finally
-			{
-				this.tickingLock.Exit();
-			}
-		}
-		else
-		{
-			this.ScheduleTaskSlow(task);
-		}
-	}
+	public bool ScheduleTask<TTask>(in TTask task)
+		where TTask : IRoomTask => this.RoomTaskScheduler.ScheduleTask(task);
+	public bool ScheduleTask(Action<IRoom> action) => this.RoomTaskScheduler.ScheduleTask(action);
+	public bool ScheduleTask<TState>(Action<IRoom, TState> action, in TState state) => this.RoomTaskScheduler.ScheduleTask(action, state);
+	public ValueTask ScheduleTaskAsync<TTask>(in TTask task)
+		where TTask : IRoomTask => this.RoomTaskScheduler.ScheduleTaskAsync(task);
+	public ValueTask ScheduleTaskAsync(Action<IRoom> action) => this.RoomTaskScheduler.ScheduleTaskAsync(action);
+	public ValueTask ScheduleTaskAsync<TState>(Action<IRoom, TState> action, in TState state) => this.RoomTaskScheduler.ScheduleTaskAsync(action, state);
+	public ValueTask ScheduleTaskAsync(Func<IRoom, ValueTask> func) => this.RoomTaskScheduler.ScheduleTaskAsync(func);
+	public ValueTask ScheduleTaskAsync<TState>(Func<IRoom, TState, ValueTask> func, in TState state) => this.RoomTaskScheduler.ScheduleTaskAsync(func, state);
+	public ValueTask<TOut> ScheduleTaskAsync<TOut>(Func<IRoom, TOut> func) => this.RoomTaskScheduler.ScheduleTaskAsync(func);
+	public ValueTask<TOut> ScheduleTaskAsync<TState, TOut>(Func<IRoom, TState, TOut> func, in TState state) => this.RoomTaskScheduler.ScheduleTaskAsync(func, state);
+	public ValueTask<TOut> ScheduleTaskAsync<TOut>(Func<IRoom, ValueTask<TOut>> func) => this.RoomTaskScheduler.ScheduleTaskAsync(func);
+	public ValueTask<TOut> ScheduleTaskAsync<TState, TOut>(Func<IRoom, TState, ValueTask<TOut>> func, in TState state) => this.RoomTaskScheduler.ScheduleTaskAsync(func, state);
 
 	public void ScheduleUpdateTask(IRoomTask task)
 	{
@@ -167,108 +144,9 @@ internal sealed class Room : IRoom
 		}
 	}
 
-	public ValueTask<TOut> ScheduleTaskAsync<TTask, TOut>(in TTask task)
-		where TTask : IRoomTask<TOut>
-	{
-		//If we can grab the ticking lock, we can just execute
-		//the task without needing to worry about threading
-		if (this.tickingLock.TryEnter())
-		{
-			try
-			{
-				return ValueTask.FromResult(task.Execute(this));
-			}
-			finally
-			{
-				this.tickingLock.Exit();
-			}
-		}
-		else
-		{
-			AsyncRoomTask<TOut> asyncTask = new(task);
-
-			this.ScheduleTaskSlow(asyncTask);
-
-			return new ValueTask<TOut>(asyncTask.Task);
-		}
-	}
-
-	private void ScheduleTaskSlow(IRoomTask task)
-	{
-		//Schedule the task to be run after ticking lock releases
-		if (!this.scheduledTasks.Writer.TryWrite(task))
-		{
-			//We are disposing, nothing to run anymore
-			return;
-		}
-
-		//Are we currently executing the tasks?
-		if (this.scheduledTasksLock.TryEnter())
-		{
-			try
-			{
-				//We are not currently executing tasks, but are we still ticking?
-				if (this.tickingLock.TryEnter())
-				{
-					//We aren't ticking, try to run all of the schedules tasks
-					try
-					{
-						this.ExecuteTasksNoLock();
-					}
-					finally
-					{
-						this.tickingLock.Exit();
-					}
-				}
-				else
-				{
-					//We are still ticking, the scheduled tasks will be run as soon as its done
-				}
-			}
-			finally
-			{
-				this.scheduledTasksLock.Exit();
-			}
-		}
-		else
-		{
-			//We are currently executing tasks, try to enter to the lock
-			//to ensure we run the task asap as we might already be
-			//exiting the loop while posted the task
-			using (this.tickingLock.Enter())
-			{
-				using (this.scheduledTasksLock.Enter())
-				{
-					this.ExecuteTasksNoLock();
-				}
-			}
-		}
-	}
-
 	internal ValueTask SendAsync<T>(in T packet)
 		where T : IGameOutgoingPacket
 	{
 		return new ValueTask(this.roomClients.SendAsync(packet));
-	}
-
-	private sealed class AsyncRoomTask<T> : IRoomTask
-	{
-		private readonly TaskCompletionSource<T> taskCompletionSource;
-
-		private readonly IRoomTask<T> task;
-
-		internal AsyncRoomTask(IRoomTask<T> task)
-		{
-			this.taskCompletionSource = new TaskCompletionSource<T>();
-
-			this.task = task;
-		}
-
-		internal Task<T> Task => this.taskCompletionSource.Task;
-
-		public void Execute(IRoom room)
-		{
-			this.taskCompletionSource.SetResult(this.task.Execute(room));
-		}
 	}
 }

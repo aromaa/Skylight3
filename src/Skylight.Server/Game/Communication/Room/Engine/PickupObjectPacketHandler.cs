@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Net.Communication.Attributes;
 using Skylight.API.Game.Clients;
 using Skylight.API.Game.Inventory.Items;
-using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Wall;
 using Skylight.API.Game.Rooms.Units;
@@ -66,7 +65,7 @@ internal sealed class PickupObjectPacketHandler<T> : UserPacketHandler<T>
 	}
 
 	[StructLayout(LayoutKind.Auto)]
-	private readonly struct PickupFloorItemTask : IClientTask, IRoomTask<IFloorRoomItem?>
+	private readonly struct PickupFloorItemTask : IClientTask
 	{
 		internal IDbContextFactory<SkylightContext> DbContextFactory { get; init; }
 
@@ -78,7 +77,20 @@ internal sealed class PickupObjectPacketHandler<T> : UserPacketHandler<T>
 
 		public async Task ExecuteAsync(IClient client)
 		{
-			IFloorRoomItem? item = await this.RoomUnit.Room.ScheduleTaskAsync<PickupFloorItemTask, IFloorRoomItem?>(this).ConfigureAwait(false);
+			IFloorRoomItem? item = await this.RoomUnit.Room.ScheduleTaskAsync(static (room, state) =>
+			{
+				if (!state.RoomUnit.InRoom || !room.ItemManager.TryGetFloorItem(state.ItemId, out IFloorRoomItem? item))
+				{
+					return default;
+				}
+
+				room.ItemManager.RemoveItem(item);
+
+				state.RoomUnit.User.Inventory.TryAddFloorItem(state.FurnitureInventoryItemFactory.CreateFurnitureItem(item.Id, item.Owner, item.Furniture, null));
+
+				return item;
+			}, (this.RoomUnit, this.ItemId, this.FurnitureInventoryItemFactory)).ConfigureAwait(false);
+
 			if (item is null)
 			{
 				return;
@@ -99,24 +111,10 @@ internal sealed class PickupObjectPacketHandler<T> : UserPacketHandler<T>
 
 			await dbContext.SaveChangesAsync().ConfigureAwait(false);
 		}
-
-		public IFloorRoomItem? Execute(IRoom room)
-		{
-			if (!this.RoomUnit.InRoom || !room.ItemManager.TryGetFloorItem(this.ItemId, out IFloorRoomItem? item))
-			{
-				return null;
-			}
-
-			room.ItemManager.RemoveItem(item);
-
-			this.RoomUnit.User.Inventory.TryAddFloorItem(this.FurnitureInventoryItemFactory.CreateFurnitureItem(item.Id, item.Owner, item.Furniture, null));
-
-			return item;
-		}
 	}
 
 	[StructLayout(LayoutKind.Auto)]
-	private readonly struct PickupWallItemTask : IClientTask, IRoomTask<IWallRoomItem?>
+	private readonly struct PickupWallItemTask : IClientTask
 	{
 		internal IDbContextFactory<SkylightContext> DbContextFactory { get; init; }
 
@@ -128,7 +126,20 @@ internal sealed class PickupObjectPacketHandler<T> : UserPacketHandler<T>
 
 		public async Task ExecuteAsync(IClient client)
 		{
-			IWallRoomItem? item = await this.RoomUnit.Room.ScheduleTaskAsync<PickupWallItemTask, IWallRoomItem?>(this).ConfigureAwait(false);
+			IWallRoomItem? item = await this.RoomUnit.Room.ScheduleTaskAsync(static (room, state) =>
+			{
+				if (!state.RoomUnit.InRoom || !room.ItemManager.TryGetWallItem(state.ItemId, out IWallRoomItem? item))
+				{
+					return default;
+				}
+
+				room.ItemManager.RemoveItem(item);
+
+				state.RoomUnit.User.Inventory.TryAddWallItem(state.FurnitureInventoryItemFactory.CreateFurnitureItem(item.Id, item.Owner, item.Furniture, null));
+
+				return item;
+			}, this).ConfigureAwait(false);
+
 			if (item is null)
 			{
 				return;
@@ -148,20 +159,6 @@ internal sealed class PickupObjectPacketHandler<T> : UserPacketHandler<T>
 			wallItem.RoomId = null;
 
 			await dbContext.SaveChangesAsync().ConfigureAwait(false);
-		}
-
-		public IWallRoomItem? Execute(IRoom room)
-		{
-			if (!this.RoomUnit.InRoom || !room.ItemManager.TryGetWallItem(this.ItemId, out IWallRoomItem? item))
-			{
-				return null;
-			}
-
-			room.ItemManager.RemoveItem(item);
-
-			this.RoomUnit.User.Inventory.TryAddWallItem(this.FurnitureInventoryItemFactory.CreateFurnitureItem(item.Id, item.Owner, item.Furniture, null));
-
-			return item;
 		}
 	}
 }

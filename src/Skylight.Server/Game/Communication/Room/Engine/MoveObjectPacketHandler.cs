@@ -1,8 +1,5 @@
-﻿using System.Runtime.InteropServices;
-using Net.Communication.Attributes;
-using Skylight.API.Game.Rooms;
+﻿using Net.Communication.Attributes;
 using Skylight.API.Game.Rooms.Items.Floor;
-using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
 using Skylight.Protocol.Packets.Incoming.Room.Engine;
@@ -21,40 +18,19 @@ internal sealed class MoveObjectPacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		roomUnit.Room.ScheduleTask(new MoveObjectTask
+		roomUnit.Room.ScheduleTask(static (room, state) =>
 		{
-			RoomUnit = roomUnit,
-
-			ItemId = packet.Id,
-
-			Location = new Point2D(packet.X, packet.Y),
-			Direction = packet.Direction,
-		});
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	private readonly struct MoveObjectTask : IRoomTask
-	{
-		internal IUserRoomUnit RoomUnit { get; init; }
-
-		internal int ItemId { get; init; }
-
-		internal Point2D Location { get; init; }
-		internal int Direction { get; init; }
-
-		public void Execute(IRoom room)
-		{
-			if (!this.RoomUnit.InRoom)
+			if (!state.RoomUnit.InRoom)
 			{
 				return;
 			}
 
-			if (!room.ItemManager.TryGetFloorItem(this.ItemId, out IFloorRoomItem? item))
+			if (!room.ItemManager.TryGetFloorItem(state.ItemId, out IFloorRoomItem? item))
 			{
 				return;
 			}
 
-			room.ItemManager.MoveItem(item, this.Location, this.Direction);
-		}
+			room.ItemManager.MoveItem(item, state.Location, state.Direction);
+		}, (RoomUnit: roomUnit, ItemId: packet.Id, Location: new Point2D(packet.X, packet.Y), Direction: packet.Direction));
 	}
 }

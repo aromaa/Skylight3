@@ -68,7 +68,7 @@ internal sealed class EditSongPacketHandler<T> : UserPacketHandler<T>
 
 			this.Unit.User.SendAsync(new SongInfoOutgoingPacket(songEntity.Id, songEntity.Name, songEntity.Data));
 
-			this.Unit.Room.ScheduleTask(this);
+			await this.Unit.Room.ScheduleTaskAsync(this).ConfigureAwait(false);
 		}
 
 		public void Execute(IRoom room)

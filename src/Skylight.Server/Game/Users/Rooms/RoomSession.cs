@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using Skylight.API.Game.Rooms;
+﻿using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Game.Users.Rooms;
@@ -80,22 +79,11 @@ internal sealed class RoomSession : IRoomSession
 			return;
 		}
 
-		this.Room!.ScheduleTask(new LeaveRoomTask
+		this.Room!.ScheduleTask(static (room, session) =>
 		{
-			Unit = this.Unit!
-		});
-	}
+			room.Exit(session.Unit!.User);
 
-	[StructLayout(LayoutKind.Auto)]
-	private readonly struct LeaveRoomTask : IRoomTask
-	{
-		internal IUserRoomUnit Unit { get; init; }
-
-		public void Execute(IRoom room)
-		{
-			room.Exit(this.Unit.User);
-
-			room.UnitManager.RemoveUnit(this.Unit);
-		}
+			room.UnitManager.RemoveUnit(session.Unit);
+		}, this);
 	}
 }

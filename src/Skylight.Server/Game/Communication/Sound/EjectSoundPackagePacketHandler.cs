@@ -1,10 +1,7 @@
-﻿using System.Runtime.InteropServices;
-using Net.Communication.Attributes;
+﻿using Net.Communication.Attributes;
 using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Inventory.Items.Floor;
-using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Interactions;
-using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.Protocol.Packets.Data.Sound;
 using Skylight.Protocol.Packets.Incoming.Sound;
@@ -24,32 +21,17 @@ internal sealed class EjectSoundPackagePacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		unit.Room.ScheduleTask(new EjectSoundPackageTask
+		unit.Room.ScheduleTask(static (room, state) =>
 		{
-			Unit = unit,
-
-			Slot = packet.Slot
-		});
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	private readonly struct EjectSoundPackageTask : IRoomTask
-	{
-		internal IUserRoomUnit Unit { get; init; }
-
-		internal int Slot { get; init; }
-
-		public void Execute(IRoom room)
-		{
-			if (!this.Unit.InRoom || !this.Unit.Room.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
+			if (!state.RoomUnit.InRoom || !state.RoomUnit.Room.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
 			{
 				return;
 			}
 
-			soundMachine.RemoveSoundSet(this.Slot);
+			soundMachine.RemoveSoundSet(state.Slot);
 
 			List<int> soundSets = new();
-			foreach (IFloorInventoryItem item in this.Unit.User.Inventory.FloorItems)
+			foreach (IFloorInventoryItem item in state.RoomUnit.User.Inventory.FloorItems)
 			{
 				if (item is not ISoundSetInventoryItem soundSet)
 				{
@@ -64,7 +46,7 @@ internal sealed class EjectSoundPackagePacketHandler<T> : UserPacketHandler<T>
 				soundSets.Add(soundSet.Furniture.SoundSetId);
 			}
 
-			this.Unit.User.SendAsync(new UserSoundPackagesOutgoingPacket(soundSets));
+			state.RoomUnit.User.SendAsync(new UserSoundPackagesOutgoingPacket(soundSets));
 
 			List<SoundSetData> filledSlots = new();
 			foreach ((int slot, ISoundSetFurniture soundSet) in soundMachine.SoundSets)
@@ -72,7 +54,7 @@ internal sealed class EjectSoundPackagePacketHandler<T> : UserPacketHandler<T>
 				filledSlots.Add(new SoundSetData(slot, soundSet.SoundSetId, soundSet.Samples));
 			}
 
-			this.Unit.User.SendAsync(new TraxSoundPackagesOutgoingPacket(soundMachine.Furniture.SoundSetSlotCount, filledSlots));
-		}
+			state.RoomUnit.User.SendAsync(new TraxSoundPackagesOutgoingPacket(soundMachine.Furniture.SoundSetSlotCount, filledSlots));
+		}, (RoomUnit: unit, Slot: packet.Slot));
 	}
 }

@@ -1,7 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using Net.Communication.Attributes;
-using Skylight.API.Game.Rooms;
-using Skylight.API.Game.Rooms.Units;
+﻿using Net.Communication.Attributes;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
 using Skylight.Protocol.Packets.Incoming.Room.Engine;
@@ -20,29 +17,16 @@ internal sealed class MoveAvatarPacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		roomUnit.Room.ScheduleTask(new MoveAvatarTask
+		Point2D location = new(packet.X, packet.Y);
+
+		roomUnit.Room.ScheduleTask(static (_, state) =>
 		{
-			RoomUnit = roomUnit,
-
-			Location = new Point2D(packet.X, packet.Y)
-		});
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	private readonly struct MoveAvatarTask : IRoomTask
-	{
-		internal IUserRoomUnit RoomUnit { get; init; }
-
-		internal Point2D Location { get; init; }
-
-		public void Execute(IRoom room)
-		{
-			if (!this.RoomUnit.InRoom)
+			if (!state.RoomUnit.InRoom)
 			{
 				return;
 			}
 
-			this.RoomUnit.PathfindTo(this.Location);
-		}
+			state.RoomUnit.PathfindTo(state.Location);
+		}, (RoomUnit: roomUnit, Location: location));
 	}
 }

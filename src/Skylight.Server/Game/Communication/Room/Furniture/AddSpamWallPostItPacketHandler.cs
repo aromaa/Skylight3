@@ -3,12 +3,10 @@ using System.Buffers.Text;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Net.Communication.Attributes;
 using Skylight.API.Game.Clients;
 using Skylight.API.Game.Inventory.Items.Wall;
-using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Interactions;
 using Skylight.API.Game.Rooms.Items.Wall;
@@ -117,7 +115,7 @@ internal sealed class AddSpamWallPostItPacketHandler<T> : UserPacketHandler<T>
 	}
 
 	[StructLayout(LayoutKind.Auto)]
-	private readonly struct PrePlaceSpamWallPostItTask : IClientTask, IRoomTask<bool>
+	private readonly struct PrePlaceSpamWallPostItTask : IClientTask
 	{
 		internal IDbContextFactory<SkylightContext> DbContextFactory { get; init; }
 
@@ -135,7 +133,12 @@ internal sealed class AddSpamWallPostItPacketHandler<T> : UserPacketHandler<T>
 
 		public async Task ExecuteAsync(IClient client)
 		{
-			bool canPlace = await this.Unit.Room.ScheduleTaskAsync<PrePlaceSpamWallPostItTask, bool>(this).ConfigureAwait(false);
+			bool canPlace = await this.Unit.Room.ScheduleTaskAsync(static (room, state) =>
+			{
+				return state.Unit.InRoom && room.ItemManager.CanPlaceItem(state.Item.Furniture, state.Location, state.Position, state.Unit.User)
+										 && room.ItemManager.TryGetInteractionHandler(out IStickyNoteInteractionHandler? handler) && handler.HasStickyNotePole;
+			}, (this.Unit, this.Item, this.Location, this.Position)).ConfigureAwait(false);
+
 			if (!canPlace)
 			{
 				return;
@@ -153,20 +156,30 @@ internal sealed class AddSpamWallPostItPacketHandler<T> : UserPacketHandler<T>
 				item = this.Item;
 			}
 
-			(Point2D Location, Point2D Position, JsonDocument? ExtraData)? result = await this.Unit.Room.ScheduleTaskAsync<PlaceSpamWallPostItTask, (Point2D, Point2D, JsonDocument?)?>(new PlaceSpamWallPostItTask
+			WallItemEntity? result = await this.Unit.Room.ScheduleTaskAsync(static (room, state) =>
 			{
-				ItemStrategy = this.ItemStrategy,
+				if (!state.Unit.InRoom || !room.ItemManager.CanPlaceItem(state.Item.Furniture, state.Location, state.Position, state.Unit.User)
+									   || !state.Unit.User.Inventory.TryRemoveWallItem(state.Item))
+				{
+					return null;
+				}
 
-				Unit = this.Unit,
+				IStickyNoteRoomItem item = state.ItemStrategy.CreateWallItem(room, state.Item, state.Location, state.Position, state.Color, state.Text);
 
-				Item = item,
+				room.ItemManager.AddItem(item);
 
-				Location = this.Location,
-				Position = this.Position,
+				return new WallItemEntity
+				{
+					Id = item.Id,
+					UserId = state.Item.Owner.Id,
 
-				Color = this.Color,
-				Text = this.Text
-			}).ConfigureAwait(false);
+					LocationX = item.Location.X,
+					LocationY = item.Location.Y,
+					PositionX = item.Position.X,
+					PositionY = item.Position.Y,
+					ExtraData = item.AsExtraData()
+				};
+			}, (this.ItemStrategy, this.Unit, Item: item, this.Location, this.Position, this.Color, this.Text)).ConfigureAwait(false);
 
 			if (result is null)
 			{
@@ -175,59 +188,9 @@ internal sealed class AddSpamWallPostItPacketHandler<T> : UserPacketHandler<T>
 
 			await using SkylightContext dbContext = await this.DbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
-			WallItemEntity itemEntity = new()
-			{
-				Id = item.Id,
-				UserId = this.Item.Owner.Id
-			};
-
-			dbContext.WallItems.Attach(itemEntity);
-
-			itemEntity.RoomId = this.Unit.Room.Info.Id;
-			itemEntity.LocationX = result.Value.Location.X;
-			itemEntity.LocationY = result.Value.Location.Y;
-			itemEntity.PositionX = result.Value.Position.X;
-			itemEntity.PositionY = result.Value.Position.Y;
-			itemEntity.ExtraData = result.Value.ExtraData;
+			dbContext.WallItems.Update(result);
 
 			await dbContext.SaveChangesAsync().ConfigureAwait(false);
-		}
-
-		public bool Execute(IRoom room)
-		{
-			return this.Unit.InRoom && room.ItemManager.CanPlaceItem(this.Item.Furniture, this.Location, this.Position, this.Unit.User)
-				&& room.ItemManager.TryGetInteractionHandler(out IStickyNoteInteractionHandler? handler) && handler.HasStickyNotePole;
-		}
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	private readonly struct PlaceSpamWallPostItTask : IRoomTask<(Point2D, Point2D, JsonDocument?)?>
-	{
-		internal IWallRoomItemStrategy ItemStrategy { get; init; }
-
-		internal IUserRoomUnit Unit { get; init; }
-
-		internal IStickyNoteInventoryItem Item { get; init; }
-
-		internal Point2D Location { get; init; }
-		internal Point2D Position { get; init; }
-
-		internal Color Color { get; init; }
-		internal string Text { get; init; }
-
-		public (Point2D, Point2D, JsonDocument?)? Execute(IRoom room)
-		{
-			if (!this.Unit.InRoom || !room.ItemManager.CanPlaceItem(this.Item.Furniture, this.Location, this.Position, this.Unit.User)
-								  || !this.Unit.User.Inventory.TryRemoveWallItem(this.Item))
-			{
-				return null;
-			}
-
-			IStickyNoteRoomItem item = this.ItemStrategy.CreateWallItem(room, this.Item, this.Location, this.Position, this.Color, this.Text);
-
-			room.ItemManager.AddItem(item);
-
-			return (item.Location, item.Position, item.AsExtraData());
 		}
 	}
 }

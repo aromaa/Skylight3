@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using Net.Communication.Attributes;
-using Skylight.API.Game.Rooms;
+﻿using Net.Communication.Attributes;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Wall;
 using Skylight.API.Game.Rooms.Units;
@@ -32,33 +30,22 @@ internal sealed class GetRoomEntryDataPacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		roomSession.Room!.ScheduleTask(new EnterRoomTask
+		roomSession.Room!.ScheduleTask(static (room, roomSession) =>
 		{
-			Session = roomSession
-		});
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	private readonly struct EnterRoomTask : IRoomTask
-	{
-		internal IRoomSession Session { get; init; }
-
-		public void Execute(IRoom room)
-		{
-			if (!this.Session.TryChangeState(IRoomSession.SessionState.InRoom, IRoomSession.SessionState.EnterRoom))
+			if (!roomSession.TryChangeState(IRoomSession.SessionState.InRoom, IRoomSession.SessionState.EnterRoom))
 			{
 				return;
 			}
 
-			room.Enter(this.Session.User);
+			room.Enter(roomSession.User);
 
-			this.Session.User.SendAsync(new RoomEntryTileOutgoingPacket(room.Map.Layout.DoorLocation.X, room.Map.Layout.DoorLocation.Y, room.Map.Layout.DoorDirection));
-			this.Session.User.SendAsync(new HeightMapOutgoingPacket
+			roomSession.User.SendAsync(new RoomEntryTileOutgoingPacket(room.Map.Layout.DoorLocation.X, room.Map.Layout.DoorLocation.Y, room.Map.Layout.DoorDirection));
+			roomSession.User.SendAsync(new HeightMapOutgoingPacket
 			{
 				Width = room.Map.Layout.Size.X,
 				HeightMap = Enumerable.Repeat((short)0, room.Map.Layout.Size.X * room.Map.Layout.Size.Y).ToArray()
 			});
-			this.Session.User.SendAsync(new FloorHeightMapOutgoingPacket
+			roomSession.User.SendAsync(new FloorHeightMapOutgoingPacket
 			{
 				Scale = false,
 				FixedWallsHeight = -1,
@@ -80,9 +67,9 @@ internal sealed class GetRoomEntryDataPacketHandler<T> : UserPacketHandler<T>
 				items.Add(new ItemData(roomItem.Id, roomItem.Furniture.Id, new WallPosition(roomItem.Location.X, roomItem.Location.Y, roomItem.Position.X, roomItem.Position.Y), roomItem.GetItemData()));
 			}
 
-			this.Session.User.SendAsync(new PublicRoomObjectsOutgoingPacket(publicRoomObjects));
-			this.Session.User.SendAsync(new ObjectsOutgoingPacket(objects, Array.Empty<(int, string)>()));
-			this.Session.User.SendAsync(new ItemsOutgoingPacket(items, Array.Empty<(int, string)>()));
+			roomSession.User.SendAsync(new PublicRoomObjectsOutgoingPacket(publicRoomObjects));
+			roomSession.User.SendAsync(new ObjectsOutgoingPacket(objects, Array.Empty<(int, string)>()));
+			roomSession.User.SendAsync(new ItemsOutgoingPacket(items, Array.Empty<(int, string)>()));
 
 			List<RoomUnitData> units = new();
 
@@ -110,13 +97,13 @@ internal sealed class GetRoomEntryDataPacketHandler<T> : UserPacketHandler<T>
 				});
 			}
 
-			this.Session.User.SendAsync(new UsersOutgoingPacket(units));
+			roomSession.User.SendAsync(new UsersOutgoingPacket(units));
 
-			this.Session.User.SendAsync(new RoomVisualizationSettingsOutgoingPacket(false, 0, 0));
+			roomSession.User.SendAsync(new RoomVisualizationSettingsOutgoingPacket(false, 0, 0));
 
-			this.Session.User.SendAsync(new RoomEntryInfoOutgoingPacket(room.Info.Id, true));
+			roomSession.User.SendAsync(new RoomEntryInfoOutgoingPacket(room.Info.Id, true));
 
-			this.Session.EnterRoom(room.UnitManager.CreateUnit(this.Session.User));
-		}
+			roomSession.EnterRoom(room.UnitManager.CreateUnit(roomSession.User));
+		}, roomSession);
 	}
 }

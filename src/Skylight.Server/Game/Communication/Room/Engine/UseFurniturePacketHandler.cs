@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using Net.Communication.Attributes;
-using Skylight.API.Game.Rooms;
+﻿using Net.Communication.Attributes;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Users;
 using Skylight.Protocol.Packets.Incoming.Room.Engine;
@@ -19,29 +17,12 @@ internal sealed class UseFurniturePacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		roomUnit.Room.ScheduleTask(new UseFurnitureTask
+		roomUnit.Room.ScheduleTask(static (room, state) =>
 		{
-			User = user,
-
-			Id = packet.Id,
-			State = packet.State
-		});
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	private readonly struct UseFurnitureTask : IRoomTask
-	{
-		public IUser User { get; init; }
-
-		public int Id { get; init; }
-		public int State { get; init; }
-
-		public void Execute(IRoom room)
-		{
-			if (!room.ItemManager.TryGetFloorItem(this.Id, out IFloorRoomItem? item))
+			if (!room.ItemManager.TryGetFloorItem(state.ItemId, out IFloorRoomItem? item))
 			{
 				return;
 			}
-		}
+		}, (ItemId: packet.Id, State: packet.State));
 	}
 }
