@@ -93,7 +93,7 @@ internal partial class AchievementManager
 						badgePointLimits.Add(levelEntity.BadgeCode, levelEntity.ProgressRequirement);
 					}
 
-					achievements.Add(achievementEntity.Id, new Achievement(achievementEntity.Id, achievementEntity.Category, achievementEntity.DisplayProgress, levels.MoveToImmutable()));
+					achievements.Add(achievementEntity.Id, new Achievement(achievementEntity.Id, achievementEntity.Category, achievementEntity.DisplayProgress, achievementEntity.State, levels.MoveToImmutable()));
 				}
 
 				return new Cache(achievements, badgePointLimits);

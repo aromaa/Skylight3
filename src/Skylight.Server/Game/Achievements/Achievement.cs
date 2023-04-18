@@ -11,15 +11,19 @@ internal sealed class Achievement : IAchievement
 
 	public bool DisplayProgress { get; }
 
+	public short State { get; }
+
 	public ImmutableArray<IAchievementLevel> Levels { get; }
 
-	internal Achievement(int id, string category, bool displayProgress, ImmutableArray<IAchievementLevel> levels)
+	internal Achievement(int id, string category, bool displayProgress, short state, ImmutableArray<IAchievementLevel> levels)
 	{
 		this.Id = id;
 
 		this.Category = category;
 
 		this.DisplayProgress = displayProgress;
+
+		this.State = state;
 
 		this.Levels = levels;
 	}

@@ -8,5 +8,7 @@ public class AchievementEntity
 
 	public bool DisplayProgress { get; set; }
 
+	public short State { get; set; }
+
 	public List<AchievementLevelEntity>? Levels { get; set; }
 }

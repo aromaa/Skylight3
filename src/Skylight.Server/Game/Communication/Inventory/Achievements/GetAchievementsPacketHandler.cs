@@ -25,6 +25,12 @@ internal sealed class GetAchievementsPacketHandler<T> : UserPacketHandler<T>
 
 		foreach (IAchievement achievement in this.achievementManager.Achievements)
 		{
+			//State definitions - 0 hidden, 1 enabled, 2 archived, 3 seasonal
+			if (achievement.State == 0)
+			{
+				continue;
+			}
+
 			//Level 0: currentLevel = null and nextLevel = achievement.Levels[0]
 			//Level 1: currentLevel = non null and nextLevel = currentLevel.NextLevel
 			//Level max: currentLevel = non null and nextLevel = currentLevel
@@ -51,7 +57,7 @@ internal sealed class GetAchievementsPacketHandler<T> : UserPacketHandler<T>
 				NextLevelRewardPointsType = 0,
 
 				DisplayMode = achievement.DisplayProgress ? 0 : 1,
-				State = 0
+				State = achievement.State
 			});
 		}
 

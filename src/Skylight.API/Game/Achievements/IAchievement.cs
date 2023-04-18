@@ -10,5 +10,7 @@ public interface IAchievement
 
 	public bool DisplayProgress { get; }
 
+	public short State { get; }
+
 	public ImmutableArray<IAchievementLevel> Levels { get; }
 }
