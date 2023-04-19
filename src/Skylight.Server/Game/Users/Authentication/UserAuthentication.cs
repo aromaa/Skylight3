@@ -71,8 +71,12 @@ internal sealed class UserAuthentication : IUserAuthentication
 		await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
 		{
 			UserSettingsEntity? userSettings = await dbContext.UserSettings.FirstOrDefaultAsync(s => s.UserId == profile.Id).ConfigureAwait(false);
+			if (userSettings is null)
+			{
+				return null;
+			}
 
-			User user = new(client, profile);
+			User user = new(client, profile, new UserSettings(userSettings));
 
 			IBadgeSnapshot badges = this.badgeManager.Current;
 			IFurnitureSnapshot furnitures = this.furnitureManager.Current;

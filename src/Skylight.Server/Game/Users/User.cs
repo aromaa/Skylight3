@@ -13,15 +13,17 @@ internal sealed class User : IUser
 {
 	public IClient Client { get; }
 	public IUserProfile Profile { get; }
+	public IUserSettings Settings { get; }
 	public IInventory Inventory { get; }
 
 	private IRoomSession? roomSession;
 
-	public User(IClient client, IUserProfile profile)
+	public User(IClient client, IUserProfile profile, IUserSettings settings)
 	{
 		this.Client = client;
 
 		this.Profile = profile;
+		this.Settings = settings;
 
 		this.Inventory = new UserInventory(this);
 	}

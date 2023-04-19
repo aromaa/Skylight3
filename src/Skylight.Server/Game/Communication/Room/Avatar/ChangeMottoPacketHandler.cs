@@ -9,6 +9,7 @@ using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Incoming.Room.Avatar;
 using Skylight.Protocol.Packets.Manager;
 using Skylight.Protocol.Packets.Outgoing.Room.Engine;
+using Skylight.Server.Game.Clients;
 
 namespace Skylight.Server.Game.Communication.Room.Avatar;
 
@@ -31,7 +32,7 @@ internal sealed class ChangeMottoPacketHandler<T> : UserPacketHandler<T>
 		}
 
 		string motto = Encoding.UTF8.GetString(packet.Motto);
-		if (motto.Length is > 38)
+		if (motto.Length > 38 || motto == user!.Profile.Motto)
 		{
 			return;
 		}

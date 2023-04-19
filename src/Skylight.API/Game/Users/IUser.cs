@@ -11,6 +11,7 @@ public interface IUser : IPacketSender
 	public IUserProfile Profile { get; }
 	public IInventory Inventory { get; }
 	public IRoomSession? RoomSession { get; }
+	public IUserSettings Settings { get; }
 
 	public IRoomSession OpenRoomSession(int roomId);
 	public bool CloseRoomSession(IRoomSession session);
