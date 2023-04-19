@@ -7,6 +7,7 @@ public interface IUserInfo
 	public string Username { get; set; }
 	public string Figure { get; set; }
 	public string Gender { get; set; }
+	public string Motto { get; set; }
 
 	public DateTimeOffset LastOnline { get; set; }
 }

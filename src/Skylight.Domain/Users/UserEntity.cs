@@ -11,8 +11,11 @@ public class UserEntity
 	public string Username { get; set; } = null!;
 	public string Figure { get; set; } = null!;
 	public string Gender { get; set; } = null!;
+	public string Motto { get; set; } = null!;
 
 	public DateTimeOffset LastOnline { get; set; }
+
+	public UserSettingsEntity? Settings { get; set; }
 
 	public List<FloorItemEntity>? FloorItems { get; set; }
 	public List<WallItemEntity>? WallItems { get; set; }

@@ -85,7 +85,7 @@ internal sealed class RoomUnitManager : IRoomUnitManager
 				{
 					IdentifierId = userUnit.User.Profile.Id,
 					Name = userUnit.User.Profile.Username,
-					Motto = "Skylight",
+					Motto = userUnit.User.Profile.Motto,
 					Figure = userUnit.User.Profile.Figure,
 					RoomUnitId = userUnit.Id,
 					X = unit.Position.X,
