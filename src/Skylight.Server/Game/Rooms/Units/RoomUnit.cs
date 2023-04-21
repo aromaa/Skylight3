@@ -21,7 +21,9 @@ internal sealed class RoomUnit : IUserRoomUnit
 	public Point3D Position => this.position;
 
 	private Point2D rotation;
-	public Point2D Rotation => this.rotation;
+	public int BodyRotation => this.rotation.X;
+	public int HeadRotation { get; private set; }
+	public bool RotationChanged { get; private set; } = false;
 
 	private Point3D nextStepPosition;
 	public Point3D NextStepPosition => this.nextStepPosition;
@@ -31,10 +33,11 @@ internal sealed class RoomUnit : IUserRoomUnit
 
 	public bool Moving => this.position.XY != this.nextStepPosition.XY;
 	public bool Pathfinding => this.path.Count > 0;
+	private readonly RoomUnitManager roomUnitManager;
 
 	private Stack<Point2D> path;
 
-	internal RoomUnit(Room room, User user, int id, Point3D position)
+	internal RoomUnit(Room room, User user, int id, Point3D position, RoomUnitManager roomUnitManager)
 	{
 		this.Room = room;
 
@@ -45,6 +48,8 @@ internal sealed class RoomUnit : IUserRoomUnit
 		this.SetPositionInternal(position);
 
 		this.path = new Stack<Point2D>();
+
+		this.roomUnitManager = roomUnitManager;
 	}
 
 	public void Tick()
@@ -68,6 +73,7 @@ internal sealed class RoomUnit : IUserRoomUnit
 			nextTile.WalkOn(this);
 
 			this.rotation = new Point2D(Walk(this.position.XY, this.nextStepPosition.XY), Walk(this.position.XY, this.nextStepPosition.XY));
+			this.HeadRotation = this.rotation.X;
 		}
 	}
 
@@ -134,5 +140,76 @@ internal sealed class RoomUnit : IUserRoomUnit
 		{
 			return 0;
 		}
+	}
+
+	public async Task LookToAsync(int x, int y)
+	{
+		if (this.Pathfinding || this.Moving)
+		{
+			return;
+		}
+
+		Point2D target = new(x, y);
+
+		if (target == this.Position.XY)
+		{
+			return;
+		}
+
+		Point2D newRotation = CalculateRotation(this.Position.XY, target);
+
+		if (this.rotation != newRotation)
+		{
+			this.rotation = newRotation;
+			this.HeadRotation = newRotation.X;
+			this.RotationChanged = true;
+
+			await this.roomUnitManager.BroadcastRotationUpdateAsync(this).ConfigureAwait(false);
+		}
+	}
+
+	private static Point2D CalculateRotation(Point2D currentPosition, Point2D targetPosition)
+	{
+		int rotation;
+
+		if (currentPosition.X > targetPosition.X && currentPosition.Y > targetPosition.Y)
+		{
+			rotation = 7;
+		}
+		else if (currentPosition.X < targetPosition.X && currentPosition.Y < targetPosition.Y)
+		{
+			rotation = 3;
+		}
+		else if (currentPosition.X > targetPosition.X && currentPosition.Y < targetPosition.Y)
+		{
+			rotation = 5;
+		}
+		else if (currentPosition.X < targetPosition.X && currentPosition.Y > targetPosition.Y)
+		{
+			rotation = 1;
+		}
+		else if (currentPosition.X > targetPosition.X)
+		{
+			rotation = 6;
+		}
+		else if (currentPosition.X < targetPosition.X)
+		{
+			rotation = 2;
+		}
+		else if (currentPosition.Y < targetPosition.Y)
+		{
+			rotation = 4;
+		}
+		else
+		{
+			rotation = 0;
+		}
+
+		return new(rotation, rotation);
+	}
+
+	public void ResetRotationChanged()
+	{
+		this.RotationChanged = false;
 	}
 }

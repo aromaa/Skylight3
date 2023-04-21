@@ -46,7 +46,7 @@ internal sealed class RoomUnitManager : IRoomUnitManager
 
 				this.room.SendAsync(new UserUpdateOutgoingPacket(new List<RoomUnitUpdateData>
 				{
-					new(roomUnit.Id, roomUnit.Position.X, roomUnit.Position.Y, roomUnit.Position.Z, roomUnit.Rotation.X, roomUnit.Rotation.Y, roomUnit.Moving ? $"mv {roomUnit.NextStepPosition.X},{roomUnit.NextStepPosition.Y},{roomUnit.NextStepPosition.Z.ToString(CultureInfo.InvariantCulture)}" : string.Empty)
+					new(roomUnit.Id, roomUnit.Position.X, roomUnit.Position.Y, roomUnit.Position.Z, roomUnit.BodyRotation, roomUnit.HeadRotation, roomUnit.Moving ? $"mv {roomUnit.NextStepPosition.X},{roomUnit.NextStepPosition.Y},{roomUnit.NextStepPosition.Z.ToString(CultureInfo.InvariantCulture)}" : string.Empty)
 				}));
 
 				if (!roomUnit.Moving)
@@ -66,7 +66,7 @@ internal sealed class RoomUnitManager : IRoomUnitManager
 
 	public IUserRoomUnit CreateUnit(IUser user)
 	{
-		RoomUnit unit = new(this.room, (User)user, this.nextUnitId++, new Point3D(this.room.Map.Layout.DoorLocation.X, this.room.Map.Layout.DoorLocation.Y, 0));
+		RoomUnit unit = new(this.room, (User)user, this.nextUnitId++, new Point3D(this.room.Map.Layout.DoorLocation.X, this.room.Map.Layout.DoorLocation.Y, 0), this);
 
 		this.AddUnit(unit);
 
@@ -91,7 +91,7 @@ internal sealed class RoomUnitManager : IRoomUnitManager
 					X = unit.Position.X,
 					Y = unit.Position.Y,
 					Z = unit.Position.Z,
-					Direction = unit.Rotation.X,
+					Direction = unit.BodyRotation,
 					Type = 1,
 					Gender = userUnit.User.Profile.Gender,
 					GroupId = 0,
@@ -120,5 +120,13 @@ internal sealed class RoomUnitManager : IRoomUnitManager
 	{
 		this.movingUnits.Remove(unit);
 		this.movingUnits.AddLast(unit);
+	}
+
+	public async Task BroadcastRotationUpdateAsync(IRoomUnit unit)
+	{
+		await this.room.SendAsync(new UserUpdateOutgoingPacket(new List<RoomUnitUpdateData>
+		{
+			new(unit.Id, unit.Position.X, unit.Position.Y, unit.Position.Z, unit.BodyRotation, unit.HeadRotation, string.Empty)
+		})).ConfigureAwait(false);
 	}
 }
