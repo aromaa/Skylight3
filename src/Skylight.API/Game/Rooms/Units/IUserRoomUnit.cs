@@ -7,5 +7,5 @@ public interface IUserRoomUnit : IHumanRoomUnit
 {
 	public IUser User { get; }
 
-	void LookTo(Point2D target);
+	public void LookTo(Point2D target);
 }

@@ -17,14 +17,16 @@ internal sealed class LookToPacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		roomUnit.Room.ScheduleTask((r, state) =>
+		Point2D location = new(packet.X, packet.Y);
+
+		roomUnit.Room.ScheduleTask(static (r, state) =>
 		{
-			if (!state.RoomUnit.InRoom || roomUnit.Moving)
+			if (!state.RoomUnit.InRoom || state.RoomUnit.Moving)
 			{
 				return;
 			}
 
-			roomUnit.LookTo(new Point2D(state.Packet.X, state.Packet.Y));
-		}, (RoomUnit: roomUnit, Packet: packet));
+			state.RoomUnit.LookTo(state.Location);
+		}, (RoomUnit: roomUnit, Location: location));
 	}
 }
