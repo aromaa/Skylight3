@@ -6,5 +6,5 @@ public interface IUserRoomUnit : IHumanRoomUnit
 {
 	public IUser User { get; }
 
-	Task LookToAsync(int x, int y);
+	Task LookTo(int x, int y);
 }

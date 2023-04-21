@@ -21,7 +21,7 @@ namespace Skylight.Server.Game.Communication.Room.Avatar
 
 			if (!roomUnit.Moving)
 			{
-				roomUnit.LookToAsync(packet.X, packet.Y);
+				roomUnit.LookTo(packet.X, packet.Y);
 
 				user.SendAsync(new UserUpdateOutgoingPacket(new List<RoomUnitUpdateData>
 				{

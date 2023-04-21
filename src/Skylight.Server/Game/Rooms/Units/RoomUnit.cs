@@ -141,7 +141,7 @@ internal sealed class RoomUnit : IUserRoomUnit
 		}
 	}
 
-	public async Task LookToAsync(int x, int y)
+	public async Task LookTo(int x, int y)
 	{
 		if (this.Pathfinding || this.Moving)
 		{
