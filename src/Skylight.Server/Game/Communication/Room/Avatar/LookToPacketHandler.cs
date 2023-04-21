@@ -1,8 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Net.Communication.Attributes;
+﻿using Net.Communication.Attributes;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
-using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Data.Room.Engine;
 using Skylight.Protocol.Packets.Incoming.Room.Avatar;
 using Skylight.Protocol.Packets.Manager;
@@ -14,13 +12,6 @@ namespace Skylight.Server.Game.Communication.Room.Avatar
 	internal sealed class LookToPacketHandler<T> : UserPacketHandler<T>
 		where T : ILookToIncomingPacket
 	{
-		private readonly IDbContextFactory<SkylightContext> dbContextFactory;
-
-		public LookToPacketHandler(IDbContextFactory<SkylightContext> dbContextFactory)
-		{
-			this.dbContextFactory = dbContextFactory;
-		}
-
 		internal override void Handle(IUser user, in T packet)
 		{
 			if (user.RoomSession?.Unit is not IUserRoomUnit roomUnit)
