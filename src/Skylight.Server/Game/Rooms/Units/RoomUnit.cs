@@ -23,7 +23,6 @@ internal sealed class RoomUnit : IUserRoomUnit
 	private Point2D rotation;
 	public int BodyRotation => this.rotation.X;
 	public int HeadRotation { get; private set; }
-	public bool RotationChanged { get; private set; } = false;
 
 	private Point3D nextStepPosition;
 	public Point3D NextStepPosition => this.nextStepPosition;
@@ -162,7 +161,6 @@ internal sealed class RoomUnit : IUserRoomUnit
 		{
 			this.rotation = newRotation;
 			this.HeadRotation = newRotation.X;
-			this.RotationChanged = true;
 
 			await this.roomUnitManager.BroadcastRotationUpdateAsync(this).ConfigureAwait(false);
 		}
@@ -206,10 +204,5 @@ internal sealed class RoomUnit : IUserRoomUnit
 		}
 
 		return new(rotation, rotation);
-	}
-
-	public void ResetRotationChanged()
-	{
-		this.RotationChanged = false;
 	}
 }

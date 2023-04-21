@@ -14,8 +14,6 @@ public interface IRoomUnit
 	int BodyRotation { get; }
 	int HeadRotation { get; }
 
-	public bool RotationChanged { get; }
-
 	public Point3D NextStepPosition { get; }
 
 	public Point2D TargetLocation { get; }
