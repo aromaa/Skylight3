@@ -17,7 +17,7 @@ public interface IRoom
 
 	public int GameTime { get; }
 
-	ValueTask SendAsync<T>(in T packet)
+	public ValueTask SendAsync<T>(in T packet)
 		where T : IGameOutgoingPacket;
 
 	public Task LoadAsync(CancellationToken cancellationToken = default);

@@ -66,7 +66,7 @@ internal sealed class RoomUnitManager : IRoomUnitManager
 
 	public IUserRoomUnit CreateUnit(IUser user)
 	{
-		RoomUnit unit = new(this.room, (User)user, this.nextUnitId++, new Point3D(this.room.Map.Layout.DoorLocation.X, this.room.Map.Layout.DoorLocation.Y, 0), this);
+		RoomUnit unit = new(this, this.room, (User)user, this.nextUnitId++, new Point3D(this.room.Map.Layout.DoorLocation.X, this.room.Map.Layout.DoorLocation.Y, 0));
 
 		this.AddUnit(unit);
 

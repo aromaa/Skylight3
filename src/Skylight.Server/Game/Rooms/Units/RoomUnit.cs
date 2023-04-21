@@ -11,6 +11,7 @@ namespace Skylight.Server.Game.Rooms.Units;
 
 internal sealed class RoomUnit : IUserRoomUnit
 {
+	private readonly RoomUnitManager roomUnitManager;
 	public IRoom Room { get; }
 
 	public IUser User { get; }
@@ -33,12 +34,13 @@ internal sealed class RoomUnit : IUserRoomUnit
 
 	public bool Moving => this.position.XY != this.nextStepPosition.XY;
 	public bool Pathfinding => this.path.Count > 0;
-	private readonly RoomUnitManager roomUnitManager;
 
 	private Stack<Point2D> path;
 
-	internal RoomUnit(Room room, User user, int id, Point3D position, RoomUnitManager roomUnitManager)
+	internal RoomUnit(RoomUnitManager roomUnitManager, Room room, User user, int id, Point3D position)
 	{
+		this.roomUnitManager = roomUnitManager;
+
 		this.Room = room;
 
 		this.User = user;
@@ -48,8 +50,6 @@ internal sealed class RoomUnit : IUserRoomUnit
 		this.SetPositionInternal(position);
 
 		this.path = new Stack<Point2D>();
-
-		this.roomUnitManager = roomUnitManager;
 	}
 
 	public void Tick()
