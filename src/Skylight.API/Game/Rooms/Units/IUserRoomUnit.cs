@@ -6,5 +6,5 @@ public interface IUserRoomUnit : IHumanRoomUnit
 {
 	public IUser User { get; }
 
-	Task LookTo(int x, int y);
+	void LookTo(int x, int y);
 }

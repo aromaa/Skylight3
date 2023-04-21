@@ -3,6 +3,8 @@ using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
+using Skylight.Protocol.Packets.Data.Room.Engine;
+using Skylight.Protocol.Packets.Outgoing.Room.Engine;
 using Skylight.Server.Game.Users;
 
 namespace Skylight.Server.Game.Rooms.Units;
@@ -21,8 +23,7 @@ internal sealed class RoomUnit : IUserRoomUnit
 	public Point3D Position => this.position;
 
 	private Point2D rotation;
-	public int BodyRotation => this.rotation.X;
-	public int HeadRotation { get; private set; }
+	public Point2D Rotation => this.rotation;
 
 	private Point3D nextStepPosition;
 	public Point3D NextStepPosition => this.nextStepPosition;
@@ -71,8 +72,8 @@ internal sealed class RoomUnit : IUserRoomUnit
 			lastTile.WalkOff(this);
 			nextTile.WalkOn(this);
 
-			this.rotation = new Point2D(Walk(this.position.XY, this.nextStepPosition.XY), Walk(this.position.XY, this.nextStepPosition.XY));
-			this.HeadRotation = this.rotation.X;
+			int calculatedRotation = CalculateDirection(this.position.XY, this.nextStepPosition.XY);
+			this.rotation = new Point2D(calculatedRotation, calculatedRotation);
 		}
 	}
 
@@ -105,7 +106,7 @@ internal sealed class RoomUnit : IUserRoomUnit
 		((RoomUnitManager)this.Room.UnitManager).Move(this);
 	}
 
-	public static int Walk(Point2D from, Point2D target)
+	public static int CalculateDirection(Point2D from, Point2D target)
 	{
 		if (from.X > target.X && from.Y > target.Y)
 		{
@@ -141,7 +142,7 @@ internal sealed class RoomUnit : IUserRoomUnit
 		}
 	}
 
-	public async Task LookTo(int x, int y)
+	public void LookTo(int x, int y)
 	{
 		if (this.Pathfinding || this.Moving)
 		{
@@ -155,54 +156,16 @@ internal sealed class RoomUnit : IUserRoomUnit
 			return;
 		}
 
-		Point2D newRotation = CalculateRotation(this.Position.XY, target);
+		int newRotation = CalculateDirection(this.Position.XY, target);
 
-		if (this.rotation != newRotation)
+		if (this.rotation.X != newRotation)
 		{
-			this.rotation = newRotation;
-			this.HeadRotation = newRotation.X;
+			this.rotation = new Point2D(newRotation, newRotation);
 
-			await this.roomUnitManager.BroadcastRotationUpdateAsync(this).ConfigureAwait(false);
+			this.Room.SendAsync(new UserUpdateOutgoingPacket(new List<RoomUnitUpdateData>
+			{
+				new(this.Id, this.Position.X, this.Position.Y, this.Position.Z, this.Rotation.X, this.Rotation.Y, string.Empty)
+			}));
 		}
-	}
-
-	private static Point2D CalculateRotation(Point2D currentPosition, Point2D targetPosition)
-	{
-		int rotation;
-
-		if (currentPosition.X > targetPosition.X && currentPosition.Y > targetPosition.Y)
-		{
-			rotation = 7;
-		}
-		else if (currentPosition.X < targetPosition.X && currentPosition.Y < targetPosition.Y)
-		{
-			rotation = 3;
-		}
-		else if (currentPosition.X > targetPosition.X && currentPosition.Y < targetPosition.Y)
-		{
-			rotation = 5;
-		}
-		else if (currentPosition.X < targetPosition.X && currentPosition.Y > targetPosition.Y)
-		{
-			rotation = 1;
-		}
-		else if (currentPosition.X > targetPosition.X)
-		{
-			rotation = 6;
-		}
-		else if (currentPosition.X < targetPosition.X)
-		{
-			rotation = 2;
-		}
-		else if (currentPosition.Y < targetPosition.Y)
-		{
-			rotation = 4;
-		}
-		else
-		{
-			rotation = 0;
-		}
-
-		return new(rotation, rotation);
 	}
 }

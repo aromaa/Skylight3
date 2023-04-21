@@ -11,8 +11,7 @@ public interface IRoomUnit
 	public bool InRoom { get; }
 
 	public Point3D Position { get; }
-	int BodyRotation { get; }
-	int HeadRotation { get; }
+	public Point2D Rotation { get; }
 
 	public Point3D NextStepPosition { get; }
 

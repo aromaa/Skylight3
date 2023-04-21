@@ -85,7 +85,7 @@ internal sealed class GetRoomEntryDataPacketHandler<T> : UserPacketHandler<T>
 					X = unit.Position.X,
 					Y = unit.Position.Y,
 					Z = unit.Position.Z,
-					Direction = unit.BodyRotation,
+					Direction = unit.Rotation.X,
 					Type = 1,
 					Gender = unit.User.Profile.Gender,
 					GroupId = 0,

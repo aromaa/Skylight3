@@ -2,6 +2,7 @@
 using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
+using Skylight.Protocol.Packets.Outgoing;
 
 namespace Skylight.API.Game.Rooms;
 
@@ -15,6 +16,9 @@ public interface IRoom
 	public IRoomUnitManager UnitManager { get; }
 
 	public int GameTime { get; }
+
+	ValueTask SendAsync<T>(in T packet)
+		where T : IGameOutgoingPacket;
 
 	public Task LoadAsync(CancellationToken cancellationToken = default);
 

@@ -25,7 +25,7 @@ namespace Skylight.Server.Game.Communication.Room.Avatar
 
 				user.SendAsync(new UserUpdateOutgoingPacket(new List<RoomUnitUpdateData>
 				{
-					new(roomUnit.Id, roomUnit.Position.X, roomUnit.Position.Y, roomUnit.Position.Z, roomUnit.BodyRotation, roomUnit.HeadRotation, string.Empty)
+					new(roomUnit.Id, roomUnit.Position.X, roomUnit.Position.Y, roomUnit.Position.Z, roomUnit.Rotation.Y, roomUnit.Rotation.X, string.Empty)
 				}));
 			}
 		}
