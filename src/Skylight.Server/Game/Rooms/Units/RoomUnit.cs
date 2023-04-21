@@ -142,14 +142,12 @@ internal sealed class RoomUnit : IUserRoomUnit
 		}
 	}
 
-	public void LookTo(int x, int y)
+	public void LookTo(Point2D target)
 	{
 		if (this.Pathfinding || this.Moving)
 		{
 			return;
 		}
-
-		Point2D target = new(x, y);
 
 		if (target == this.Position.XY)
 		{
@@ -163,9 +161,9 @@ internal sealed class RoomUnit : IUserRoomUnit
 			this.rotation = new Point2D(newRotation, newRotation);
 
 			this.Room.SendAsync(new UserUpdateOutgoingPacket(new List<RoomUnitUpdateData>
-			{
-				new(this.Id, this.Position.X, this.Position.Y, this.Position.Z, this.Rotation.X, this.Rotation.Y, string.Empty)
-			}));
+		{
+			new(this.Id, this.Position.X, this.Position.Y, this.Position.Z, this.Rotation.X, this.Rotation.Y, string.Empty)
+		}));
 		}
 	}
 }
