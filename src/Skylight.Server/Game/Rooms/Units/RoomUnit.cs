@@ -3,12 +3,15 @@ using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
+using Skylight.Protocol.Packets.Data.Room.Engine;
+using Skylight.Protocol.Packets.Outgoing.Room.Engine;
 using Skylight.Server.Game.Users;
 
 namespace Skylight.Server.Game.Rooms.Units;
 
 internal sealed class RoomUnit : IUserRoomUnit
 {
+	private readonly RoomUnitManager roomUnitManager;
 	public IRoom Room { get; }
 
 	public IUser User { get; }
@@ -34,8 +37,10 @@ internal sealed class RoomUnit : IUserRoomUnit
 
 	private Stack<Point2D> path;
 
-	internal RoomUnit(Room room, User user, int id, Point3D position)
+	internal RoomUnit(RoomUnitManager roomUnitManager, Room room, User user, int id, Point3D position)
 	{
+		this.roomUnitManager = roomUnitManager;
+
 		this.Room = room;
 
 		this.User = user;
@@ -67,7 +72,8 @@ internal sealed class RoomUnit : IUserRoomUnit
 			lastTile.WalkOff(this);
 			nextTile.WalkOn(this);
 
-			this.rotation = new Point2D(Walk(this.position.XY, this.nextStepPosition.XY), Walk(this.position.XY, this.nextStepPosition.XY));
+			int calculatedRotation = CalculateDirection(this.position.XY, this.nextStepPosition.XY);
+			this.rotation = new Point2D(calculatedRotation, calculatedRotation);
 		}
 	}
 
@@ -100,7 +106,7 @@ internal sealed class RoomUnit : IUserRoomUnit
 		((RoomUnitManager)this.Room.UnitManager).Move(this);
 	}
 
-	public static int Walk(Point2D from, Point2D target)
+	public static int CalculateDirection(Point2D from, Point2D target)
 	{
 		if (from.X > target.X && from.Y > target.Y)
 		{
@@ -133,6 +139,26 @@ internal sealed class RoomUnit : IUserRoomUnit
 		else
 		{
 			return 0;
+		}
+	}
+
+	public void LookTo(Point2D target)
+	{
+		if (this.Pathfinding || this.Moving || target == this.Position.XY)
+		{
+			return;
+		}
+
+		int newRotation = CalculateDirection(this.Position.XY, target);
+
+		if (this.rotation.X != newRotation)
+		{
+			this.rotation = new Point2D(newRotation, newRotation);
+
+			this.Room.SendAsync(new UserUpdateOutgoingPacket(new List<RoomUnitUpdateData>
+			{
+				new(this.Id, this.Position.X, this.Position.Y, this.Position.Z, this.Rotation.X, this.Rotation.Y, string.Empty)
+			}));
 		}
 	}
 }
