@@ -19,7 +19,7 @@ internal sealed class LookToPacketHandler<T> : UserPacketHandler<T>
 
 		Point2D location = new(packet.X, packet.Y);
 
-		roomUnit.Room.ScheduleTask(static (r, state) =>
+		roomUnit.Room.ScheduleTask(static (_, state) =>
 		{
 			if (!state.RoomUnit.InRoom || state.RoomUnit.Moving)
 			{
