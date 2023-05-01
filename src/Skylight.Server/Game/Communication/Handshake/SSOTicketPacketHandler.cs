@@ -80,7 +80,7 @@ internal sealed class SSOTicketPacketHandler<T> : ClientPacketHandler<T>
 			//Unseen items
 			//Figure set ids
 			client.SendAsync(new NoobnessLevelOutgoingPacket(0));
-			client.SendAsync(new NavigatorSettingsOutgoingPacket(client.User!.Settings?.Home ?? 0, client.User!.Settings?.Home ?? 0));
+			client.SendAsync(new NavigatorSettingsOutgoingPacket(user.Settings.Home, user.Settings.Home));
 			client.SendAsync(new UserRightsOutgoingPacket(7, 7, true));
 			//Favourites
 			client.SendAsync(new AvailabilityStatusOutgoingPacket(true, false, true));
