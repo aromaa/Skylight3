@@ -4,12 +4,12 @@ using Skylight.Domain.Users;
 internal sealed class UserSettings : IUserSettings
 {
 	public int UserId { get; }
-	public int Home { get; set; }
+	public int HomeRoomId { get; set; }
 
 	internal UserSettings(UserSettingsEntity entity)
 	{
 		this.UserId = entity.UserId;
 
-		this.Home = entity.Home;
+		this.HomeRoomId = entity.Home;
 	}
 }

@@ -3,5 +3,5 @@
 public interface IUserSettings
 {
 	public int UserId { get; }
-	public int Home { get; set; }
+	public int HomeRoomId { get; set; }
 }

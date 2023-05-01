@@ -1,4 +1,5 @@
 ﻿namespace Skylight.Domain.Users;
+
 public class UserSettingsEntity
 {
 	public int UserId { get; init; }

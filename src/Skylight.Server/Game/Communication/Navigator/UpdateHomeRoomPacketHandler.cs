@@ -7,7 +7,6 @@ using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Incoming.Navigator;
 using Skylight.Protocol.Packets.Manager;
 using Skylight.Protocol.Packets.Outgoing.Navigator;
-using Skylight.Server.Game.Clients;
 
 namespace Skylight.Server.Game.Communication.Navigator;
 
@@ -29,7 +28,7 @@ internal sealed class UpdateHomeRoomPacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		if (packet.RoomId < 0 || packet.RoomId == user!.Settings?.Home)
+		if (packet.RoomId < 0 || packet.RoomId == user!.Settings?.HomeRoomId)
 		{
 			return;
 		}
@@ -38,7 +37,7 @@ internal sealed class UpdateHomeRoomPacketHandler<T> : UserPacketHandler<T>
 		{
 			DbContextFactory = this.dbContextFactory,
 
-			Home = packet.RoomId
+			HomeRoomId = packet.RoomId
 		});
 	}
 
@@ -46,7 +45,7 @@ internal sealed class UpdateHomeRoomPacketHandler<T> : UserPacketHandler<T>
 	{
 		internal readonly IDbContextFactory<SkylightContext> DbContextFactory { get; init; }
 
-		internal readonly int Home { get; init; }
+		internal readonly int HomeRoomId { get; init; }
 
 		public async Task ExecuteAsync(IClient client)
 		{
@@ -55,7 +54,7 @@ internal sealed class UpdateHomeRoomPacketHandler<T> : UserPacketHandler<T>
 			await dbContext.UserSettings.Upsert(new UserSettingsEntity
 			{
 				UserId = client.User!.Profile.Id,
-				Home = this.Home,
+				Home = this.HomeRoomId,
 			})
 			.On(c => c.UserId)
 			.WhenMatched((_, c) => new UserSettingsEntity
@@ -63,9 +62,9 @@ internal sealed class UpdateHomeRoomPacketHandler<T> : UserPacketHandler<T>
 				Home = c.Home,
 			}).RunAsync().ConfigureAwait(false);
 
-			client.User!.Settings.Home = this.Home;
+			client.User!.Settings.HomeRoomId = this.HomeRoomId;
 
-			client.SendAsync(new NavigatorSettingsOutgoingPacket(client.User!.Settings.Home, client.User!.Settings.Home));
+			client.SendAsync(new NavigatorSettingsOutgoingPacket(client.User!.Settings.HomeRoomId, client.User!.Settings.HomeRoomId));
 
 			await dbContext.SaveChangesAsync().ConfigureAwait(false);
 		}

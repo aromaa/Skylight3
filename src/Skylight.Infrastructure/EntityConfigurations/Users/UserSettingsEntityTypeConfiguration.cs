@@ -13,7 +13,6 @@ internal sealed class UserSettingsEntityTypeConfiguration : IEntityTypeConfigura
 		builder.HasKey(u => u.UserId);
 
 		builder.Property(u => u.Home)
-			.HasMaxLength(16)
 			.HasDefaultValue(0);
 
 		builder.HasOne(u => u.User)
