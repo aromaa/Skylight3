@@ -29,7 +29,7 @@ internal sealed class UpdateHomeRoomPacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		if (packet.FlatId < 0 || packet.FlatId == user!.Settings?.Home)
+		if (packet.RoomId < 0 || packet.RoomId == user!.Settings?.Home)
 		{
 			return;
 		}
@@ -38,7 +38,7 @@ internal sealed class UpdateHomeRoomPacketHandler<T> : UserPacketHandler<T>
 		{
 			DbContextFactory = this.dbContextFactory,
 
-			Home = packet.FlatId
+			Home = packet.RoomId
 		});
 	}
 
