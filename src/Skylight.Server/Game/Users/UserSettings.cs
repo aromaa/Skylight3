@@ -6,10 +6,8 @@ internal sealed class UserSettings : IUserSettings
 	public int UserId { get; }
 	public int HomeRoomId { get; set; }
 
-	internal UserSettings(UserSettingsEntity entity)
+	internal UserSettings(UserSettingsEntity? entity)
 	{
-		this.UserId = entity.UserId;
-
-		this.HomeRoomId = entity.Home;
+		this.HomeRoomId = entity?.HomeRoom ?? 0;
 	}
 }

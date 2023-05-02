@@ -1,8 +1,11 @@
-﻿namespace Skylight.Domain.Users;
+﻿using Skylight.Domain.Rooms;
+
+namespace Skylight.Domain.Users;
 
 public class UserSettingsEntity
 {
 	public int UserId { get; init; }
 	public UserEntity? User { get; set; }
-	public int Home { get; set; }
+	public RoomEntity? Room { get; set; }
+	public int HomeRoom { get; set; }
 }

@@ -54,12 +54,12 @@ internal sealed class UpdateHomeRoomPacketHandler<T> : UserPacketHandler<T>
 			await dbContext.UserSettings.Upsert(new UserSettingsEntity
 			{
 				UserId = client.User!.Profile.Id,
-				Home = this.HomeRoomId,
+				HomeRoom = this.HomeRoomId,
 			})
 			.On(c => c.UserId)
 			.WhenMatched((_, c) => new UserSettingsEntity
 			{
-				Home = c.Home,
+				HomeRoom = c.HomeRoom,
 			}).RunAsync().ConfigureAwait(false);
 
 			client.User!.Settings.HomeRoomId = this.HomeRoomId;
