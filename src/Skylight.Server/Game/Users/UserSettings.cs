@@ -8,6 +8,6 @@ internal sealed class UserSettings : IUserSettings
 
 	internal UserSettings(UserSettingsEntity? entity)
 	{
-		this.HomeRoomId = entity?.HomeRoom ?? 0;
+		this.HomeRoomId = entity?.HomeRoomId ?? 0;
 	}
 }

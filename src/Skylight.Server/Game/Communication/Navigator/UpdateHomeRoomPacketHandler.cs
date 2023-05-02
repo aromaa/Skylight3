@@ -28,7 +28,7 @@ internal sealed class UpdateHomeRoomPacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		if (packet.RoomId < 0 || packet.RoomId == user!.Settings?.HomeRoomId)
+		if (packet.RoomId < 0 || packet.RoomId == user.Settings.HomeRoomId)
 		{
 			return;
 		}
@@ -54,17 +54,17 @@ internal sealed class UpdateHomeRoomPacketHandler<T> : UserPacketHandler<T>
 			await dbContext.UserSettings.Upsert(new UserSettingsEntity
 			{
 				UserId = client.User!.Profile.Id,
-				HomeRoom = this.HomeRoomId,
+				HomeRoomId = this.HomeRoomId,
 			})
 			.On(c => c.UserId)
 			.WhenMatched((_, c) => new UserSettingsEntity
 			{
-				HomeRoom = c.HomeRoom,
+				HomeRoomId = c.HomeRoomId,
 			}).RunAsync().ConfigureAwait(false);
 
-			client.User!.Settings.HomeRoomId = this.HomeRoomId;
+			client.User.Settings.HomeRoomId = this.HomeRoomId;
 
-			client.SendAsync(new NavigatorSettingsOutgoingPacket(client.User!.Settings.HomeRoomId, client.User!.Settings.HomeRoomId));
+			client.SendAsync(new NavigatorSettingsOutgoingPacket(client.User.Settings.HomeRoomId, client.User.Settings.HomeRoomId));
 
 			await dbContext.SaveChangesAsync().ConfigureAwait(false);
 		}

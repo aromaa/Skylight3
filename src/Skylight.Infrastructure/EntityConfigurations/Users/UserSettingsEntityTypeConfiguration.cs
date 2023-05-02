@@ -12,16 +12,13 @@ internal sealed class UserSettingsEntityTypeConfiguration : IEntityTypeConfigura
 
 		builder.HasKey(u => u.UserId);
 
-		builder.Property(u => u.HomeRoom)
-			.HasDefaultValue(0);
-
 		builder.HasOne(u => u.User)
 			.WithOne(u => u.Settings)
 			.HasForeignKey<UserSettingsEntity>(u => u.UserId);
 
-		builder.HasOne(u => u.Room)
+		builder.HasOne(u => u.HomeRoom)
 			.WithMany()
-			.HasForeignKey(u => u.HomeRoom)
+			.HasForeignKey(u => u.HomeRoomId)
 			.OnDelete(DeleteBehavior.SetNull);
 	}
 }

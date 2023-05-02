@@ -32,7 +32,7 @@ internal sealed class ChangeMottoPacketHandler<T> : UserPacketHandler<T>
 		}
 
 		string motto = Encoding.UTF8.GetString(packet.Motto);
-		if (motto.Length > 38 || motto == user!.Profile.Motto)
+		if (motto.Length > 38 || motto == user.Profile.Motto)
 		{
 			return;
 		}
@@ -57,13 +57,13 @@ internal sealed class ChangeMottoPacketHandler<T> : UserPacketHandler<T>
 
 		public async Task ExecuteAsync(IClient client)
 		{
-			client.User!.Profile.Motto = this.Motto;
+			client.User.Profile.Motto = this.Motto;
 
 			await using SkylightContext dbContext = await this.DbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
 			UserEntity entity = new()
 			{
-				Id = client.User!.Profile.Id
+				Id = client.User.Profile.Id
 			};
 
 			dbContext.Users.Attach(entity);
@@ -72,7 +72,7 @@ internal sealed class ChangeMottoPacketHandler<T> : UserPacketHandler<T>
 
 			await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
-			_ = ((Rooms.Room)this.Room).SendAsync(new UserChangeOutgoingPacket(client.User!.Profile.Id, client.User!.Profile.Figure, client.User!.Profile.Gender, client.User!.Profile.Motto, 666));
+			_ = ((Rooms.Room)this.Room).SendAsync(new UserChangeOutgoingPacket(client.User.Profile.Id, client.User.Profile.Figure, client.User.Profile.Gender, client.User.Profile.Motto, 666));
 		}
 	}
 }
