@@ -22,6 +22,6 @@ internal sealed class UserSettingsEntityTypeConfiguration : IEntityTypeConfigura
 		builder.HasOne(u => u.Room)
 			.WithMany()
 			.HasForeignKey(u => u.HomeRoom)
-			.OnDelete(DeleteBehavior.Cascade);
+			.OnDelete(DeleteBehavior.SetNull);
 	}
 }

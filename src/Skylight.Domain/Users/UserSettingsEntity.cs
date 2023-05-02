@@ -7,5 +7,5 @@ public class UserSettingsEntity
 	public int UserId { get; init; }
 	public UserEntity? User { get; set; }
 	public RoomEntity? Room { get; set; }
-	public int HomeRoom { get; set; }
+	public int? HomeRoom { get; set; }
 }
