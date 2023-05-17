@@ -20,9 +20,11 @@ internal sealed partial class FurniMaticManager : IFurniMaticManager
 
 	private readonly FurniMaticSettings settings;
 
+	private readonly TimeProvider timeProvider;
+
 	private Snapshot snapshot;
 
-	public FurniMaticManager(IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, ICatalogTransactionFactory catalogTransactionFactory, IFurnitureInventoryItemStrategy furnitureInventoryItemStrategy, IOptions<FurniMaticSettings> settings)
+	public FurniMaticManager(IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, ICatalogTransactionFactory catalogTransactionFactory, IFurnitureInventoryItemStrategy furnitureInventoryItemStrategy, IOptions<FurniMaticSettings> settings, TimeProvider timeProvider)
 	{
 		this.dbContextFactory = dbContextFactory;
 
@@ -32,7 +34,9 @@ internal sealed partial class FurniMaticManager : IFurniMaticManager
 
 		this.settings = settings.Value;
 
-		this.snapshot = new Snapshot(this, Cache.CreateBuilder().ToImmutable(furnitureManager.Current));
+		this.timeProvider = timeProvider;
+
+		this.snapshot = new Snapshot(this, this.timeProvider, Cache.CreateBuilder().ToImmutable(furnitureManager.Current));
 	}
 
 	public IFurniMaticSnapshot Current => this.snapshot;
@@ -66,6 +70,6 @@ internal sealed partial class FurniMaticManager : IFurniMaticManager
 			}
 		}
 
-		return this.snapshot = new Snapshot(this, builder.ToImmutable(furnitures));
+		return this.snapshot = new Snapshot(this, this.timeProvider, builder.ToImmutable(furnitures));
 	}
 }

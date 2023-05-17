@@ -28,11 +28,13 @@ internal partial class FurniMaticManager
 	private sealed class Snapshot : IFurniMaticSnapshot
 	{
 		private readonly FurniMaticManager manager;
+		private readonly TimeProvider timeProvider;
 		private readonly Cache cache;
 
-		internal Snapshot(FurniMaticManager manager, Cache cache)
+		internal Snapshot(FurniMaticManager manager, TimeProvider timeProvider, Cache cache)
 		{
 			this.manager = manager;
+			this.timeProvider = timeProvider;
 			this.cache = cache;
 		}
 
@@ -55,7 +57,7 @@ internal partial class FurniMaticManager
 			{
 				UserId = user.Profile.Id,
 				FurnitureId = giftFurniture.Id,
-				ExtraData = JsonSerializer.SerializeToDocument(DateTimeOffset.Now)
+				ExtraData = JsonSerializer.SerializeToDocument(this.timeProvider.GetUtcNow())
 			};
 
 			try

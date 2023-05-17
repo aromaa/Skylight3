@@ -67,6 +67,8 @@ public static class HostBuilderExtensions
 				services.Configure<FurniMaticSettings>(context.Configuration.GetSection("FurniMatic"));
 				services.Configure<NetworkSettings>(context.Configuration.GetSection("Network"));
 
+				services.AddSingleton(_ => TimeProvider.System);
+
 				services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redis["ConnectionString"] ?? "localhost"));
 
 				services.AddDbContextFactory<SkylightContext>(options => options.UseNpgsql(database["ConnectionString"]));
