@@ -9,7 +9,6 @@ using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Incoming.Room.Avatar;
 using Skylight.Protocol.Packets.Manager;
 using Skylight.Protocol.Packets.Outgoing.Room.Engine;
-using Skylight.Server.Game.Clients;
 
 namespace Skylight.Server.Game.Communication.Room.Avatar;
 
@@ -57,7 +56,7 @@ internal sealed class ChangeMottoPacketHandler<T> : UserPacketHandler<T>
 
 		public async Task ExecuteAsync(IClient client)
 		{
-			client.User.Profile.Motto = this.Motto;
+			client.User!.Profile.Motto = this.Motto;
 
 			await using SkylightContext dbContext = await this.DbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
