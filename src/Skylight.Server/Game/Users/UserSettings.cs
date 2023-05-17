@@ -3,7 +3,6 @@ using Skylight.Domain.Users;
 
 internal sealed class UserSettings : IUserSettings
 {
-	public int UserId { get; }
 	public int HomeRoomId { get; set; }
 
 	internal UserSettings(UserSettingsEntity? entity)
