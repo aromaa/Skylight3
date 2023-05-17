@@ -1,8 +1,5 @@
 is_global = true
 
-# SA0001: XML comments
-dotnet_diagnostic.SA0001.severity = none
-
 # SA1005: Single line comment should begin with a space
 dotnet_diagnostic.SA1005.severity = none
 

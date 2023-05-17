@@ -1,5 +1,10 @@
 <Project>
 
+	<PropertyGroup>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<NoWarn>$(NoWarn),1573,1591,1712</NoWarn>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<EditorConfigFiles Include="$(MSBuildThisFileDirectory)CodeAnalysis.globalconfig" />
 		<PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.435" PrivateAssets="all" />
