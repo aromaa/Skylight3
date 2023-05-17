@@ -10,6 +10,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.HighPerformance" Version="8.0.0" />
+		<PackageReference Include="FlexLabs.EntityFrameworkCore.Upsert" Version="7.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
 		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="7.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="7.0.0" />

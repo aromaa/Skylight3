@@ -9,6 +9,7 @@ using Skylight.API.Game.Users;
 using Skylight.API.Game.Users.Authentication;
 using Skylight.Domain.Badges;
 using Skylight.Domain.Items;
+using Skylight.Domain.Users;
 using Skylight.Infrastructure;
 using Skylight.Server.Game.Inventory.Items.Badges;
 using StackExchange.Redis;
@@ -67,10 +68,11 @@ internal sealed class UserAuthentication : IUserAuthentication
 			return null;
 		}
 
-		User user = new(client, profile);
-
 		await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
 		{
+			UserSettingsEntity? userSettings = await dbContext.UserSettings.FirstOrDefaultAsync(s => s.UserId == profile.Id).ConfigureAwait(false);
+			User user = new(client, profile, new UserSettings(userSettings));
+
 			IBadgeSnapshot badges = this.badgeManager.Current;
 			IFurnitureSnapshot furnitures = this.furnitureManager.Current;
 
@@ -115,8 +117,8 @@ internal sealed class UserAuthentication : IUserAuthentication
 
 				user.Inventory.TryAddBadge(new BadgeInventoryItem(badge, profile));
 			}
-		}
 
-		return user;
+			return user;
+		}
 	}
 }

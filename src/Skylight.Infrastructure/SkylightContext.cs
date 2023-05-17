@@ -67,6 +67,8 @@ public sealed class SkylightContext : DbContext
 
 	public DbSet<UserEntity> Users { get; init; } = null!;
 
+	public DbSet<UserSettingsEntity> UserSettings { get; init; } = null!;
+
 	public SkylightContext(DbContextOptions<SkylightContext> options)
 		: base(options)
 	{
@@ -117,5 +119,6 @@ public sealed class SkylightContext : DbContext
 		modelBuilder.ApplyConfiguration(new SettingsEntityTypeConfiguration());
 
 		modelBuilder.ApplyConfiguration(new UserEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new UserSettingsEntityTypeConfiguration());
 	}
 }

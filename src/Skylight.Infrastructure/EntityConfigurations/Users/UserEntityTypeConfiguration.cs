@@ -23,6 +23,10 @@ internal sealed class UserEntityTypeConfiguration : IEntityTypeConfiguration<Use
 			.HasMaxLength(1)
 			.HasDefaultValue("M");
 
+		builder.Property(u => u.Motto)
+			.HasMaxLength(38)
+			.HasDefaultValue(string.Empty);
+
 		builder.Property(u => u.LastOnline)
 			.HasDefaultValueSql("NOW()");
 
