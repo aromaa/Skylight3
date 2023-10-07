@@ -16,8 +16,8 @@ internal partial class FurnitureManager
 
 		internal Cache(Dictionary<int, IFloorFurniture> floorFurnitures, Dictionary<int, IWallFurniture> wallFurnitures)
 		{
-			this.FloorFurnitures = floorFurnitures.ToFrozenDictionary(optimizeForReading: true);
-			this.WallFurnitures = wallFurnitures.ToFrozenDictionary(optimizeForReading: true);
+			this.FloorFurnitures = floorFurnitures.ToFrozenDictionary();
+			this.WallFurnitures = wallFurnitures.ToFrozenDictionary();
 		}
 
 		internal static Builder CreateBuilder() => new();
@@ -68,7 +68,7 @@ internal partial class FurnitureManager
 					{
 						int soundSetId = int.Parse(entity.ClassName.AsSpan(entity.ClassName.LastIndexOf('_') + 1));
 
-						return new SoundSetFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0], soundSetId, Enumerable.Range((soundSetId * 9) - 8, 9).ToFrozenSet(optimizeForReading: true));
+						return new SoundSetFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0], soundSetId, Enumerable.Range((soundSetId * 9) - 8, 9).ToFrozenSet());
 					}
 				}
 

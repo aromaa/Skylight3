@@ -18,9 +18,9 @@ internal partial class AchievementManager
 
 		internal Cache(Dictionary<int, IAchievement> achievements, Dictionary<string, int> badgePointLimits)
 		{
-			this.Achievements = achievements.ToFrozenDictionary(optimizeForReading: true);
+			this.Achievements = achievements.ToFrozenDictionary();
 
-			this.BadgePointLimits = badgePointLimits.ToFrozenDictionary(optimizeForReading: true);
+			this.BadgePointLimits = badgePointLimits.ToFrozenDictionary();
 		}
 
 		internal static Builder CreateBuilder() => new();

@@ -23,7 +23,7 @@ internal sealed class FurniMaticPrizes : IFurniMaticPrizes
 
 		this.prizeTable = FurniMaticPrizes.CreatePrizeTable(levels);
 
-		this.prizes = levels.SelectMany(x => x.Prizes).ToDictionary(x => x.Id).ToFrozenDictionary(optimizeForReading: true);
+		this.prizes = levels.SelectMany(x => x.Prizes).ToFrozenDictionary(x => x.Id);
 	}
 
 	internal IFurniMaticPrize? RollRandomPrice() => this.prizeTable.Next();

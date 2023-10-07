@@ -26,8 +26,8 @@ internal partial class CatalogManager
 		{
 			this.Furnitures = furnitures;
 
-			this.Pages = pages.ToFrozenDictionary(optimizeForReading: true);
-			this.Offers = offers.ToFrozenDictionary(optimizeForReading: true);
+			this.Pages = pages.ToFrozenDictionary();
+			this.Offers = offers.ToFrozenDictionary();
 
 			this.RootPages = rootPages;
 		}

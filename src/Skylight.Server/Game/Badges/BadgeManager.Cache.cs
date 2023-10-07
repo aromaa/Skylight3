@@ -12,7 +12,7 @@ internal partial class BadgeManager
 
 		private Cache(Dictionary<string, IBadge> badges)
 		{
-			this.Badges = badges.ToFrozenDictionary(optimizeForReading: true);
+			this.Badges = badges.ToFrozenDictionary();
 		}
 
 		internal static Builder CreateBuilder() => new();

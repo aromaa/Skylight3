@@ -17,8 +17,8 @@ internal partial class NavigatorManager
 
 		private Cache(Dictionary<string, IRoomLayout> layouts, Dictionary<int, IRoomFlatCat> flatCats)
 		{
-			this.Layouts = layouts.ToFrozenDictionary(optimizeForReading: true);
-			this.FlatCats = flatCats.ToFrozenDictionary(optimizeForReading: true);
+			this.Layouts = layouts.ToFrozenDictionary();
+			this.FlatCats = flatCats.ToFrozenDictionary();
 		}
 
 		internal static Builder CreateBuilder() => new();
