@@ -43,87 +43,61 @@ namespace Skylight.Server.Extensions;
 
 public static class HostBuilderExtensions
 {
-	public static IHostBuilder ConfigureSkylightServerDefaults(this IHostBuilder builder)
+	//TODO: Actual application builder, now for simplicity
+	public static IHostApplicationBuilder ConfigureSkylightServer(this IHostApplicationBuilder builder)
 	{
-		return builder.ConfigureSkylightServerDefaults(static _ => { });
-	}
+		IConfigurationSection database = builder.Configuration.GetSection("Database");
+		IConfigurationSection redis = builder.Configuration.GetSection("Redis");
 
-	public static IHostBuilder ConfigureSkylightServerDefaults(this IHostBuilder builder, Action<IServerHostBuilder> configure)
-	{
-		return builder.ConfigureSkylightServer(hostBuilder =>
-		{
-			hostBuilder.ConfigureAppConfiguration(static (_, configuration) =>
-			{
-				IConfigurationRoot currentConfig = configuration.Build();
+		builder.Configuration.Add(new ServerConfigurationSource(database["ConnectionString"]));
 
-				configuration.Add(new ServerConfigurationSource(currentConfig["Database:ConnectionString"]));
-			});
+		builder.Services.AddHostedService<ServerHostService>();
 
-			hostBuilder.ConfigureServices(static (context, services) =>
-			{
-				IConfigurationSection database = context.Configuration.GetSection("Database");
-				IConfigurationSection redis = context.Configuration.GetSection("Redis");
+		builder.Services.Configure<FurniMaticSettings>(builder.Configuration.GetSection("FurniMatic"));
+		builder.Services.Configure<NetworkSettings>(builder.Configuration.GetSection("Network"));
 
-				services.Configure<FurniMaticSettings>(context.Configuration.GetSection("FurniMatic"));
-				services.Configure<NetworkSettings>(context.Configuration.GetSection("Network"));
+		builder.Services.AddSingleton(_ => TimeProvider.System);
 
-				services.AddSingleton(_ => TimeProvider.System);
+		builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redis["ConnectionString"] ?? "localhost"));
 
-				services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redis["ConnectionString"] ?? "localhost"));
+		builder.Services.AddDbContextFactory<SkylightContext>(options => options.UseNpgsql(database["ConnectionString"]));
 
-				services.AddDbContextFactory<SkylightContext>(options => options.UseNpgsql(database["ConnectionString"]));
+		builder.Services.AddSingleton<IServer, SkylightServer>();
 
-				services.AddSingleton<IServer, SkylightServer>();
+		builder.Services.AddSingleton<IUserManager, UserManager>();
+		builder.Services.AddSingleton<IUserAuthentication, UserAuthentication>();
 
-				services.AddSingleton<IUserManager, UserManager>();
-				services.AddSingleton<IUserAuthentication, UserAuthentication>();
+		builder.Services.AddSingleton<IClientManager, ClientManager>();
+		builder.Services.AddSingleton<PacketManagerCache>();
+		builder.Services.AddSingleton<NetworkManager>();
 
-				services.AddSingleton<IClientManager, ClientManager>();
-				services.AddSingleton<PacketManagerCache>();
-				services.AddSingleton<NetworkManager>();
+		builder.Services.AddSingleton<IBadgeManager, BadgeManager>();
+		builder.Services.AddSingleton<IAchievementManager, AchievementManager>();
 
-				services.AddSingleton<IBadgeManager, BadgeManager>();
-				services.AddSingleton<IAchievementManager, AchievementManager>();
+		builder.Services.AddSingleton<IFurnitureManager, FurnitureManager>();
+		builder.Services.AddSingleton<ICatalogManager, CatalogManager>();
+		builder.Services.AddSingleton<ICatalogTransactionFactory, CatalogTransactionFactory>();
+		builder.Services.AddSingleton<IFurniMaticManager, FurniMaticManager>();
 
-				services.AddSingleton<IFurnitureManager, FurnitureManager>();
-				services.AddSingleton<ICatalogManager, CatalogManager>();
-				services.AddSingleton<ICatalogTransactionFactory, CatalogTransactionFactory>();
-				services.AddSingleton<IFurniMaticManager, FurniMaticManager>();
+		builder.Services.AddSingleton<IFurnitureInventoryItemStrategy, FurnitureInventoryItemStrategy>();
+		builder.Services.AddSingleton<IFurnitureInventoryItemFactory, StickyNoteInventoryItemFactory>();
+		builder.Services.AddSingleton<IFurnitureInventoryItemFactory, FurniMaticGiftInventoryItemFactory>();
+		builder.Services.AddSingleton<IFurnitureInventoryItemFactory, SoundSetInventoryItemFactory>();
 
-				services.AddSingleton<IFurnitureInventoryItemStrategy, FurnitureInventoryItemStrategy>();
-				services.AddSingleton<IFurnitureInventoryItemFactory, StickyNoteInventoryItemFactory>();
-				services.AddSingleton<IFurnitureInventoryItemFactory, FurniMaticGiftInventoryItemFactory>();
-				services.AddSingleton<IFurnitureInventoryItemFactory, SoundSetInventoryItemFactory>();
+		builder.Services.AddSingleton<IRoomManager, RoomManager>();
+		builder.Services.AddSingleton<IRoomItemInteractionManager, RoomItemInteractionManager>();
+		builder.Services.AddSingleton<INavigatorManager, NavigatorManager>();
 
-				services.AddSingleton<IRoomManager, RoomManager>();
-				services.AddSingleton<IRoomItemInteractionManager, RoomItemInteractionManager>();
-				services.AddSingleton<INavigatorManager, NavigatorManager>();
+		builder.Services.AddSingleton<IFloorRoomItemStrategy, FloorRoomItemStrategy>();
+		builder.Services.AddSingleton<IFloorRoomItemFactory, BasicFloorRoomItemFactory>();
+		builder.Services.AddSingleton<IFloorRoomItemFactory, FurniMaticGiftRoomItemFactory>();
+		builder.Services.AddSingleton<IFloorRoomItemFactory, StickyNotePoleRoomItemFactory>();
+		builder.Services.AddSingleton<IFloorRoomItemFactory, SoundMachineRoomItemFactory>();
+		builder.Services.AddSingleton<IFloorRoomItemFactory, RollerRoomItemFactory>();
 
-				services.AddSingleton<IFloorRoomItemStrategy, FloorRoomItemStrategy>();
-				services.AddSingleton<IFloorRoomItemFactory, BasicFloorRoomItemFactory>();
-				services.AddSingleton<IFloorRoomItemFactory, FurniMaticGiftRoomItemFactory>();
-				services.AddSingleton<IFloorRoomItemFactory, StickyNotePoleRoomItemFactory>();
-				services.AddSingleton<IFloorRoomItemFactory, SoundMachineRoomItemFactory>();
-				services.AddSingleton<IFloorRoomItemFactory, RollerRoomItemFactory>();
-
-				services.AddSingleton<IWallRoomItemStrategy, WallRoomItemStrategy>();
-				services.AddSingleton<IWallRoomItemFactory, BasicWallRoomItemFactory>();
-				services.AddSingleton<IWallRoomItemFactory, StickyNoteRoomItemFactory>();
-			});
-
-			configure(hostBuilder);
-		});
-	}
-
-	public static IHostBuilder ConfigureSkylightServer(this IHostBuilder builder, Action<IServerHostBuilder> configure)
-	{
-		ServerHostBuilder hostBuilder = new(builder);
-		configure(hostBuilder);
-
-		builder.ConfigureServices(static (_, services) =>
-		{
-			services.AddHostedService<ServerHostService>();
-		});
+		builder.Services.AddSingleton<IWallRoomItemStrategy, WallRoomItemStrategy>();
+		builder.Services.AddSingleton<IWallRoomItemFactory, BasicWallRoomItemFactory>();
+		builder.Services.AddSingleton<IWallRoomItemFactory, StickyNoteRoomItemFactory>();
 
 		return builder;
 	}
