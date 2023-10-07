@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Runtime.Loader;
 using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging;
 using Skylight.Protocol.Attributes;
 using Skylight.Protocol.Packets.Manager;
 
@@ -13,13 +14,17 @@ internal sealed class PacketManagerCache
 {
 	private readonly IServiceProvider serviceProvider;
 
+	private readonly ILogger<PacketManagerCache> logger;
+
 	private readonly Dictionary<string, Assembly> protocolAssemblies;
 
-	public PacketManagerCache(IServiceProvider serviceProvider)
+	public PacketManagerCache(IServiceProvider serviceProvider, ILogger<PacketManagerCache> logger)
 	{
 		this.serviceProvider = serviceProvider;
 
 		this.protocolAssemblies = new Dictionary<string, Assembly>();
+
+		this.logger = logger;
 	}
 
 	[Conditional("DEBUG")]
@@ -51,6 +56,8 @@ internal sealed class PacketManagerCache
 			if (attribute is not null)
 			{
 				this.protocolAssemblies.Add(attribute.Revision, assembly);
+
+				this.logger.LogInformation($"Found protocol data for revision {attribute.Revision}");
 			}
 		}
 	}
@@ -93,6 +100,12 @@ internal sealed class PacketManagerCache
 			if (attribute is not null)
 			{
 				this.protocolAssemblies.Add(attribute.Revision, assembly);
+
+				this.logger.LogInformation($"Found protocol data for revision {attribute.Revision}");
+			}
+			else
+			{
+				this.logger.LogWarning($"Found invalid protocol assembly {file.Name}");
 			}
 		}
 	}

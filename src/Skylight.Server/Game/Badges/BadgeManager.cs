@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Skylight.API.DependencyInjection;
 using Skylight.API.Game.Badges;
 using Skylight.Domain.Badges;
 using Skylight.Infrastructure;
@@ -20,7 +21,7 @@ internal sealed partial class BadgeManager : IBadgeManager
 
 	public IBadgeSnapshot Current => this.snapshot;
 
-	public async Task<IBadgeSnapshot> LoadAsync(CancellationToken cancellationToken = default)
+	public async Task<IBadgeSnapshot> LoadAsync(ILoadableServiceContext context, CancellationToken cancellationToken)
 	{
 		Cache.Builder builder = Cache.CreateBuilder();
 
@@ -36,6 +37,8 @@ internal sealed partial class BadgeManager : IBadgeManager
 			}
 		}
 
-		return this.snapshot = new Snapshot(builder.ToImmutable());
+		Snapshot snapshot = new(builder.ToImmutable());
+
+		return context.Commit(() => this.snapshot = snapshot, snapshot);
 	}
 }

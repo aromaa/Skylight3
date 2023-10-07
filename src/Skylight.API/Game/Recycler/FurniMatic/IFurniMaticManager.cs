@@ -1,8 +1,7 @@
-﻿namespace Skylight.API.Game.Recycler.FurniMatic;
+﻿using Skylight.API.DependencyInjection;
 
-public interface IFurniMaticManager : IFurniMaticSnapshot
+namespace Skylight.API.Game.Recycler.FurniMatic;
+
+public interface IFurniMaticManager : IFurniMaticSnapshot, ILoadableService<IFurniMaticSnapshot>
 {
-	public IFurniMaticSnapshot Current { get; }
-
-	public Task<IFurniMaticSnapshot> LoadAsync(CancellationToken cancellationToken = default);
 }

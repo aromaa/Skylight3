@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Skylight.API.DependencyInjection;
 using Skylight.API.Game.Navigator;
 using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Map;
@@ -35,7 +36,7 @@ internal sealed partial class NavigatorManager : INavigatorManager
 
 	public INavigatorSnapshot Current => this.snapshot;
 
-	public async Task<INavigatorSnapshot> LoadAsync(CancellationToken cancellationToken)
+	public async Task<INavigatorSnapshot> LoadAsync(ILoadableServiceContext context, CancellationToken cancellationToken)
 	{
 		Cache.Builder builder = Cache.CreateBuilder();
 
@@ -58,7 +59,9 @@ internal sealed partial class NavigatorManager : INavigatorManager
 			}
 		}
 
-		return this.snapshot = new Snapshot(this, builder.ToImmutable());
+		Snapshot snapshot = new(this, builder.ToImmutable());
+
+		return context.Commit(() => this.snapshot = snapshot, snapshot);
 	}
 
 	public ValueTask<IRoomInfo?> GetRoomDataAsync(int id, CancellationToken cancellationToken)

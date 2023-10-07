@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Skylight.API.DependencyInjection;
 using Skylight.API.Game.Achievements;
 using Skylight.API.Game.Badges;
 using Skylight.API.Game.Catalog;
@@ -17,6 +18,7 @@ using Skylight.API.Game.Rooms.Items.Wall;
 using Skylight.API.Game.Users;
 using Skylight.API.Game.Users.Authentication;
 using Skylight.Infrastructure;
+using Skylight.Server.DependencyInjection;
 using Skylight.Server.Game.Achievements;
 using Skylight.Server.Game.Badges;
 using Skylight.Server.Game.Catalog;
@@ -64,6 +66,8 @@ public static class HostBuilderExtensions
 
 		builder.Services.AddSingleton<IServer, SkylightServer>();
 
+		builder.Services.AddSingleton<ILoadableServiceManager, LoadableServiceManager>();
+
 		builder.Services.AddSingleton<IUserManager, UserManager>();
 		builder.Services.AddSingleton<IUserAuthentication, UserAuthentication>();
 
@@ -71,13 +75,13 @@ public static class HostBuilderExtensions
 		builder.Services.AddSingleton<PacketManagerCache>();
 		builder.Services.AddSingleton<NetworkManager>();
 
-		builder.Services.AddSingleton<IBadgeManager, BadgeManager>();
-		builder.Services.AddSingleton<IAchievementManager, AchievementManager>();
+		builder.Services.AddLoadableSingleton<IBadgeManager, BadgeManager>();
+		builder.Services.AddLoadableSingleton<IAchievementManager, AchievementManager>();
 
-		builder.Services.AddSingleton<IFurnitureManager, FurnitureManager>();
-		builder.Services.AddSingleton<ICatalogManager, CatalogManager>();
+		builder.Services.AddLoadableSingleton<IFurnitureManager, FurnitureManager>();
+		builder.Services.AddLoadableSingleton<ICatalogManager, CatalogManager>();
 		builder.Services.AddSingleton<ICatalogTransactionFactory, CatalogTransactionFactory>();
-		builder.Services.AddSingleton<IFurniMaticManager, FurniMaticManager>();
+		builder.Services.AddLoadableSingleton<IFurniMaticManager, FurniMaticManager>();
 
 		builder.Services.AddSingleton<IFurnitureInventoryItemStrategy, FurnitureInventoryItemStrategy>();
 		builder.Services.AddSingleton<IFurnitureInventoryItemFactory, StickyNoteInventoryItemFactory>();
@@ -86,7 +90,7 @@ public static class HostBuilderExtensions
 
 		builder.Services.AddSingleton<IRoomManager, RoomManager>();
 		builder.Services.AddSingleton<IRoomItemInteractionManager, RoomItemInteractionManager>();
-		builder.Services.AddSingleton<INavigatorManager, NavigatorManager>();
+		builder.Services.AddLoadableSingleton<INavigatorManager, NavigatorManager>();
 
 		builder.Services.AddSingleton<IFloorRoomItemStrategy, FloorRoomItemStrategy>();
 		builder.Services.AddSingleton<IFloorRoomItemFactory, BasicFloorRoomItemFactory>();
@@ -99,6 +103,19 @@ public static class HostBuilderExtensions
 		builder.Services.AddSingleton<IWallRoomItemFactory, BasicWallRoomItemFactory>();
 		builder.Services.AddSingleton<IWallRoomItemFactory, StickyNoteRoomItemFactory>();
 
+		builder.Services.AddSingleton(typeof(Lazy<>), typeof(LazyService<>));
+
 		return builder;
+	}
+
+	public static IServiceCollection AddLoadableSingleton<TService, TImplementation>(this IServiceCollection services)
+		where TService : class, ILoadableService
+		where TImplementation : class, TService
+
+	{
+		services.AddSingleton<TService, TImplementation>();
+		services.AddSingleton<ILoadableService, TImplementation>(l => (TImplementation)l.GetRequiredService<TService>());
+
+		return services;
 	}
 }

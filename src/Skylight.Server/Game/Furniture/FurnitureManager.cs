@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Skylight.API.DependencyInjection;
 using Skylight.API.Game.Furniture;
 using Skylight.Domain.Furniture;
 using Skylight.Infrastructure;
@@ -20,7 +21,7 @@ internal sealed partial class FurnitureManager : IFurnitureManager
 
 	public IFurnitureSnapshot Current => this.snapshot;
 
-	public async Task<IFurnitureSnapshot> LoadAsync(CancellationToken cancellationToken)
+	public async Task<IFurnitureSnapshot> LoadAsync(ILoadableServiceContext context, CancellationToken cancellationToken)
 	{
 		Cache.Builder builder = Cache.CreateBuilder();
 
@@ -43,6 +44,8 @@ internal sealed partial class FurnitureManager : IFurnitureManager
 			}
 		}
 
-		return this.snapshot = new Snapshot(builder.ToImmutable());
+		Snapshot snapshot = new(builder.ToImmutable());
+
+		return context.Commit(() => this.snapshot = snapshot, snapshot);
 	}
 }

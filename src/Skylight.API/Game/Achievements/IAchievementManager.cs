@@ -1,8 +1,7 @@
-﻿namespace Skylight.API.Game.Achievements;
+﻿using Skylight.API.DependencyInjection;
 
-public interface IAchievementManager : IAchievementSnapshot
+namespace Skylight.API.Game.Achievements;
+
+public interface IAchievementManager : IAchievementSnapshot, ILoadableService<IAchievementSnapshot>
 {
-	public IAchievementSnapshot Current { get; }
-
-	public Task<IAchievementSnapshot> LoadAsync(CancellationToken cancellationToken = default);
 }

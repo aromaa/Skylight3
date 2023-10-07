@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Skylight.API.DependencyInjection;
 using Skylight.API.Game.Badges;
 using Skylight.API.Game.Catalog;
 using Skylight.API.Game.Furniture;
@@ -32,8 +33,11 @@ internal sealed partial class CatalogManager : ICatalogManager
 
 	public ICatalogSnapshot Current => this.snapshot;
 
-	public async Task<ICatalogSnapshot> LoadAsync(CancellationToken cancellationToken)
+	public async Task<ICatalogSnapshot> LoadAsync(ILoadableServiceContext context, CancellationToken cancellationToken)
 	{
+		Task<IBadgeSnapshot> badgeSnapshot = context.RequestDependencyAsync<IBadgeSnapshot>(cancellationToken);
+		Task<IFurnitureSnapshot> furnitureSnapshot = context.RequestDependencyAsync<IFurnitureSnapshot>(cancellationToken);
+
 		Cache.Builder builder = Cache.CreateBuilder();
 
 		await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
@@ -51,6 +55,8 @@ internal sealed partial class CatalogManager : ICatalogManager
 			}
 		}
 
-		return this.snapshot = new Snapshot(this, builder.ToImmutable(this.badgeManager.Current, this.furnitureManager.Current));
+		Snapshot snapshot = new(this, builder.ToImmutable(await badgeSnapshot.ConfigureAwait(false), await furnitureSnapshot.ConfigureAwait(false)));
+
+		return context.Commit(() => this.snapshot = snapshot, snapshot);
 	}
 }

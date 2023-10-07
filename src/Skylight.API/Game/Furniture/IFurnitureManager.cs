@@ -1,8 +1,7 @@
-﻿namespace Skylight.API.Game.Furniture;
+﻿using Skylight.API.DependencyInjection;
 
-public interface IFurnitureManager : IFurnitureSnapshot
+namespace Skylight.API.Game.Furniture;
+
+public interface IFurnitureManager : IFurnitureSnapshot, ILoadableService<IFurnitureSnapshot>
 {
-	public IFurnitureSnapshot Current { get; }
-
-	public Task<IFurnitureSnapshot> LoadAsync(CancellationToken cancellationToken = default);
 }

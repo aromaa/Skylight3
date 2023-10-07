@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Net.Metadata;
 using Net.Sockets.Listener;
+using Skylight.API.DependencyInjection;
 using Skylight.Protocol.Packets.Manager;
 using Skylight.Server.Game.Clients;
 using Skylight.Server.Net.Communication;
@@ -24,7 +25,9 @@ internal sealed class NetworkManager
 
 	private readonly PacketManagerCache packetManagerCache;
 
-	public NetworkManager(IServiceProvider serviceProvider, ILogger<NetworkManager> logger, IOptions<NetworkSettings> settings, PacketManagerCache packetManagerCache)
+	private readonly Lazy<ILoadableServiceManager> loadableServiceManager;
+
+	public NetworkManager(IServiceProvider serviceProvider, ILogger<NetworkManager> logger, IOptions<NetworkSettings> settings, PacketManagerCache packetManagerCache, Lazy<ILoadableServiceManager> loadableServiceManager)
 	{
 		this.serviceProvider = serviceProvider;
 
@@ -33,6 +36,8 @@ internal sealed class NetworkManager
 		this.settings = settings.Value;
 
 		this.packetManagerCache = packetManagerCache;
+
+		this.loadableServiceManager = loadableServiceManager;
 	}
 
 	public void Start()
@@ -50,8 +55,12 @@ internal sealed class NetworkManager
 			{
 				if (IPEndPoint.TryParse(endPoint, out IPEndPoint? ipEndPoint))
 				{
+					this.logger.LogInformation($"Listening on {ipEndPoint}");
+
 					IListener.CreateTcpListener(ipEndPoint, socket =>
 					{
+						this.loadableServiceManager.Value.WaitForInitialization().GetAwaiter().GetResult();
+
 						socket.Metadata.Set(NetworkManager.GameClientMetadataKey, new Client(socket));
 
 						socket.Pipeline.AddHandlerFirst(new LeftOverHandler());

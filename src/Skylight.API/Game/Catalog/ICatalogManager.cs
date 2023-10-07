@@ -1,8 +1,7 @@
-﻿namespace Skylight.API.Game.Catalog;
+﻿using Skylight.API.DependencyInjection;
 
-public interface ICatalogManager : ICatalogSnapshot
+namespace Skylight.API.Game.Catalog;
+
+public interface ICatalogManager : ICatalogSnapshot, ILoadableService<ICatalogSnapshot>
 {
-	public ICatalogSnapshot Current { get; }
-
-	public Task<ICatalogSnapshot> LoadAsync(CancellationToken cancellationToken = default);
 }

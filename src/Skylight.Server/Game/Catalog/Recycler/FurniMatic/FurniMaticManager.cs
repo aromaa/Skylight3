@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Skylight.API.DependencyInjection;
 using Skylight.API.Game.Catalog;
 using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Furniture.Floor;
@@ -41,9 +42,9 @@ internal sealed partial class FurniMaticManager : IFurniMaticManager
 
 	public IFurniMaticSnapshot Current => this.snapshot;
 
-	public async Task<IFurniMaticSnapshot> LoadAsync(CancellationToken cancellationToken)
+	public async Task<IFurniMaticSnapshot> LoadAsync(ILoadableServiceContext context, CancellationToken cancellationToken)
 	{
-		IFurnitureSnapshot furnitures = this.furnitureManager.Current;
+		Task<IFurnitureSnapshot> furnitures = context.RequestDependencyAsync<IFurnitureSnapshot>(cancellationToken);
 
 		Cache.Builder builder = Cache.CreateBuilder();
 
@@ -60,7 +61,7 @@ internal sealed partial class FurniMaticManager : IFurniMaticManager
 				builder.AddLevel(prizeLevel);
 			}
 
-			if (furnitures.TryGetFloorFurniture(this.settings.GiftFurnitureId, out IFloorFurniture? giftFurniture) && giftFurniture is IFurniMaticGiftFurniture)
+			if ((await furnitures.ConfigureAwait(false)).TryGetFloorFurniture(this.settings.GiftFurnitureId, out IFloorFurniture? giftFurniture) && giftFurniture is IFurniMaticGiftFurniture)
 			{
 				builder.GiftFurniture = giftFurniture;
 			}
@@ -70,6 +71,8 @@ internal sealed partial class FurniMaticManager : IFurniMaticManager
 			}
 		}
 
-		return this.snapshot = new Snapshot(this, this.timeProvider, builder.ToImmutable(furnitures));
+		Snapshot snapshot = new(this, this.timeProvider, builder.ToImmutable(await furnitures.ConfigureAwait(false)));
+
+		return context.Commit(() => this.snapshot = snapshot, snapshot);
 	}
 }
