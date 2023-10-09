@@ -22,7 +22,7 @@ internal sealed class GetExtendedProfilePacketHandler<T> : UserPacketHandler<T>
 
 	internal override void Handle(IUser user, in T packet)
 	{
-		user.Client.ScheduleTask(new GetGuestRoomTask
+		user.Client.ScheduleTask(new GetExtendedProfileTask
 		{
 			UserManager = this.userManager,
 
@@ -31,7 +31,7 @@ internal sealed class GetExtendedProfilePacketHandler<T> : UserPacketHandler<T>
 	}
 
 	[StructLayout(LayoutKind.Auto)]
-	private readonly struct GetGuestRoomTask : IClientTask
+	private readonly struct GetExtendedProfileTask : IClientTask
 	{
 		internal IUserManager UserManager { get; init; }
 
