@@ -45,7 +45,6 @@ internal sealed class PacketHeaderHandler : IncomingBytesHandler, IOutgoingObjec
 
 		if (this.packetManager.TryGetConsumer(header, out IIncomingPacketConsumer? consumer))
 		{
-			Console.WriteLine(consumer);
 			consumer.Read(context, ref reader);
 
 			if (reader.Readable)
