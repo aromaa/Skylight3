@@ -79,7 +79,7 @@ internal sealed class GetRoomEntryDataPacketHandler<T> : UserPacketHandler<T>
 				{
 					IdentifierId = unit.User.Profile.Id,
 					Name = unit.User.Profile.Username,
-					Motto = "Skylight",
+					Motto = unit.User.Profile.Motto,
 					Figure = unit.User.Profile.Figure,
 					RoomUnitId = unit.Id,
 					X = unit.Position.X,
