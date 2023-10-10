@@ -4,6 +4,9 @@
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net8.0</TargetFramework>
 		<UserSecretsId>cc2c8427-3173-434a-9cb5-3a511fb8b81f</UserSecretsId>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(BuildingInsideVisualStudio)' == 'true'">
 		<DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
 	</PropertyGroup>
 
@@ -26,11 +29,19 @@
 			<ProtocolProjectReference Include="..\submodules\Skylight.Protocol\src\Skylight.Protocol.X\Skylight.Protocol.%(ProtocolReference.Identity)\Skylight.Protocol.%(ProtocolReference.Identity).csproj" />
 		</ItemGroup>
 
-		<MSBuild Projects="@(ProtocolProjectReference)" BuildInParallel="true" Targets="Restore;Build" Properties="Configuration=$(Configuration);Platform=$(Platform)">
+		<MSBuild Projects="@(ProtocolProjectReference)" BuildInParallel="true" Targets="Restore;Build" Properties="Configuration=$(Configuration);Platform=$(Platform);HotSwap=True">
 			<Output TaskParameter="TargetOutputs" ItemName="ProtocolAssemblies" />
 		</MSBuild>
 
-		<Copy SourceFiles="@(ProtocolAssemblies)" DestinationFolder="$(OutputPath)\Protocol" SkipUnchangedFiles="true" />
+		<ItemGroup>
+			<AssemblyAttributes Include="Skylight.Server.Attributes.InternalProtocolLibraryPathAttribute">
+				<_Parameter1>%(ProtocolAssemblies.Identity)</_Parameter1>
+			</AssemblyAttributes>
+		</ItemGroup>
+
+		<WriteCodeFragment AssemblyAttributes="@(AssemblyAttributes)" Language="C#" OutputDirectory="$(IntermediateOutputPath)" OutputFile="InternalProtocolLibraryPathAttribute.cs">
+			<Output TaskParameter="OutputFile" ItemName="Compile" />
+		</WriteCodeFragment>
 	</Target>
 
 </Project>

@@ -8,7 +8,6 @@
 		<PackageReference Include="CommunityToolkit.HighPerformance" Version="8.2.1" />
 		<PackageReference Include="FlexLabs.EntityFrameworkCore.Upsert" Version="7.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="7.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0-rc.1.23419.4" />
 		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
 		<PackageReference Include="StackExchange.Redis" Version="2.6.122" />

@@ -44,7 +44,7 @@ internal sealed class NetworkManager
 	{
 		foreach (NetworkSettings.ListenerSettings listenerSettings in this.settings.Listeners)
 		{
-			if (!this.packetManagerCache.TryCreatePacketManager(listenerSettings.Revision, out Lazy<AbstractGamePacketManager>? packetManagerHolder))
+			if (!this.packetManagerCache.TryCreatePacketManager(listenerSettings.Revision, out Func<AbstractGamePacketManager>? packetManagerGetter))
 			{
 				this.logger.LogWarning($"Did not find a packet manager for revision {listenerSettings.Revision}.");
 
@@ -65,10 +65,10 @@ internal sealed class NetworkManager
 
 						socket.Pipeline.AddHandlerFirst(new LeftOverHandler());
 
-						AbstractGamePacketManager packetManager = packetManagerHolder.Value;
+						AbstractGamePacketManager packetManager = packetManagerGetter();
 						if (packetManager.Modern)
 						{
-							socket.Pipeline.AddHandlerFirst(new PacketHeaderHandler(packetManager));
+							socket.Pipeline.AddHandlerFirst(new HotSwapPacketHandler(packetManagerGetter));
 							socket.Pipeline.AddHandlerFirst(FlashSocketPolicyRequestHandler.Instance);
 						}
 						else

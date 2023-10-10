@@ -1,12 +1,17 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Reflection.Metadata;
 using System.Runtime.Loader;
-using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using Net.Communication.Attributes;
 using Skylight.Protocol.Attributes;
 using Skylight.Protocol.Packets.Manager;
+using Skylight.Server.Attributes;
+using Skylight.Server.Net.Communication;
+
+[assembly: MetadataUpdateHandler(typeof(PacketManagerCache.MetadataUpdateHandler))]
 
 namespace Skylight.Server.Net.Communication;
 
@@ -16,48 +21,49 @@ internal sealed class PacketManagerCache
 
 	private readonly ILogger<PacketManagerCache> logger;
 
-	private readonly Dictionary<string, Assembly> protocolAssemblies;
+	private readonly Dictionary<string, ProtocolData> protocols;
 
 	public PacketManagerCache(IServiceProvider serviceProvider, ILogger<PacketManagerCache> logger)
 	{
 		this.serviceProvider = serviceProvider;
 
-		this.protocolAssemblies = new Dictionary<string, Assembly>();
+		this.protocols = new Dictionary<string, ProtocolData>();
 
 		this.logger = logger;
+
+		MetadataUpdateHandler.PacketManagerCache = this;
 	}
 
 	[Conditional("DEBUG")]
 	internal void ScanAppDomain()
 	{
-		string protocolLibraryName = typeof(GameProtocolAttribute).Assembly.GetName().Name!;
-
-		foreach (RuntimeLibrary library in DependencyContext.Default!.RuntimeLibraries)
+		foreach (InternalProtocolLibraryPathAttribute attribute in Assembly.GetEntryAssembly()!.GetCustomAttributes<InternalProtocolLibraryPathAttribute>())
 		{
-			if (library.Dependencies.All(d => d.Name != protocolLibraryName))
-			{
-				continue;
-			}
+			using FileStream fileStream = File.OpenRead(attribute.Path);
 
-			foreach (AssemblyName assemblyName in library.GetDefaultAssemblyNames(DependencyContext.Default))
+			AssemblyLoadContext assemblyLoadContext = new("Unloadable Packet Manager", isCollectible: true);
+
+			if (this.TryLoadProtocolAssembly(assemblyLoadContext.LoadFromStream(fileStream), out ProtocolData? protocolData))
 			{
-				if (!assemblyName.FullName.StartsWith(protocolLibraryName))
+				protocolData.PhysicalFileProvider = new PhysicalFileProvider(Path.GetDirectoryName(attribute.Path)!);
+
+				RegisterCallback();
+
+				void RegisterCallback()
 				{
-					continue;
+					protocolData.PhysicalFileProvider.Watch("*").RegisterChangeCallback(_ =>
+					{
+						this.logger.LogInformation($"HotSwapping protocol data for {protocolData.Revision}");
+
+						using FileStream fileStream = File.OpenRead(attribute.Path);
+
+						AssemblyLoadContext assemblyLoadContext = new("Unloadable Packet Manager", isCollectible: true);
+
+						protocolData.Update(this.serviceProvider, assemblyLoadContext.LoadFromStream(fileStream));
+
+						RegisterCallback();
+					}, null);
 				}
-
-				AssemblyLoadContext.Default.LoadFromAssemblyName(assemblyName);
-			}
-		}
-
-		foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
-		{
-			GameProtocolAttribute? attribute = assembly.GetCustomAttribute<GameProtocolAttribute>();
-			if (attribute is not null)
-			{
-				this.protocolAssemblies.Add(attribute.Revision, assembly);
-
-				this.logger.LogInformation($"Found protocol data for revision {attribute.Revision}");
 			}
 		}
 	}
@@ -71,10 +77,12 @@ internal sealed class PacketManagerCache
 				continue;
 			}
 
+			AssemblyLoadContext assemblyLoadContext = AssemblyLoadContext.Default;
+
 			Assembly assembly;
-			if (file.PhysicalPath is not null)
+			if (!assemblyLoadContext.IsCollectible && file.PhysicalPath is not null)
 			{
-				assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(file.PhysicalPath);
+				assembly = assemblyLoadContext.LoadFromAssemblyPath(file.PhysicalPath);
 			}
 			else
 			{
@@ -86,41 +94,130 @@ internal sealed class PacketManagerCache
 					using Stream stream = file.CreateReadStream();
 					using Stream symbolsStream = symbolsFile.CreateReadStream();
 
-					assembly = AssemblyLoadContext.Default.LoadFromStream(stream, symbolsStream);
+					assembly = assemblyLoadContext.LoadFromStream(stream, symbolsStream);
 				}
 				else
 				{
 					using Stream stream = file.CreateReadStream();
 
-					assembly = AssemblyLoadContext.Default.LoadFromStream(stream);
+					assembly = assemblyLoadContext.LoadFromStream(stream);
 				}
 			}
 
-			GameProtocolAttribute? attribute = assembly.GetCustomAttribute<GameProtocolAttribute>();
-			if (attribute is not null)
-			{
-				this.protocolAssemblies.Add(attribute.Revision, assembly);
-
-				this.logger.LogInformation($"Found protocol data for revision {attribute.Revision}");
-			}
-			else
-			{
-				this.logger.LogWarning($"Found invalid protocol assembly {file.Name}");
-			}
+			this.TryLoadProtocolAssembly(assembly, out _);
 		}
 	}
 
-	internal bool TryCreatePacketManager(string version, [NotNullWhen(true)] out Lazy<AbstractGamePacketManager>? packetManager)
+	private bool TryLoadProtocolAssembly(Assembly assembly, [NotNullWhen(true)] out ProtocolData? protocolData)
 	{
-		if (this.protocolAssemblies.TryGetValue(version, out Assembly? assembly))
+		GameProtocolAttribute? attribute = assembly.GetCustomAttribute<GameProtocolAttribute>();
+		if (attribute is not null)
 		{
-			GameProtocolManagerAttribute? attribute = assembly.GetCustomAttribute<GameProtocolManagerAttribute>();
+			protocolData = new ProtocolData(this.serviceProvider, attribute.Revision, assembly);
 
-			packetManager = new Lazy<AbstractGamePacketManager>(() => attribute!.CreatePacketManager(this.serviceProvider));
+			this.protocols.Add(attribute.Revision, protocolData);
+
+			this.logger.LogInformation($"Found protocol data for revision {attribute.Revision}");
+
+			return true;
+		}
+		else
+		{
+			this.logger.LogWarning($"Found invalid protocol assembly {assembly.FullName}");
+		}
+
+		protocolData = null;
+
+		return false;
+	}
+
+	private void Refresh()
+	{
+		this.logger.LogInformation("Updating protocols");
+
+		foreach (ProtocolData protocol in this.protocols.Values)
+		{
+			protocol.Update(this.serviceProvider);
+		}
+	}
+
+	internal bool TryCreatePacketManager(string version, [NotNullWhen(true)] out Func<AbstractGamePacketManager>? packetManagerGetter)
+	{
+		if (this.protocols.TryGetValue(version, out ProtocolData? protocol))
+		{
+			packetManagerGetter = protocol.PacketManagerGetter;
+
 			return true;
 		}
 
-		packetManager = null;
+		packetManagerGetter = null;
+
 		return false;
+	}
+
+	private sealed class ProtocolData
+	{
+		internal string Revision { get; }
+
+		private Assembly assembly;
+		private Lazy<AbstractGamePacketManager> packetManager;
+
+		internal Func<AbstractGamePacketManager> PacketManagerGetter { get; }
+
+		internal PhysicalFileProvider? PhysicalFileProvider { get; set; }
+
+		internal ProtocolData(IServiceProvider serviceProvider, string revision, Assembly assembly)
+		{
+			this.Revision = revision;
+
+			this.Update(serviceProvider, assembly);
+
+			this.PacketManagerGetter = () => this.packetManager.Value;
+		}
+
+		[MemberNotNull(nameof(ProtocolData.packetManager))]
+		internal void Update(IServiceProvider serviceProvider)
+		{
+			this.Update(serviceProvider, this.assembly);
+		}
+
+		[MemberNotNull(nameof(ProtocolData.packetManager), nameof(ProtocolData.assembly))]
+		internal void Update(IServiceProvider serviceProvider, Assembly assembly)
+		{
+			this.assembly = assembly;
+			this.packetManager = new Lazy<AbstractGamePacketManager>(() => assembly.GetCustomAttribute<GameProtocolManagerAttribute>()!.CreatePacketManager(serviceProvider));
+		}
+	}
+
+	internal static class MetadataUpdateHandler
+	{
+		internal static PacketManagerCache? PacketManagerCache { get; set; }
+
+		private static void ClearCache(Type[]? updatedTypes)
+		{
+		}
+
+		private static void UpdateApplication(Type[]? updatedTypes)
+		{
+			if (MetadataUpdateHandler.PacketManagerCache is not { } packetManagerCache)
+			{
+				return;
+			}
+
+			if (updatedTypes is null)
+			{
+				packetManagerCache.Refresh();
+				return;
+			}
+
+			foreach (Type updatedType in updatedTypes)
+			{
+				if (updatedType.GetCustomAttribute<PacketManagerRegisterAttribute>() is not null)
+				{
+					packetManagerCache.Refresh();
+					return;
+				}
+			}
+		}
 	}
 }
