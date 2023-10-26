@@ -19,7 +19,7 @@ internal sealed partial class NavigatorManager : INavigatorManager
 
 	private readonly IUserManager userManager;
 
-	private readonly TypedCache<int, Lazy<Task<IRoomInfo?>>> roomData;
+	private readonly AsyncTypedCache<int, IRoomInfo?> roomData;
 
 	private Snapshot snapshot;
 
@@ -29,7 +29,7 @@ internal sealed partial class NavigatorManager : INavigatorManager
 
 		this.userManager = userManager;
 
-		this.roomData = new TypedCache<int, Lazy<Task<IRoomInfo?>>>();
+		this.roomData = new AsyncTypedCache<int, IRoomInfo?>(this.InternalLoadRoomDataAsync);
 
 		this.snapshot = new Snapshot(this, Cache.CreateBuilder().ToImmutable());
 	}
@@ -66,25 +66,7 @@ internal sealed partial class NavigatorManager : INavigatorManager
 
 	public ValueTask<IRoomInfo?> GetRoomDataAsync(int id, CancellationToken cancellationToken)
 	{
-		TypedCacheEntry<Lazy<Task<IRoomInfo?>>> value = this.GetCacheEntry(id);
-
-		Task<IRoomInfo?> task = value.Value.Value;
-		if (task.IsCompletedSuccessfully)
-		{
-			return ValueTask.FromResult(task.Result);
-		}
-
-		return new ValueTask<IRoomInfo?>(task);
-	}
-
-	private TypedCacheEntry<Lazy<Task<IRoomInfo?>>> GetCacheEntry(int id)
-	{
-		return this.roomData.GetOrAdd(id, static (key, navigatorManager) =>
-		{
-			Lazy<Task<IRoomInfo?>> value = new(() => navigatorManager.InternalLoadRoomDataAsync(key));
-
-			return new TypedCacheEntry<Lazy<Task<IRoomInfo?>>>(value);
-		}, this);
+		return this.roomData.GetAsync(id);
 	}
 
 	private async Task<IRoomInfo?> InternalLoadRoomDataAsync(int id)

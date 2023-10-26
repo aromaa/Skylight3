@@ -1,5 +1,5 @@
-﻿using System.Runtime.CompilerServices;
-using Skylight.API.Game.Rooms;
+﻿using Skylight.API.Game.Rooms;
+using Skylight.Server.Extensions;
 
 namespace Skylight.Server.Game.Rooms.Scheduler.Tasks;
 
@@ -32,21 +32,7 @@ internal sealed class AsyncFuncRoomTask<TState, TOut> : IRoomTask
 				return;
 			}
 
-			task.AsTask().ContinueWith(static (task, state) =>
-			{
-				if (task.IsCompletedSuccessfully)
-				{
-					Unsafe.As<TaskCompletionSource<TOut>>(state!).SetResult(task.Result);
-				}
-				else if (task.IsFaulted)
-				{
-					Unsafe.As<TaskCompletionSource<TOut>>(state!).SetException(task.Exception);
-				}
-				else
-				{
-					Unsafe.As<TaskCompletionSource<TOut>>(state!).SetCanceled();
-				}
-			}, this.taskCompletionSource, TaskContinuationOptions.ExecuteSynchronously);
+			this.taskCompletionSource.SetFromTask(task.AsTask());
 		}
 		catch (Exception e)
 		{

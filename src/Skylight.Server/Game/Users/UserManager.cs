@@ -2,6 +2,7 @@
 using Skylight.API.Game.Users;
 using Skylight.Domain.Users;
 using Skylight.Infrastructure;
+using Skylight.Server.Collections.Cache;
 
 namespace Skylight.Server.Game.Users;
 
@@ -9,32 +10,38 @@ internal sealed class UserManager : IUserManager
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
 
+	private readonly AsyncTypedCache<int, IUserInfo?> userInfos;
+	private readonly AsyncTypedCache<int, IUserProfile?> userProfiles;
+
 	public UserManager(IDbContextFactory<SkylightContext> dbContextFactory)
 	{
 		this.dbContextFactory = dbContextFactory;
+
+		this.userInfos = new AsyncTypedCache<int, IUserInfo?>(null!);
+		this.userProfiles = new AsyncTypedCache<int, IUserProfile?>(this.InternalLoadUserProfileAsync);
 	}
 
-	public async ValueTask<IUserInfo?> GetUserInfoAsync(int id, CancellationToken cancellationToken)
+	public async ValueTask<IUserInfo?> GetUserInfoAsync(int id, CancellationToken cancellationToken = default)
 	{
-		return await this.LoadUserProfileAsync(id, cancellationToken).ConfigureAwait(false);
+		return await this.userProfiles.GetAsync(id).ConfigureAwait(false);
 	}
 
-	public async ValueTask<IUserProfile?> GetUserProfileAsync(int id, CancellationToken cancellationToken)
+	public ValueTask<IUserProfile?> GetUserProfileAsync(int id, CancellationToken cancellationToken = default)
 	{
-		return await this.LoadUserProfileAsync(id, cancellationToken).ConfigureAwait(false);
+		return this.userProfiles.GetAsync(id);
 	}
 
-	public async Task<IUserProfile?> LoadUserProfileAsync(int id, CancellationToken cancellationToken)
-	{
-		await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+	public Task<IUserProfile?> LoadUserProfileAsync(int userId, CancellationToken cancellationToken = default) => this.InternalLoadUserProfileAsync(userId);
 
-		UserEntity? user = await dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id, cancellationToken).ConfigureAwait(false);
+	public async Task<IUserProfile?> InternalLoadUserProfileAsync(int id)
+	{
+		await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+		UserEntity? user = await dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id).ConfigureAwait(false);
 		if (user is null)
 		{
 			return null;
 		}
-
-		//TODO: Caching!
 
 		return new UserInfo(user);
 	}

@@ -79,7 +79,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 				throw new Exception($"Floor furniture {floorItem.FurnitureId} not found");
 			}
 
-			IUserProfile? owner = await this.userManager.LoadUserProfileAsync(floorItem.UserId, cancellationToken).ConfigureAwait(false);
+			IUserInfo? owner = await this.userManager.GetUserInfoAsync(floorItem.UserId, cancellationToken).ConfigureAwait(false);
 			if (owner is null)
 			{
 				throw new Exception($"User {floorItem.UserId} not found");
@@ -101,7 +101,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 				throw new Exception($"Wall furniture {wallItem.FurnitureId} not found");
 			}
 
-			IUserProfile? owner = await this.userManager.LoadUserProfileAsync(wallItem.UserId, cancellationToken).ConfigureAwait(false);
+			IUserInfo? owner = await this.userManager.GetUserInfoAsync(wallItem.UserId, cancellationToken).ConfigureAwait(false);
 			if (owner is null)
 			{
 				throw new Exception($"User {wallItem.UserId} not found");
