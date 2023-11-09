@@ -31,23 +31,15 @@ internal sealed class AsyncTypedCache<TKey, TValue>
 		return new ValueTask<TValue>(Unsafe.As<PendingAsyncTask>(value).LoadAsync(entry, key, this.loader));
 	}
 
-	private sealed class PendingAsyncTask : TaskCompletionSource<object?>
+	private sealed class PendingAsyncTask : TaskCompletionSource<TValue>
 	{
-		private Task<TValue>? castingTask;
+		private int initialized;
 
 		internal Task<TValue> LoadAsync(TypedCacheEntry<object?> entry, TKey key, Func<TKey, Task<TValue>> loader)
 		{
-			Task<TValue>? castingTask = this.castingTask;
-			if (castingTask is not null)
+			if (this.initialized != 0 || Interlocked.CompareExchange(ref this.initialized, 1, 0) == 1)
 			{
-				return castingTask;
-			}
-
-			Task<TValue> newCastingTask = this.Task.ContinueWith(static t => (TValue)t.Result!, TaskContinuationOptions.ExecuteSynchronously);
-			if (Interlocked.CompareExchange(ref this.castingTask, newCastingTask, null) is not null)
-			{
-				//Lost the race, consume the task as we created it
-				return newCastingTask;
+				return this.Task;
 			}
 
 			loader(key).ContinueWith(static (task, state) =>
@@ -78,7 +70,7 @@ internal sealed class AsyncTypedCache<TKey, TValue>
 				}
 			}, (This: this, Entry: entry), TaskContinuationOptions.ExecuteSynchronously);
 
-			return newCastingTask;
+			return this.Task;
 		}
 	}
 }
