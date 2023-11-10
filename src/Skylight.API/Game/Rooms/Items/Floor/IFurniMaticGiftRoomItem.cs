@@ -3,11 +3,11 @@ using Skylight.API.Game.Furniture.Floor;
 
 namespace Skylight.API.Game.Rooms.Items.Floor;
 
-public interface IFurniMaticGiftRoomItem : IFloorRoomItem, IFurnitureItem<IFurniMaticGiftFurniture>, IFurnitureData<DateTimeOffset>
+public interface IFurniMaticGiftRoomItem : IFloorRoomItem, IFurnitureItem<IFurniMaticGiftFurniture>, IFurnitureData<DateTime>
 {
 	public new IFurniMaticGiftFurniture Furniture { get; }
 
-	public DateTimeOffset RecycledAt { get; }
+	public DateTime RecycledAt { get; }
 
 	IFloorFurniture IFurnitureItem<IFloorFurniture>.Furniture => this.Furniture;
 }

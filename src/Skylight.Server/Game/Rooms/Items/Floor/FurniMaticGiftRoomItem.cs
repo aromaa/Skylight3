@@ -11,9 +11,9 @@ internal sealed class FurniMaticGiftRoomItem : FloorRoomItem, IFurniMaticGiftRoo
 {
 	public override IFurniMaticGiftFurniture Furniture { get; }
 
-	public DateTimeOffset RecycledAt { get; }
+	public DateTime RecycledAt { get; }
 
-	public FurniMaticGiftRoomItem(IRoom room, int id, IUserInfo owner, IFurniMaticGiftFurniture furniture, Point3D position, int direction, DateTimeOffset recycledAt)
+	public FurniMaticGiftRoomItem(IRoom room, int id, IUserInfo owner, IFurniMaticGiftFurniture furniture, Point3D position, int direction, DateTime recycledAt)
 		: base(room, id, owner, position, direction)
 	{
 		this.Furniture = furniture;

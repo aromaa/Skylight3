@@ -13,7 +13,7 @@ public class UserEntity
 	public string Gender { get; set; } = null!;
 	public string Motto { get; set; } = null!;
 
-	public DateTimeOffset LastOnline { get; set; }
+	public DateTime LastOnline { get; set; }
 
 	public UserSettingsEntity? Settings { get; set; }
 

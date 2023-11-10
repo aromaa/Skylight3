@@ -6,15 +6,15 @@ using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor.Factory;
 
-internal sealed class FurniMaticGiftRoomItemFactory : FloorRoomItemFactory<IFurniMaticGiftFurniture, FurniMaticGiftRoomItem, DateTimeOffset>
+internal sealed class FurniMaticGiftRoomItemFactory : FloorRoomItemFactory<IFurniMaticGiftFurniture, FurniMaticGiftRoomItem, DateTime>
 {
-	public override FurniMaticGiftRoomItem Create(IRoom room, int itemId, IUserInfo owner, IFurniMaticGiftFurniture furniture, Point3D position, int direction, DateTimeOffset data)
+	public override FurniMaticGiftRoomItem Create(IRoom room, int itemId, IUserInfo owner, IFurniMaticGiftFurniture furniture, Point3D position, int direction, DateTime data)
 	{
 		return new FurniMaticGiftRoomItem(room, itemId, owner, furniture, position, direction, data);
 	}
 
 	public override FurniMaticGiftRoomItem Create(IRoom room, int itemId, IUserInfo owner, IFurniMaticGiftFurniture furniture, Point3D position, int direction, JsonDocument? extraData)
 	{
-		return new FurniMaticGiftRoomItem(room, itemId, owner, furniture, position, direction, extraData?.RootElement.GetDateTimeOffset() ?? DateTimeOffset.UnixEpoch);
+		return new FurniMaticGiftRoomItem(room, itemId, owner, furniture, position, direction, extraData?.RootElement.GetDateTime() ?? DateTime.UnixEpoch);
 	}
 }

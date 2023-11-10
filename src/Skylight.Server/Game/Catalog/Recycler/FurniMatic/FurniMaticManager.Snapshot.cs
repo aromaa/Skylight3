@@ -57,7 +57,7 @@ internal partial class FurniMaticManager
 			{
 				UserId = user.Profile.Id,
 				FurnitureId = giftFurniture.Id,
-				ExtraData = JsonSerializer.SerializeToDocument(this.timeProvider.GetUtcNow())
+				ExtraData = JsonSerializer.SerializeToDocument(this.timeProvider.GetUtcNow().UtcDateTime)
 			};
 
 			try

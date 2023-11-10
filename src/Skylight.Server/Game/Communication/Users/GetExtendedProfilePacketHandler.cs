@@ -45,7 +45,7 @@ internal sealed class GetExtendedProfilePacketHandler<T> : UserPacketHandler<T>
 				return;
 			}
 
-			client.SendAsync(new ExtendedProfileOutgoingPacket(new ExtendedProfileData(this.UserId, profile.Username, profile.Figure, profile.Motto, "08-03-2001", 666, 0, false, false, true, new List<string>(), (int)(DateTimeOffset.Now - profile.LastOnline).TotalSeconds, true, false, 69, 8, 420, true, false)));
+			client.SendAsync(new ExtendedProfileOutgoingPacket(new ExtendedProfileData(this.UserId, profile.Username, profile.Figure, profile.Motto, "08-03-2001", 666, 0, false, false, true, new List<string>(), (int)(DateTime.Now - profile.LastOnline).TotalSeconds, true, false, 69, 8, 420, true, false)));
 		}
 	}
 }

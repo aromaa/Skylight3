@@ -9,9 +9,9 @@ internal sealed class FurniMaticGiftInventoryItem : FloorInventoryItem, IFurniMa
 {
 	public override IFurniMaticGiftFurniture Furniture { get; }
 
-	public DateTimeOffset RecycledAt { get; }
+	public DateTime RecycledAt { get; }
 
-	public FurniMaticGiftInventoryItem(int id, IUserInfo owner, IFurniMaticGiftFurniture furniture, DateTimeOffset recucledAt)
+	public FurniMaticGiftInventoryItem(int id, IUserInfo owner, IFurniMaticGiftFurniture furniture, DateTime recucledAt)
 		: base(id, owner)
 	{
 		this.Furniture = furniture;

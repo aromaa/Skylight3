@@ -12,7 +12,7 @@ internal sealed class UserInfo : IUserProfile
 	public string Gender { get; set; }
 	public string Motto { get; set; }
 
-	public DateTimeOffset LastOnline { get; set; }
+	public DateTime LastOnline { get; set; }
 
 	internal UserInfo(UserEntity entity)
 	{

@@ -9,5 +9,5 @@ public interface IUserInfo
 	public string Gender { get; set; }
 	public string Motto { get; set; }
 
-	public DateTimeOffset LastOnline { get; set; }
+	public DateTime LastOnline { get; set; }
 }
