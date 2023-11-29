@@ -6,9 +6,9 @@ internal sealed class NetworkSettings
 
 	internal sealed class ListenerSettings
 	{
-		public required List<string> EndPoints { get; set; }
+		public List<string> EndPoints { get; set; } = null!;
 
-		public required string Revision { get; set; }
+		public string Revision { get; set; } = null!;
 
 		public string? CryptoPrime { get; set; }
 		public string? CryptoGenerator { get; set; }

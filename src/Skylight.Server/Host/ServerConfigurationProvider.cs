@@ -14,7 +14,7 @@ internal sealed class ServerConfigurationProvider : ConfigurationProvider
 
 	public override void Load()
 	{
-		NpgsqlDataSourceBuilder dataSourceBuilder = new(this.connectionString)
+		NpgsqlSlimDataSourceBuilder dataSourceBuilder = new(this.connectionString)
 		{
 			ConnectionStringBuilder =
 			{

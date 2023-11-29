@@ -15,7 +15,7 @@
 	<ItemGroup>
 		<EditorConfigFiles Include="$(MSBuildThisFileDirectory)CodeAnalysis.globalconfig" />
 		<PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.507" PrivateAssets="all" />
-		<PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.7.30" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.8.14" PrivateAssets="all" />
 	</ItemGroup>
 
 </Project>
