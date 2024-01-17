@@ -90,7 +90,6 @@ internal sealed partial class SaveSongNewPacketHandler<T> : UserPacketHandler<T>
 				Name = name,
 				Length = songLength,
 				Data = songData
-
 			};
 
 			dbContext.Add(songEntity);

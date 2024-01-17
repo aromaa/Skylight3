@@ -37,8 +37,8 @@ internal sealed partial class EditSongPacketHandler<T> : UserPacketHandler<T>
 		{
 			await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
-			int _songId = songId;
-			SongEntity? songEntity = await dbContext.Songs.FirstOrDefaultAsync(s => s.Id == _songId).ConfigureAwait(false);
+			int songIdCaptured = songId;
+			SongEntity? songEntity = await dbContext.Songs.FirstOrDefaultAsync(s => s.Id == songIdCaptured).ConfigureAwait(false);
 			if (songEntity is null)
 			{
 				return;

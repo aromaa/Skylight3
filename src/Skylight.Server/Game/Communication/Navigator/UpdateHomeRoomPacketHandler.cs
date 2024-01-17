@@ -39,15 +39,14 @@ internal sealed partial class UpdateHomeRoomPacketHandler<T> : UserPacketHandler
 			await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
 			await dbContext.UserSettings.Upsert(new UserSettingsEntity
-				{
-					UserId = client.User!.Profile.Id,
-					HomeRoomId = homeRoomId,
-				})
-				.On(c => c.UserId)
-				.WhenMatched((_, c) => new UserSettingsEntity
-				{
-					HomeRoomId = c.HomeRoomId,
-				}).RunAsync().ConfigureAwait(false);
+			{
+				UserId = client.User!.Profile.Id,
+				HomeRoomId = homeRoomId,
+			}).On(c => c.UserId)
+			.WhenMatched((_, c) => new UserSettingsEntity
+			{
+				HomeRoomId = c.HomeRoomId,
+			}).RunAsync().ConfigureAwait(false);
 
 			client.User.Settings.HomeRoomId = homeRoomId;
 

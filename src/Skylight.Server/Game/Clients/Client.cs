@@ -193,7 +193,7 @@ internal sealed class Client : IClient
 		{
 			internal static Action<Task, object?> Continuation { get; set; } = (task, state) =>
 			{
-				Unsafe.As<PacketScheduler>(state!).ScheduledTaskCompletion(typeof(T), task, ContinuationHolder<T>.Continuation);
+				Unsafe.As<PacketScheduler>(state!).ScheduledTaskCompletion(typeof(T), task, ContinuationHolder<T>.Continuation!);
 			};
 		}
 	}
