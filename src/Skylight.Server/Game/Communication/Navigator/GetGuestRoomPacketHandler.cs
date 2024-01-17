@@ -12,7 +12,7 @@ using Skylight.Protocol.Packets.Outgoing.Navigator;
 namespace Skylight.Server.Game.Communication.Navigator;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class GetGuestRoomPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class GetGuestRoomPacketHandler<T> : UserPacketHandler<T>
 	where T : IGetGuestRoomIncomingPacket
 {
 	private readonly INavigatorManager navigatorManager;
@@ -24,36 +24,20 @@ internal sealed class GetGuestRoomPacketHandler<T> : UserPacketHandler<T>
 
 	internal override void Handle(IUser user, in T packet)
 	{
-		user.Client.ScheduleTask(new GetGuestRoomTask
+		int roomId = packet.RoomId;
+
+		bool enterRoom = packet.EnterRoom;
+		bool roomForward = packet.RoomForward;
+
+		user.Client.ScheduleTask(async client =>
 		{
-			NavigatorManager = this.navigatorManager,
-
-			RoomId = packet.RoomId,
-
-			EnterRoom = packet.EnterRoom,
-			RoomForward = packet.RoomForward,
-		});
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	private readonly struct GetGuestRoomTask : IClientTask
-	{
-		internal INavigatorManager NavigatorManager { get; init; }
-
-		internal int RoomId { get; init; }
-
-		internal bool EnterRoom { get; init; }
-		internal bool RoomForward { get; init; }
-
-		public async Task ExecuteAsync(IClient client)
-		{
-			IRoomInfo? room = await this.NavigatorManager.GetRoomDataAsync(this.RoomId).ConfigureAwait(false);
+			IRoomInfo? room = await this.navigatorManager.GetRoomDataAsync(roomId).ConfigureAwait(false);
 			if (room is null)
 			{
 				return;
 			}
 
-			client.SendAsync(new GetGuestRoomResultOutgoingPacket(this.EnterRoom, this.RoomForward, new GuestRoomData(room.Id, room.Name, room.Owner.Username, room.Layout.Id, 0), false, false, false, false, (0, 0, 0), (0, 1, 1, 1, 50)));
-		}
+			client.SendAsync(new GetGuestRoomResultOutgoingPacket(enterRoom, roomForward, new GuestRoomData(room.Id, room.Name, room.Owner.Username, room.Layout.Id, 0), false, false, false, false, (0, 0, 0), (0, 1, 1, 1, 50)));
+		});
 	}
 }

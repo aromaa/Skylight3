@@ -30,54 +30,19 @@ internal sealed class RoomTaskScheduler
 		this.synchronizationContext = new RoomSynchronizationContext(this);
 	}
 
-	public bool ScheduleTask<TTask>(in TTask task)
+	public bool PostTask<TTask>(TTask task)
 		where TTask : IRoomTask => this.ScheduleTaskInternal<RawRoomTaskScheduler<TTask>, bool>(new RawRoomTaskScheduler<TTask>(task));
 
-	public bool ScheduleTask(Action<IRoom> action) => this.ScheduleTask(static (room, state) => state(room), action);
-	public bool ScheduleTask<TState>(Action<IRoom, TState> action, in TState state) => this.ScheduleTaskInternal<ActionRoomTaskScheduler<TState>, bool>(new ActionRoomTaskScheduler<TState>(action, state));
+	public ValueTask PostTaskAsync<TTask>(TTask task)
+		where TTask : IRoomTask => this.ScheduleTaskInternal<AsyncRoomTaskScheduler<TTask>, ValueTask>(new AsyncRoomTaskScheduler<TTask>(task));
 
-	public ValueTask ScheduleTaskAsync<TTask>(in TTask task)
-		where TTask : IRoomTask
-	{
-		return this.ScheduleTaskAsync(static (room, state) =>
-		{
-			state.Execute(room);
+	public ValueTask<TResult> ScheduleTask<TTask, TResult>(in TTask task)
+		where TTask : IRoomTask<TResult> => this.ScheduleTaskInternal<ResultRoomTaskScheduler<TTask, TResult>, ValueTask<TResult>>(new ResultRoomTaskScheduler<TTask, TResult>(task));
+	public ValueTask<TResult> ScheduleTaskAsync<TTask, TResult>(in TTask task)
+		where TTask : IAsyncRoomTask<TResult> => this.ScheduleTaskInternal<AsyncResultRoomTaskScheduler<TTask, TResult>, ValueTask<TResult>>(new AsyncResultRoomTaskScheduler<TTask, TResult>(task));
 
-			return ValueTask.CompletedTask;
-		}, task);
-	}
-
-	public ValueTask ScheduleTaskAsync(Action<IRoom> action)
-	{
-		return this.ScheduleTaskAsync(static (room, state) =>
-		{
-			state(room);
-
-			return ValueTask.CompletedTask;
-		}, action);
-	}
-
-	public ValueTask ScheduleTaskAsync<TState>(Action<IRoom, TState> action, in TState state)
-	{
-		return this.ScheduleTaskAsync(static (room, state) =>
-		{
-			state.action(room, state.state);
-
-			return ValueTask.CompletedTask;
-		}, (action, state));
-	}
-
-	public ValueTask ScheduleTaskAsync(Func<IRoom, ValueTask> func) => this.ScheduleTaskAsync(static (room, state) => state(room), func);
-	public ValueTask ScheduleTaskAsync<TState>(Func<IRoom, TState, ValueTask> func, in TState state) => this.ScheduleTaskInternal<FuncRoomTaskScheduler<TState>, ValueTask>(new FuncRoomTaskScheduler<TState>(func, state));
-
-	public ValueTask<TOut> ScheduleTaskAsync<TOut>(Func<IRoom, TOut> func) => this.ScheduleTaskAsync(static (room, state) => ValueTask.FromResult(state(room)), func);
-	public ValueTask<TOut> ScheduleTaskAsync<TState, TOut>(Func<IRoom, TState, TOut> func, in TState state) => this.ScheduleTaskAsync(static (room, state) => ValueTask.FromResult(state.func(room, state.state)), (func, state));
-
-	public ValueTask<TOut> ScheduleTaskAsync<TOut>(Func<IRoom, ValueTask<TOut>> func) => this.ScheduleTaskAsync(static (room, state) => state(room), func);
-	public ValueTask<TOut> ScheduleTaskAsync<TState, TOut>(Func<IRoom, TState, ValueTask<TOut>> func, in TState state) => this.ScheduleTaskInternal<FuncRoomTaskScheduler<TState, TOut>, ValueTask<TOut>>(new FuncRoomTaskScheduler<TState, TOut>(func, state));
-
-	private TOut ScheduleTaskInternal<TTask, TOut>(in TTask action)
-		where TTask : IRoomTaskScheduler<TOut>
+	private TResult ScheduleTaskInternal<TTask, TResult>(in TTask action)
+		where TTask : IRoomTaskScheduler<TResult>
 	{
 		if (this.room.TickingLock.TryEnter())
 		{
@@ -98,7 +63,7 @@ internal sealed class RoomTaskScheduler
 		}
 		else
 		{
-			return action.CreateTask(this.room);
+			return action.CreateTask(this);
 		}
 	}
 
@@ -186,51 +151,63 @@ internal sealed class RoomTaskScheduler
 	private readonly struct RawRoomTaskScheduler<TTask>(TTask task) : IRoomTaskScheduler<bool>
 		where TTask : IRoomTask
 	{
-		public bool CreateTask(Room room)
+		public bool Execute(Room room)
 		{
 			task.Execute(room);
 
 			return true;
 		}
 
-		public bool Execute(Room room) => room.RoomTaskScheduler.ScheduleTaskSlow(task);
+		public bool CreateTask(RoomTaskScheduler scheduler) => scheduler.ScheduleTaskSlow(task);
 	}
 
-	private readonly struct ActionRoomTaskScheduler<TState>(Action<IRoom, TState> action, TState state) : IRoomTaskScheduler<bool>
+	private readonly struct AsyncRoomTaskScheduler<TTask>(TTask task) : IRoomTaskScheduler<ValueTask>
+		where TTask : IRoomTask
 	{
-		public bool CreateTask(Room room)
-		{
-			action(room, state);
-
-			return true;
-		}
-
-		public bool Execute(Room room) => room.RoomTaskScheduler.ScheduleTaskSlow(new ActionRoomTask<TState>(action, state));
-	}
-
-	private readonly struct FuncRoomTaskScheduler<TState>(Func<IRoom, TState, ValueTask> func, TState state) : IRoomTaskScheduler<ValueTask>
-	{
-		public ValueTask CreateTask(Room room) => func(room, state);
 		public ValueTask Execute(Room room)
 		{
-			AsyncFuncRoomTask<TState> task = new(func, state);
+			task.Execute(room);
 
-			room.RoomTaskScheduler.ScheduleTaskSlow(task);
+			return ValueTask.CompletedTask;
+		}
 
-			return new ValueTask(task.Task);
+		public ValueTask CreateTask(RoomTaskScheduler scheduler)
+		{
+			AsyncRoomTask<TTask> asyncTask = new(task);
+
+			scheduler.ScheduleTaskSlow(asyncTask);
+
+			return new ValueTask(asyncTask.Task);
 		}
 	}
 
-	private readonly struct FuncRoomTaskScheduler<TState, TOut>(Func<IRoom, TState, ValueTask<TOut>> func, TState state) : IRoomTaskScheduler<ValueTask<TOut>>
+	private readonly struct ResultRoomTaskScheduler<TTask, TResult>(TTask task) : IRoomTaskScheduler<ValueTask<TResult>>
+		where TTask : IRoomTask<TResult>
 	{
-		public ValueTask<TOut> CreateTask(Room room) => func(room, state);
-		public ValueTask<TOut> Execute(Room room)
+		public ValueTask<TResult> Execute(Room room) => ValueTask.FromResult(task.Execute(room));
+
+		public ValueTask<TResult> CreateTask(RoomTaskScheduler scheduler)
 		{
-			AsyncFuncRoomTask<TState, TOut> task = new(func, state);
+			ResultRoomTask<TTask, TResult> asyncTask = new(task);
 
-			room.RoomTaskScheduler.ScheduleTaskSlow(task);
+			scheduler.ScheduleTaskSlow(asyncTask);
 
-			return new ValueTask<TOut>(task.Task);
+			return new ValueTask<TResult>(asyncTask.Task);
+		}
+	}
+
+	private readonly struct AsyncResultRoomTaskScheduler<TTask, TResult>(TTask task) : IRoomTaskScheduler<ValueTask<TResult>>
+		where TTask : IAsyncRoomTask<TResult>
+	{
+		public ValueTask<TResult> Execute(Room room) => task.Execute(room);
+
+		public ValueTask<TResult> CreateTask(RoomTaskScheduler scheduler)
+		{
+			AsyncResultRoomTask<TTask, TResult> asyncTask = new(task);
+
+			scheduler.ScheduleTaskSlow(asyncTask);
+
+			return new ValueTask<TResult>(asyncTask.Task);
 		}
 	}
 }

@@ -11,7 +11,7 @@ using Skylight.Protocol.Packets.Outgoing.Sound;
 namespace Skylight.Server.Game.Communication.Sound;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class NewSongPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class NewSongPacketHandler<T> : UserPacketHandler<T>
 	where T : INewSongIncomingPacket
 {
 	internal override void Handle(IUser user, in T packet)
@@ -21,9 +21,9 @@ internal sealed class NewSongPacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		unit.Room.ScheduleTask(static (room, roomUnit) =>
+		unit.Room.PostTask(_ =>
 		{
-			if (!roomUnit.InRoom || !roomUnit.Room.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
+			if (!unit.InRoom || !unit.Room.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
 			{
 				return;
 			}
@@ -34,10 +34,10 @@ internal sealed class NewSongPacketHandler<T> : UserPacketHandler<T>
 				filledSlots.Add(new SoundSetData(slot, soundSet.SoundSetId, soundSet.Samples));
 			}
 
-			roomUnit.User.SendAsync(new TraxSoundPackagesOutgoingPacket(soundMachine.Furniture.SoundSetSlotCount, filledSlots));
+			unit.User.SendAsync(new TraxSoundPackagesOutgoingPacket(soundMachine.Furniture.SoundSetSlotCount, filledSlots));
 
 			List<int> soundSets = new();
-			foreach (IFloorInventoryItem item in roomUnit.User.Inventory.FloorItems)
+			foreach (IFloorInventoryItem item in unit.User.Inventory.FloorItems)
 			{
 				if (item is not ISoundSetInventoryItem soundSet)
 				{
@@ -52,7 +52,7 @@ internal sealed class NewSongPacketHandler<T> : UserPacketHandler<T>
 				soundSets.Add(soundSet.Furniture.SoundSetId);
 			}
 
-			roomUnit.User.SendAsync(new UserSoundPackagesOutgoingPacket(soundSets));
-		}, unit);
+			unit.User.SendAsync(new UserSoundPackagesOutgoingPacket(soundSets));
+		});
 	}
 }

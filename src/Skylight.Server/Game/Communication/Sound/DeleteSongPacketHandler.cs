@@ -11,7 +11,7 @@ using Skylight.Protocol.Packets.Manager;
 namespace Skylight.Server.Game.Communication.Sound;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class DeleteSongPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class DeleteSongPacketHandler<T> : UserPacketHandler<T>
 	where T : IDeleteSongIncomingPacket
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
@@ -23,31 +23,18 @@ internal sealed class DeleteSongPacketHandler<T> : UserPacketHandler<T>
 
 	internal override void Handle(IUser user, in T packet)
 	{
-		user.Client.ScheduleTask(new DeleteSongTask
+		int songId = packet.SongId;
+
+		user.Client.ScheduleTask(async _ =>
 		{
-			DbContextFactory = this.dbContextFactory,
-
-			SongId = packet.SongId
-		});
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	private readonly struct DeleteSongTask : IClientTask
-	{
-		internal IDbContextFactory<SkylightContext> DbContextFactory { get; init; }
-
-		internal int SongId { get; init; }
-
-		public async Task ExecuteAsync(IClient client)
-		{
-			await using SkylightContext dbContext = await this.DbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
+			await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
 			dbContext.Remove(new SongEntity
 			{
-				Id = this.SongId
+				Id = songId
 			});
 
 			await dbContext.SaveChangesAsync().ConfigureAwait(false);
-		}
+		});
 	}
 }

@@ -1,8 +1,6 @@
-﻿using System.Runtime.InteropServices;
-using System.Text;
+﻿using System.Text;
 using Net.Communication.Attributes;
 using Skylight.API.Game.Catalog;
-using Skylight.API.Game.Clients;
 using Skylight.API.Game.Users;
 using Skylight.Protocol.Packets.Data.Catalog;
 using Skylight.Protocol.Packets.Incoming.Catalog;
@@ -12,7 +10,7 @@ using Skylight.Protocol.Packets.Outgoing.Catalog;
 namespace Skylight.Server.Game.Communication.Catalog;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class PurchaseFromCatalogPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class PurchaseFromCatalogPacketHandler<T> : UserPacketHandler<T>
 	where T : IPurchaseFromCatalogIncomingPacket
 {
 	private readonly ICatalogManager catalogManager;
@@ -48,30 +46,17 @@ internal sealed class PurchaseFromCatalogPacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		bool scheduled = user.Client.ScheduleTask(new CatalogPurchaseTask
-		{
-			Catalog = catalog,
-			Offer = offer,
+		string extraData = Encoding.UTF8.GetString(packet.ExtraData);
+		int amount = packet.Amount;
 
-			ExtraData = Encoding.UTF8.GetString(packet.ExtraData),
-			Amount = packet.Amount
+		bool scheduled = user.Client.ScheduleTask(client =>
+		{
+			return catalog.PurchaseOfferAsync(client.User!, offer, extraData, amount);
 		});
 
 		if (!scheduled)
 		{
 			user.SendAsync(new PurchaseErrorOutgoingPacket(PurchaseErrorReason.Generic));
 		}
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	private readonly struct CatalogPurchaseTask : IClientTask
-	{
-		internal ICatalogSnapshot Catalog { get; init; }
-		internal ICatalogOffer Offer { get; init; }
-
-		internal string ExtraData { get; init; }
-		internal int Amount { get; init; }
-
-		public Task ExecuteAsync(IClient client) => this.Catalog.PurchaseOfferAsync(client.User!, this.Offer, this.ExtraData, this.Amount);
 	}
 }

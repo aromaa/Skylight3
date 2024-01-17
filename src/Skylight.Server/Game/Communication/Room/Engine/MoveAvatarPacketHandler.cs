@@ -7,7 +7,7 @@ using Skylight.Protocol.Packets.Manager;
 namespace Skylight.Server.Game.Communication.Room.Engine;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class MoveAvatarPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class MoveAvatarPacketHandler<T> : UserPacketHandler<T>
 	where T : IMoveAvatarIncomingPacket
 {
 	internal override void Handle(IUser user, in T packet)
@@ -19,14 +19,14 @@ internal sealed class MoveAvatarPacketHandler<T> : UserPacketHandler<T>
 
 		Point2D location = new(packet.X, packet.Y);
 
-		roomUnit.Room.ScheduleTask(static (_, state) =>
+		roomUnit.Room.PostTask(_ =>
 		{
-			if (!state.RoomUnit.InRoom)
+			if (!roomUnit.InRoom)
 			{
 				return;
 			}
 
-			state.RoomUnit.PathfindTo(state.Location);
-		}, (RoomUnit: roomUnit, Location: location));
+			roomUnit.PathfindTo(location);
+		});
 	}
 }

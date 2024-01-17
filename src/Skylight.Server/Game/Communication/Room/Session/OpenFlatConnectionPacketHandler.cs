@@ -12,7 +12,7 @@ using Skylight.Protocol.Packets.Outgoing.RoomSettings;
 namespace Skylight.Server.Game.Communication.Room.Session;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class OpenFlatConnectionPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class OpenFlatConnectionPacketHandler<T> : UserPacketHandler<T>
 	where T : IOpenFlatConnectionIncomingPacket
 {
 	private readonly IRoomManager roomManager;
@@ -34,38 +34,23 @@ internal sealed class OpenFlatConnectionPacketHandler<T> : UserPacketHandler<T>
 
 		IRoomSession session = user.OpenRoomSession(packet.RoomId);
 
-		user.Client.ScheduleTask(new OpenFlatTask
+		user.Client.ScheduleTask(async client =>
 		{
-			RoomManager = this.roomManager,
+			client.SendAsync(new OpenConnectionOutgoingPacket(session.RoomId));
 
-			Session = session
-		});
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	private readonly struct OpenFlatTask : IClientTask
-	{
-		internal IRoomManager RoomManager { get; init; }
-
-		internal IRoomSession Session { get; init; }
-
-		public async Task ExecuteAsync(IClient client)
-		{
-			client.SendAsync(new OpenConnectionOutgoingPacket(this.Session.RoomId));
-
-			IRoom? room = await this.RoomManager.GetRoomAsync(this.Session.RoomId).ConfigureAwait(false);
+			IRoom? room = await this.roomManager.GetRoomAsync(session.RoomId).ConfigureAwait(false);
 			if (room is null)
 			{
-				if (this.Session.Close())
+				if (session.Close())
 				{
-					client.SendAsync(new NoSuchFlatOutgoingPacket(this.Session.RoomId));
+					client.SendAsync(new NoSuchFlatOutgoingPacket(session.RoomId));
 					client.SendAsync(new CloseConnectionOutgoingPacket());
 				}
 
 				return;
 			}
 
-			this.Session.LoadRoom(room);
-		}
+			session.LoadRoom(room);
+		});
 	}
 }

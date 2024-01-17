@@ -15,7 +15,7 @@ using Skylight.Server.Extensions;
 namespace Skylight.Server.Game.Communication.Room.Engine;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class GetRoomEntryDataPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class GetRoomEntryDataPacketHandler<T> : UserPacketHandler<T>
 	where T : IGetRoomEntryDataIncomingPacket
 {
 	internal override void Handle(IUser user, in T packet)
@@ -30,7 +30,7 @@ internal sealed class GetRoomEntryDataPacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		roomSession.Room!.ScheduleTask(static (room, roomSession) =>
+		roomSession.Room!.PostTask(room =>
 		{
 			if (!roomSession.TryChangeState(IRoomSession.SessionState.InRoom, IRoomSession.SessionState.EnterRoom))
 			{
@@ -104,6 +104,6 @@ internal sealed class GetRoomEntryDataPacketHandler<T> : UserPacketHandler<T>
 			roomSession.User.SendAsync(new RoomEntryInfoOutgoingPacket(room.Info.Id, true));
 
 			roomSession.EnterRoom(room.UnitManager.CreateUnit(roomSession.User));
-		}, roomSession);
+		});
 	}
 }

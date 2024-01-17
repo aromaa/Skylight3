@@ -15,5 +15,7 @@ public interface IClient : IPacketSender
 	public bool ScheduleTask<T>(in T task)
 		where T : IClientTask;
 
+	public bool ScheduleTask(Func<IClient, Task> task) => throw new NotSupportedException();
+
 	public void Disconnect();
 }

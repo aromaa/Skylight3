@@ -65,69 +65,44 @@ internal sealed partial class SaveSongEditPacketHandler<T> : UserPacketHandler<T
 			}
 		}
 
-		user.Client.ScheduleTask(new SaveSongTask
+		int songId = packet.SongId;
+
+		user.Client.ScheduleTask(async client =>
 		{
-			DbContextFactory = this.dbContextFactory,
-
-			Unit = unit,
-
-			SongId = packet.SongId,
-
-			Name = name,
-			Length = songLength,
-			Data = songData
-		});
-	}
-
-	[GeneratedRegex("(?:([1-4])(?::(?:([0-9]+,[0-9]+);?)+:))?")]
-	private static partial Regex ParseSongData();
-
-	[StructLayout(LayoutKind.Auto)]
-	private readonly struct SaveSongTask : IClientTask
-	{
-		internal IDbContextFactory<SkylightContext> DbContextFactory { get; init; }
-
-		internal IUserRoomUnit Unit { get; init; }
-
-		internal int SongId { get; init; }
-
-		internal string Name { get; init; }
-		internal int Length { get; init; }
-		internal string Data { get; init; }
-
-		public async Task ExecuteAsync(IClient client)
-		{
-			int soundMachineId = await this.Unit.Room.ScheduleTaskAsync(static (room, roomUnit) =>
+			int soundMachineId = await unit.Room.ScheduleTask(room =>
 			{
-				if (!roomUnit.InRoom || !room.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
+				if (!unit.InRoom || !room.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
 				{
 					return 0;
 				}
 
 				return soundMachine.Id;
-			}, this.Unit).ConfigureAwait(false);
+			}).ConfigureAwait(false);
 
 			if (soundMachineId == 0)
 			{
 				return;
 			}
 
-			await using SkylightContext dbContext = await this.DbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
+			await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
 			SongEntity songEntity = new()
 			{
-				Id = this.SongId
+				Id = songId
 			};
 
 			dbContext.Attach(songEntity);
 
-			songEntity.Name = this.Name;
-			songEntity.Length = this.Length;
-			songEntity.Data = this.Data;
+			songEntity.Name = name;
+			songEntity.Length = songLength;
+			songEntity.Data = songData;
 
 			await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
-			client.SendAsync(new NewSongOutgoingPacket(songEntity.Id, this.Name));
-		}
+			client.SendAsync(new NewSongOutgoingPacket(songEntity.Id, name));
+		});
 	}
+
+	[GeneratedRegex("(?:([1-4])(?::(?:([0-9]+,[0-9]+);?)+:))?")]
+	private static partial Regex ParseSongData();
 }

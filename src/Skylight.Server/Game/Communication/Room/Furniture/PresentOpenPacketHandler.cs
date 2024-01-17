@@ -14,7 +14,7 @@ using Skylight.Protocol.Packets.Outgoing.Room.Furniture;
 namespace Skylight.Server.Game.Communication.Room.Furniture;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class PresentOpenPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class PresentOpenPacketHandler<T> : UserPacketHandler<T>
 	where T : IPresentOpenIncomingPacket
 {
 	private readonly IFurniMaticManager furniMaticManager;
@@ -31,40 +31,23 @@ internal sealed class PresentOpenPacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		user.Client.ScheduleTask(new OpenPresentTask
+		int itemId = packet.ItemId;
+
+		user.Client.ScheduleTask(async client =>
 		{
-			FurniMaticSnapshot = this.furniMaticManager.Current,
-
-			Unit = roomUnit,
-
-			ItemId = packet.ItemId
-		});
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	private readonly struct OpenPresentTask : IClientTask
-	{
-		internal IFurniMaticSnapshot FurniMaticSnapshot { get; init; }
-
-		internal IUserRoomUnit Unit { get; init; }
-
-		internal int ItemId { get; init; }
-
-		public async Task ExecuteAsync(IClient client)
-		{
-			IFloorRoomItem? present = await this.Unit.Room.ScheduleTaskAsync(static (room, state) =>
+			IFloorRoomItem? present = await roomUnit.Room.ScheduleTask(room =>
 			{
-				if (state.Unit.InRoom && room.ItemManager.TryGetFloorItem(state.ItemId, out IFloorRoomItem? item))
+				if (roomUnit.InRoom && room.ItemManager.TryGetFloorItem(itemId, out IFloorRoomItem? item))
 				{
 					return item;
 				}
 
 				return null;
-			}, (this.Unit, this.ItemId)).ConfigureAwait(false);
+			}).ConfigureAwait(false);
 
 			if (present is IFurniMaticGiftRoomItem roomItem)
 			{
-				IFurniMaticPrize? prize = await this.FurniMaticSnapshot.OpenGiftAsync(this.Unit.User, roomItem).ConfigureAwait(false);
+				IFurniMaticPrize? prize = await this.furniMaticManager.OpenGiftAsync(roomUnit.User, roomItem).ConfigureAwait(false);
 				if (prize is null)
 				{
 					return;
@@ -72,14 +55,14 @@ internal sealed class PresentOpenPacketHandler<T> : UserPacketHandler<T>
 
 				client.SendAsync(new PresentOpenedOutgoingPacket(prize.Name, prize.Furnitures[0] is IFloorFurniture ? FurnitureType.Floor : FurnitureType.Wall, prize.Furnitures[0].Id, false, 0, FurnitureType.Floor, string.Empty));
 
-				this.Unit.Room.ScheduleTask(static (room, itemId) =>
+				roomUnit.Room.PostTask(room =>
 				{
 					if (room.ItemManager.TryGetFloorItem(itemId, out IFloorRoomItem? item))
 					{
 						room.ItemManager.RemoveItem(item);
 					}
-				}, this.ItemId);
+				});
 			}
-		}
+		});
 	}
 }

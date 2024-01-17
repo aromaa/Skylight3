@@ -8,7 +8,7 @@ using Skylight.Protocol.Packets.Manager;
 namespace Skylight.Server.Game.Communication.Room.Engine;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class MoveObjectPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class MoveObjectPacketHandler<T> : UserPacketHandler<T>
 	where T : IMoveObjectIncomingPacket
 {
 	internal override void Handle(IUser user, in T packet)
@@ -18,19 +18,24 @@ internal sealed class MoveObjectPacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		roomUnit.Room.ScheduleTask(static (room, state) =>
+		int itemId = packet.Id;
+
+		Point2D location = new(packet.X, packet.Y);
+		int direction = packet.Direction;
+
+		roomUnit.Room.PostTask(room =>
 		{
-			if (!state.RoomUnit.InRoom)
+			if (!roomUnit.InRoom)
 			{
 				return;
 			}
 
-			if (!room.ItemManager.TryGetFloorItem(state.ItemId, out IFloorRoomItem? item))
+			if (!room.ItemManager.TryGetFloorItem(itemId, out IFloorRoomItem? item))
 			{
 				return;
 			}
 
-			room.ItemManager.MoveItem(item, state.Location, state.Direction);
-		}, (RoomUnit: roomUnit, ItemId: packet.Id, Location: new Point2D(packet.X, packet.Y), Direction: packet.Direction));
+			room.ItemManager.MoveItem(item, location, direction);
+		});
 	}
 }

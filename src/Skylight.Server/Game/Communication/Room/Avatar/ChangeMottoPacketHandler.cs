@@ -13,7 +13,7 @@ using Skylight.Protocol.Packets.Outgoing.Room.Engine;
 namespace Skylight.Server.Game.Communication.Room.Avatar;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class ChangeMottoPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class ChangeMottoPacketHandler<T> : UserPacketHandler<T>
 	where T : IChangeMottoIncomingPacket
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
@@ -36,29 +36,11 @@ internal sealed class ChangeMottoPacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		user.Client.ScheduleTask(new ChangeMottoTask
+		user.Client.ScheduleTask(async client =>
 		{
-			DbContextFactory = this.dbContextFactory,
+			client.User!.Profile.Motto = motto;
 
-			Motto = motto,
-
-			Room = roomUnit.Room
-		});
-	}
-
-	private readonly struct ChangeMottoTask : IClientTask
-	{
-		internal readonly IDbContextFactory<SkylightContext> DbContextFactory { get; init; }
-
-		internal readonly string Motto { get; init; }
-
-		internal readonly IRoom Room { get; init; }
-
-		public async Task ExecuteAsync(IClient client)
-		{
-			client.User!.Profile.Motto = this.Motto;
-
-			await using SkylightContext dbContext = await this.DbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
+			await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
 			UserEntity entity = new()
 			{
@@ -67,11 +49,11 @@ internal sealed class ChangeMottoPacketHandler<T> : UserPacketHandler<T>
 
 			dbContext.Users.Attach(entity);
 
-			entity.Motto = this.Motto;
+			entity.Motto = motto;
 
 			await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
-			_ = ((Rooms.Room)this.Room).SendAsync(new UserChangeOutgoingPacket(client.User.Profile.Id, client.User.Profile.Figure, client.User.Profile.Gender, client.User.Profile.Motto, 666));
-		}
+			_ = ((Rooms.Room)roomUnit.Room).SendAsync(new UserChangeOutgoingPacket(client.User.Profile.Id, client.User.Profile.Figure, client.User.Profile.Gender, client.User.Profile.Motto, 666));
+		});
 	}
 }

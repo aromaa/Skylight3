@@ -6,10 +6,10 @@ using Net.Communication.Attributes;
 using Skylight.API.Game.Clients;
 using Skylight.API.Game.Inventory.Items;
 using Skylight.API.Game.Inventory.Items.Wall;
+using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Interactions;
 using Skylight.API.Game.Rooms.Items.Wall;
-using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
 using Skylight.Domain.Items;
@@ -23,7 +23,7 @@ using Skylight.Protocol.Packets.Outgoing.Room.Furniture;
 namespace Skylight.Server.Game.Communication.Room.Furniture;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class PlacePostItPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class PlacePostItPacketHandler<T> : UserPacketHandler<T>
 	where T : IPlacePostItIncomingPacket
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
@@ -84,94 +84,74 @@ internal sealed class PlacePostItPacketHandler<T> : UserPacketHandler<T>
 				return;
 			}
 
-			user.Client.ScheduleTask(new PrePlacePostItTask
+			Point2D location = new(xLocation, yLocation);
+			Point2D position = new(xPosition, yPosition);
+
+			user.Client.ScheduleTask(async _ =>
 			{
-				DbContextFactory = this.dbContextFactory,
+				WallItemEntity? itemEntity = await roomUnit.Room.ScheduleTaskAsync(async room =>
+				{
+					if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(postItItem.Furniture, location, position, roomUnit.User))
+					{
+						return default;
+					}
 
-				ItemStrategy = this.wallRoomItemStrategy,
+					if (room.ItemManager.TryGetInteractionHandler(out IStickyNoteInteractionHandler? handler) && handler.HasStickyNotePole)
+					{
+						roomUnit.User.SendAsync(new RequestSpamWallPostItOutgoingPacket(postItItem.Id, new WallPosition(location.X, location.Y, position.X, position.Y)));
 
-				Unit = roomUnit,
+						return default;
+					}
 
-				Item = postItItem,
+					IStickyNoteInventoryItem? inventoryItem = await postItItem.TryConsumeAsync().ConfigureAwait(true);
+					if (inventoryItem is not null)
+					{
+						roomUnit.User.SendAsync(new PostItPlacedOutgoingPacket(postItItem.StripId, postItItem.Count));
 
-				Location = new Point2D(xLocation, yLocation),
-				Position = new Point2D(xPosition, yPosition)
+						roomUnit.User.Inventory.TryAddWallItem(inventoryItem);
+					}
+					else
+					{
+						inventoryItem = postItItem;
+					}
+
+					if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(inventoryItem.Furniture, location, position, roomUnit.User)
+										  || !roomUnit.User.Inventory.TryRemoveWallItem(inventoryItem))
+					{
+						return default;
+					}
+
+					IStickyNoteRoomItem wallItem = this.wallRoomItemStrategy.CreateWallItem(room, inventoryItem, location, position, inventoryItem.Furniture.DefaultColor);
+
+					room.ItemManager.AddItem(wallItem);
+
+					return new WallItemEntity
+					{
+						Id = wallItem.Id,
+						UserId = postItItem.Owner.Id,
+						RoomId = roomUnit.Room.Info.Id,
+						LocationX = wallItem.Location.X,
+						LocationY = wallItem.Location.Y,
+						PositionX = wallItem.Position.X,
+						PositionY = wallItem.Position.Y,
+					};
+				}).ConfigureAwait(false);
+
+				if (itemEntity is not null)
+				{
+					await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+					//var e = dbContext.WallItems.Update(itemEntity);
+
+					var e = dbContext.WallItems.Entry(itemEntity);
+
+					e.CurrentValues.SetValues(itemEntity);
+
+					dbContext.WallItems.Update(itemEntity);
+
+					await dbContext.SaveChangesAsync().ConfigureAwait(false);
+				}
 			});
-		}
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	private readonly struct PrePlacePostItTask : IClientTask
-	{
-		internal IDbContextFactory<SkylightContext> DbContextFactory { get; init; }
-
-		internal IWallRoomItemStrategy ItemStrategy { get; init; }
-
-		internal IUserRoomUnit Unit { get; init; }
-
-		internal IStickyNoteInventoryItem Item { get; init; }
-
-		internal Point2D Location { get; init; }
-		internal Point2D Position { get; init; }
-
-		public async Task ExecuteAsync(IClient client)
-		{
-			WallItemEntity? itemEntity = await this.Unit.Room.ScheduleTaskAsync(static async (room, state) =>
-			{
-				if (!state.Unit.InRoom || !room.ItemManager.CanPlaceItem(state.Item.Furniture, state.Location, state.Position, state.Unit.User))
-				{
-					return default;
-				}
-
-				if (room.ItemManager.TryGetInteractionHandler(out IStickyNoteInteractionHandler? handler) && handler.HasStickyNotePole)
-				{
-					state.Unit.User.SendAsync(new RequestSpamWallPostItOutgoingPacket(state.Item.Id, new WallPosition(state.Location.X, state.Location.Y, state.Position.X, state.Position.Y)));
-
-					return default;
-				}
-
-				IStickyNoteInventoryItem? inventoryItem = await state.Item.TryConsumeAsync().ConfigureAwait(true);
-				if (inventoryItem is not null)
-				{
-					state.Unit.User.SendAsync(new PostItPlacedOutgoingPacket(state.Item.StripId, state.Item.Count));
-
-					state.Unit.User.Inventory.TryAddWallItem(inventoryItem);
-				}
-				else
-				{
-					inventoryItem = state.Item;
-				}
-
-				if (!state.Unit.InRoom || !room.ItemManager.CanPlaceItem(inventoryItem.Furniture, state.Location, state.Position, state.Unit.User)
-									  || !state.Unit.User.Inventory.TryRemoveWallItem(inventoryItem))
-				{
-					return default;
-				}
-
-				IStickyNoteRoomItem wallItem = state.ItemStrategy.CreateWallItem(room, inventoryItem, state.Location, state.Position, inventoryItem.Furniture.DefaultColor);
-
-				room.ItemManager.AddItem(wallItem);
-
-				return new WallItemEntity
-				{
-					Id = wallItem.Id,
-					UserId = state.Item.Owner.Id,
-					RoomId = state.Unit.Room.Info.Id,
-					LocationX = wallItem.Location.X,
-					LocationY = wallItem.Location.Y,
-					PositionX = wallItem.Position.X,
-					PositionY = wallItem.Position.Y,
-				};
-			}, (this.Unit, this.Item, this.Location, this.Position, this.ItemStrategy)).ConfigureAwait(false);
-
-			if (itemEntity is not null)
-			{
-				await using SkylightContext dbContext = await this.DbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
-
-				dbContext.WallItems.Update(itemEntity);
-
-				await dbContext.SaveChangesAsync().ConfigureAwait(false);
-			}
 		}
 	}
 }

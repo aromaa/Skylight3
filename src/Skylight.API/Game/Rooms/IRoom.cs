@@ -25,26 +25,22 @@ public interface IRoom
 	public void Enter(IUser user);
 	public void Exit(IUser user);
 
-	public bool ScheduleTask<TTask>(in TTask task)
+	public bool PostTask<TTask>(TTask task)
 		where TTask : IRoomTask;
 
-	public bool ScheduleTask(Action<IRoom> action);
-	public bool ScheduleTask<TState>(Action<IRoom, TState> action, in TState state);
-
-	public ValueTask ScheduleTaskAsync<TTask>(in TTask task)
+	public ValueTask PostTaskAsync<TTask>(TTask task)
 		where TTask : IRoomTask;
 
-	public ValueTask ScheduleTaskAsync(Action<IRoom> action);
-	public ValueTask ScheduleTaskAsync<TState>(Action<IRoom, TState> action, in TState state);
+	public ValueTask<TResult> ScheduleTask<TTask, TResult>(TTask task)
+		where TTask : IRoomTask<TResult>;
 
-	public ValueTask ScheduleTaskAsync(Func<IRoom, ValueTask> func);
-	public ValueTask ScheduleTaskAsync<TState>(Func<IRoom, TState, ValueTask> func, in TState state);
+	public ValueTask<TResult> ScheduleTaskAsync<TTask, TResult>(TTask task)
+		where TTask : IAsyncRoomTask<TResult>;
 
-	public ValueTask<TOut> ScheduleTaskAsync<TOut>(Func<IRoom, TOut> func);
-	public ValueTask<TOut> ScheduleTaskAsync<TState, TOut>(Func<IRoom, TState, TOut> func, in TState state);
-
-	public ValueTask<TOut> ScheduleTaskAsync<TOut>(Func<IRoom, ValueTask<TOut>> func);
-	public ValueTask<TOut> ScheduleTaskAsync<TState, TOut>(Func<IRoom, TState, ValueTask<TOut>> func, in TState state);
+	public bool PostTask(Action<IRoom> action) => throw new NotSupportedException();
+	public ValueTask PostTaskAsync(Action<IRoom> action) => throw new NotSupportedException();
+	public ValueTask<TReturn> ScheduleTask<TReturn>(Func<IRoom, TReturn> func) => throw new NotSupportedException();
+	public ValueTask<TResult> ScheduleTaskAsync<TResult>(Func<IRoom, ValueTask<TResult>> func) => throw new NotSupportedException();
 
 	public void ScheduleUpdateTask(IRoomTask task);
 }

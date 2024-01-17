@@ -17,7 +17,7 @@ using Skylight.Protocol.Packets.Outgoing.Navigator;
 namespace Skylight.Server.Game.Communication.Navigator;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class CreateFlatPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class CreateFlatPacketHandler<T> : UserPacketHandler<T>
 	where T : ICreateFlatIncomingPacket
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
@@ -33,17 +33,17 @@ internal sealed class CreateFlatPacketHandler<T> : UserPacketHandler<T>
 
 	internal override void Handle(IUser user, in T packet)
 	{
-		ReadOnlySpan<byte> roomName = packet.RoomName.ToArray();
+		ReadOnlySpan<byte> roomNameSpan = packet.RoomName.ToArray();
 
-		int roomNameCharCount = Encoding.UTF8.GetCharCount(roomName);
+		int roomNameCharCount = Encoding.UTF8.GetCharCount(roomNameSpan);
 		if (roomNameCharCount is < 3 or > 25)
 		{
 			return;
 		}
 
-		ReadOnlySpan<byte> description = packet.Description.ToArray();
+		ReadOnlySpan<byte> descriptionSpan = packet.Description.ToArray();
 
-		int descriptionCharCount = Encoding.UTF8.GetCharCount(description);
+		int descriptionCharCount = Encoding.UTF8.GetCharCount(descriptionSpan);
 		if (descriptionCharCount > 128)
 		{
 			return;
@@ -65,47 +65,25 @@ internal sealed class CreateFlatPacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		user.Client.ScheduleTask(new CreateFlatTask
-		{
-			DbContextFactory = this.dbContextFactory,
+		string roomName = Encoding.UTF8.GetString(packet.RoomName);
+		string description = Encoding.UTF8.GetString(packet.Description);
 
-			RoomName = Encoding.UTF8.GetString(packet.RoomName),
-			Description = Encoding.UTF8.GetString(packet.Description),
-			Layout = layout,
+		int maxUserCount = packet.MaxUserCount;
 
-			FlatCat = flatCat,
-
-			MaxUserCount = packet.MaxUserCount
-		});
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	private readonly struct CreateFlatTask : IClientTask
-	{
-		internal IDbContextFactory<SkylightContext> DbContextFactory { get; init; }
-
-		internal string RoomName { get; init; }
-		internal string Description { get; init; }
-		internal IRoomLayout Layout { get; init; }
-
-		internal IRoomFlatCat FlatCat { get; init; }
-
-		internal int MaxUserCount { get; init; }
-
-		public async Task ExecuteAsync(IClient client)
+		user.Client.ScheduleTask(async client =>
 		{
 			RoomEntity room;
-			await using (SkylightContext dbContext = await this.DbContextFactory.CreateDbContextAsync().ConfigureAwait(false))
+			await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false))
 			{
 				dbContext.Rooms.Add(room = new RoomEntity
 				{
-					Name = this.RoomName,
-					Description = this.Description,
-					LayoutId = this.Layout.Id,
+					Name = roomName,
+					Description = description,
+					LayoutId = layout.Id,
 
-					CategoryId = this.FlatCat.Id,
+					CategoryId = flatCat.Id,
 
-					UsersMax = this.MaxUserCount,
+					UsersMax = maxUserCount,
 
 					OwnerId = client.User!.Profile.Id
 				});
@@ -114,6 +92,6 @@ internal sealed class CreateFlatPacketHandler<T> : UserPacketHandler<T>
 			}
 
 			client.SendAsync(new FlatCreatedOutgoingPacket(room.Id, room.Name));
-		}
+		});
 	}
 }

@@ -3,5 +3,6 @@
 internal interface IRoomTaskScheduler<T>
 {
 	public T Execute(Room room);
-	public T CreateTask(Room room);
+
+	public T CreateTask(RoomTaskScheduler scheduler);
 }

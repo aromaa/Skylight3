@@ -11,7 +11,7 @@ using Skylight.Protocol.Packets.Outgoing.Sound;
 namespace Skylight.Server.Game.Communication.Sound;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class InsertSoundPackagePacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class InsertSoundPackagePacketHandler<T> : UserPacketHandler<T>
 	where T : IInsertSoundPackageIncomingPacket
 {
 	internal override void Handle(IUser user, in T packet)
@@ -21,23 +21,26 @@ internal sealed class InsertSoundPackagePacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		unit.Room.ScheduleTask(static (room, state) =>
+		int slot = packet.Slot;
+		int soundSetId = packet.SoundSetId;
+
+		unit.Room.PostTask(_ =>
 		{
-			if (!state.RoomUnit.InRoom || !state.RoomUnit.Room.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
+			if (!unit.InRoom || !unit.Room.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
 			{
 				return;
 			}
 
-			foreach (IFloorInventoryItem item in state.RoomUnit.User.Inventory.FloorItems)
+			foreach (IFloorInventoryItem item in unit.User.Inventory.FloorItems)
 			{
 				if (item is not ISoundSetInventoryItem soundSet)
 				{
 					continue;
 				}
 
-				if (state.SoundSetId == soundSet.Furniture.SoundSetId)
+				if (soundSetId == soundSet.Furniture.SoundSetId)
 				{
-					soundMachine.AddSoundSet(state.Slot, soundSet.Furniture);
+					soundMachine.AddSoundSet(slot, soundSet.Furniture);
 
 					break;
 				}
@@ -49,7 +52,7 @@ internal sealed class InsertSoundPackagePacketHandler<T> : UserPacketHandler<T>
 				filledSlots.Add(new SoundSetData(slot, soundSet.SoundSetId, soundSet.Samples));
 			}
 
-			state.RoomUnit.User.SendAsync(new TraxSoundPackagesOutgoingPacket(soundMachine.Furniture.SoundSetSlotCount, filledSlots));
-		}, (RoomUnit: unit, Slot: packet.Slot, SoundSetId: packet.SoundSetId));
+			unit.User.SendAsync(new TraxSoundPackagesOutgoingPacket(soundMachine.Furniture.SoundSetSlotCount, filledSlots));
+		});
 	}
 }

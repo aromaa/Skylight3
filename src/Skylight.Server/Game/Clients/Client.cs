@@ -54,7 +54,7 @@ internal sealed class Client : IClient
 
 		private readonly Dictionary<Type, int> taskLimits;
 
-		private readonly Dictionary<Type, ScheduleData> scheduledTasks;
+		private readonly Dictionary<Type, object?> scheduledTasks;
 
 		internal PacketScheduler(Client client)
 		{
@@ -62,7 +62,7 @@ internal sealed class Client : IClient
 
 			this.taskLimits = new Dictionary<Type, int>();
 
-			this.scheduledTasks = new Dictionary<Type, ScheduleData>();
+			this.scheduledTasks = new Dictionary<Type, object?>();
 		}
 
 		internal bool ScheduleTask<T>(in T task)
@@ -70,83 +70,131 @@ internal sealed class Client : IClient
 		{
 			lock (this.scheduledTasks)
 			{
-				ref ScheduleData data = ref CollectionsMarshal.GetValueRefOrAddDefault(this.scheduledTasks, typeof(T), out _);
-
-				if (data.CurrentTask is null)
+				ref object? data = ref this.scheduledTasks.Count <= 0
+					? ref Unsafe.NullRef<object?>()
+					: ref CollectionsMarshal.GetValueRefOrNullRef(this.scheduledTasks, typeof(T));
+				if (Unsafe.IsNullRef(ref data))
 				{
-					data.CurrentTask = task.ExecuteAsync(this.client);
-					data.CurrentTask.ContinueWith(static (task, state) =>
-					{
-						Unsafe.As<PacketScheduler>(state!).ScheduledTaskCompletion<T>(task);
-					}, this, TaskContinuationOptions.ExecuteSynchronously);
+					//We do not have any tasks of this type so we are safe to start executing immediately
+					Task promise = task.ExecuteAsync(this.client);
 
-					return true;
+					return promise.IsCompletedSuccessfully || this.ScheduleTaskPromise(typeof(T), promise, ContinuationHolder<T>.Continuation);
 				}
 
 				return this.ScheduleTaskSlow(ref data, task);
 			}
 		}
 
-		private bool ScheduleTaskSlow(ref ScheduleData data, IClientTask task)
+		private bool ScheduleTaskPromise(Type key, Task task, Action<Task, object?> continuation)
 		{
-			if (this.taskLimits.TryGetValue(task.GetType(), out int limit))
+			//Fast path if the task faulted
+			if (task.IsFaulted)
 			{
-				int current = data.QueuedTasks?.Count ?? 0;
-				if (limit > current)
+				throw task.Exception;
+			}
+
+			//Add entry but no value as in reserved for the next task
+			CollectionsMarshal.GetValueRefOrAddDefault(this.scheduledTasks, key, out _);
+
+			task.ContinueWith(continuation, this, TaskContinuationOptions.ExecuteSynchronously);
+
+			return true;
+		}
+
+		private bool ScheduleTaskSlow(ref object? data, IClientTask task)
+		{
+			this.taskLimits[task.GetType()] = 400;
+
+			if (this.taskLimits.TryGetValue(task.GetType(), out int limit) && limit > 0)
+			{
+				if (data == null)
 				{
-					data.QueuedTasks ??= new Queue<IClientTask>();
-					data.QueuedTasks.Enqueue(task);
+					//We can use the slot directly to hold one queued up task
+					data = task;
 
 					return true;
+				}
+				else if (data is IClientTask oldTask)
+				{
+					//If we allow more than one queued up task then we allocate a queue
+					if (limit > 1)
+					{
+						Queue<IClientTask> queue = new();
+						queue.Enqueue(oldTask);
+						queue.Enqueue(task);
+
+						data = queue;
+
+						return true;
+					}
+				}
+				else if (data is Queue<IClientTask> tasks)
+				{
+					if (limit > tasks.Count)
+					{
+						tasks.Enqueue(task);
+
+						return true;
+					}
+				}
+				else
+				{
+					Debug.Fail("Unknown object");
 				}
 			}
 
 			return false;
 		}
 
-		private void ScheduledTaskCompletion<T>(Task task)
-			where T : IClientTask
+		private void ScheduledTaskCompletion(Type key, Task task, Action<Task, object?> continuation)
 		{
-			if (task.IsCompletedSuccessfully)
+			if (!task.IsCompletedSuccessfully)
 			{
-				lock (this.scheduledTasks)
+				this.client.Socket.Disconnect(task.Exception!);
+
+				return;
+			}
+
+			lock (this.scheduledTasks)
+			{
+				ref object? data = ref CollectionsMarshal.GetValueRefOrNullRef(this.scheduledTasks, key);
+
+				Debug.Assert(!Unsafe.IsNullRef(ref data));
+
+				if (data == null)
 				{
-					ref ScheduleData data = ref CollectionsMarshal.GetValueRefOrNullRef(this.scheduledTasks, typeof(T));
-
-					Debug.Assert(!Unsafe.IsNullRef(ref data));
-					Debug.Assert(data.CurrentTask == task);
-
-					Queue<IClientTask>? queuedTasks = data.QueuedTasks;
-					if (queuedTasks is null)
+					this.scheduledTasks.Remove(key);
+				}
+				else if (data is IClientTask newTask)
+				{
+					data = null;
+					newTask.ExecuteAsync(this.client).ContinueWith(continuation, this, TaskContinuationOptions.ExecuteSynchronously);
+				}
+				else if (data is Queue<IClientTask> tasks)
+				{
+					if (tasks.TryDequeue(out IClientTask? queuedTask))
 					{
-						this.scheduledTasks.Remove(typeof(T));
-					}
-					else if (queuedTasks.TryDequeue(out IClientTask? queuedTask))
-					{
-						data.CurrentTask = queuedTask.ExecuteAsync(this.client);
-						data.CurrentTask.ContinueWith(static (task, state) =>
-						{
-							Unsafe.As<PacketScheduler>(state!).ScheduledTaskCompletion<T>(task);
-						}, this, TaskContinuationOptions.ExecuteSynchronously);
+						queuedTask.ExecuteAsync(this.client).ContinueWith(continuation, this, TaskContinuationOptions.ExecuteSynchronously);
 					}
 					else
 					{
-						Debug.Assert(queuedTasks.Count == 0);
-
-						this.scheduledTasks.Remove(typeof(T));
+						this.scheduledTasks.Remove(key);
 					}
 				}
-			}
-			else
-			{
-				this.client.Socket.Disconnect(task.Exception!);
+				else
+				{
+					Debug.Fail("Unknown object");
+				}
 			}
 		}
 
-		private struct ScheduleData
+		private static class ContinuationHolder<T>
+			where T : IClientTask
 		{
-			internal Task? CurrentTask;
-			internal Queue<IClientTask>? QueuedTasks;
+			internal static Action<Task, object?> Continuation { get; set; } = (task, state) =>
+			{
+				Unsafe.As<PacketScheduler>(state!).ScheduledTaskCompletion(typeof(T), task, ContinuationHolder<T>.Continuation);
+			};
 		}
 	}
 }

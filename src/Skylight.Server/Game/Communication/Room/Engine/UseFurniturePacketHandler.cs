@@ -7,7 +7,7 @@ using Skylight.Protocol.Packets.Manager;
 namespace Skylight.Server.Game.Communication.Room.Engine;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class UseFurniturePacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class UseFurniturePacketHandler<T> : UserPacketHandler<T>
 	where T : IUseFurnitureIncomingPacket
 {
 	internal override void Handle(IUser user, in T packet)
@@ -17,12 +17,14 @@ internal sealed class UseFurniturePacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		roomUnit.Room.ScheduleTask(static (room, state) =>
+		int itemId = packet.Id;
+
+		roomUnit.Room.PostTask(room =>
 		{
-			if (!room.ItemManager.TryGetFloorItem(state.ItemId, out IFloorRoomItem? item))
+			if (!room.ItemManager.TryGetFloorItem(itemId, out IFloorRoomItem? item))
 			{
 				return;
 			}
-		}, (ItemId: packet.Id, State: packet.State));
+		});
 	}
 }

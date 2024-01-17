@@ -11,7 +11,7 @@ using Skylight.Protocol.Packets.Outgoing.Navigator;
 namespace Skylight.Server.Game.Communication.Navigator;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class UpdateHomeRoomPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class UpdateHomeRoomPacketHandler<T> : UserPacketHandler<T>
 	where T : IUpdateHomeRoomIncomingPacket
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
@@ -33,40 +33,28 @@ internal sealed class UpdateHomeRoomPacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		user.Client.ScheduleTask(new UpdateHomeRoomTask
+		int homeRoomId = packet.RoomId;
+
+		user.Client.ScheduleTask(async client =>
 		{
-			DbContextFactory = this.dbContextFactory,
-
-			HomeRoomId = packet.RoomId
-		});
-	}
-
-	private readonly struct UpdateHomeRoomTask : IClientTask
-	{
-		internal readonly IDbContextFactory<SkylightContext> DbContextFactory { get; init; }
-
-		internal readonly int HomeRoomId { get; init; }
-
-		public async Task ExecuteAsync(IClient client)
-		{
-			await using SkylightContext dbContext = await this.DbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
+			await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
 			await dbContext.UserSettings.Upsert(new UserSettingsEntity
-			{
-				UserId = client.User!.Profile.Id,
-				HomeRoomId = this.HomeRoomId,
-			})
-			.On(c => c.UserId)
-			.WhenMatched((_, c) => new UserSettingsEntity
-			{
-				HomeRoomId = c.HomeRoomId,
-			}).RunAsync().ConfigureAwait(false);
+				{
+					UserId = client.User!.Profile.Id,
+					HomeRoomId = homeRoomId,
+				})
+				.On(c => c.UserId)
+				.WhenMatched((_, c) => new UserSettingsEntity
+				{
+					HomeRoomId = c.HomeRoomId,
+				}).RunAsync().ConfigureAwait(false);
 
-			client.User.Settings.HomeRoomId = this.HomeRoomId;
+			client.User.Settings.HomeRoomId = homeRoomId;
 
 			client.SendAsync(new NavigatorSettingsOutgoingPacket(client.User.Settings.HomeRoomId, client.User.Settings.HomeRoomId));
 
 			await dbContext.SaveChangesAsync().ConfigureAwait(false);
-		}
+		});
 	}
 }

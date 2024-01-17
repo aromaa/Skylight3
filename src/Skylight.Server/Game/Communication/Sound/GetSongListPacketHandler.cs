@@ -14,7 +14,7 @@ using Skylight.Protocol.Packets.Outgoing.Sound;
 namespace Skylight.Server.Game.Communication.Sound;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class GetSongListPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class GetSongListPacketHandler<T> : UserPacketHandler<T>
 	where T : IGetSongListIncomingPacket
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
@@ -31,39 +31,24 @@ internal sealed class GetSongListPacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		user.Client.ScheduleTask(new GetSongListTask
+		user.Client.ScheduleTask(async client =>
 		{
-			DbContextFactory = this.dbContextFactory,
-
-			Unit = unit
-		});
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	private readonly struct GetSongListTask : IClientTask
-	{
-		internal IDbContextFactory<SkylightContext> DbContextFactory { get; init; }
-
-		internal IUserRoomUnit Unit { get; init; }
-
-		public async Task ExecuteAsync(IClient client)
-		{
-			int soundMachineId = await this.Unit.Room.ScheduleTaskAsync(static (room, roomUnit) =>
+			int soundMachineId = await unit.Room.ScheduleTask(room =>
 			{
-				if (!roomUnit.InRoom || !room.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
+				if (!unit.InRoom || !room.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
 				{
 					return 0;
 				}
 
 				return soundMachine.Id;
-			}, this.Unit).ConfigureAwait(false);
+			}).ConfigureAwait(false);
 
 			if (soundMachineId == 0)
 			{
 				return;
 			}
 
-			await using SkylightContext dbContext = await this.DbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
+			await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
 			List<SongData> songs = await dbContext.Songs
 				.Where(s => s.ItemId == soundMachineId)
@@ -72,6 +57,6 @@ internal sealed class GetSongListPacketHandler<T> : UserPacketHandler<T>
 				.ConfigureAwait(false);
 
 			client.SendAsync(new SongListOutgoingPacket(songs));
-		}
+		});
 	}
 }

@@ -18,7 +18,7 @@ using Skylight.Protocol.Packets.Outgoing.Sound;
 namespace Skylight.Server.Game.Communication.Sound;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class EditSongPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class EditSongPacketHandler<T> : UserPacketHandler<T>
 	where T : IEditSongIncomingPacket
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
@@ -35,74 +35,54 @@ internal sealed class EditSongPacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		user.Client.ScheduleTask(new EditSongTask
+		int songId = packet.SongId;
+
+		user.Client.ScheduleTask(async _ =>
 		{
-			DbContextFactory = this.dbContextFactory,
+			await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
-			Unit = unit,
-
-			SongId = packet.SongId
-		});
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	private readonly struct EditSongTask : IClientTask, IRoomTask
-	{
-		internal IDbContextFactory<SkylightContext> DbContextFactory { get; init; }
-
-		internal IUserRoomUnit Unit { get; init; }
-
-		internal int SongId { get; init; }
-
-		public async Task ExecuteAsync(IClient client)
-		{
-			int songId = this.SongId;
-
-			await using SkylightContext dbContext = await this.DbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
-
-			SongEntity? songEntity = await dbContext.Songs.FirstOrDefaultAsync(s => s.Id == songId).ConfigureAwait(false);
+			int _songId = songId;
+			SongEntity? songEntity = await dbContext.Songs.FirstOrDefaultAsync(s => s.Id == _songId).ConfigureAwait(false);
 			if (songEntity is null)
 			{
 				return;
 			}
 
-			this.Unit.User.SendAsync(new SongInfoOutgoingPacket(songEntity.Id, songEntity.Name, songEntity.Data));
+			unit.User.SendAsync(new SongInfoOutgoingPacket(songEntity.Id, songEntity.Name, songEntity.Data));
 
-			await this.Unit.Room.ScheduleTaskAsync(this).ConfigureAwait(false);
-		}
-
-		public void Execute(IRoom room)
-		{
-			if (!this.Unit.InRoom || !this.Unit.Room.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
+			unit.Room.PostTask(_ =>
 			{
-				return;
-			}
-
-			List<SoundSetData> filledSlots = new();
-			foreach ((int slot, ISoundSetFurniture soundSet) in soundMachine.SoundSets)
-			{
-				filledSlots.Add(new SoundSetData(slot, soundSet.SoundSetId, soundSet.Samples));
-			}
-
-			this.Unit.User.SendAsync(new TraxSoundPackagesOutgoingPacket(soundMachine.Furniture.SoundSetSlotCount, filledSlots));
-
-			List<int> soundSets = new();
-			foreach (IFloorInventoryItem item in this.Unit.User.Inventory.FloorItems)
-			{
-				if (item is not ISoundSetInventoryItem soundSet)
+				if (!unit.InRoom || !unit.Room.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
 				{
-					continue;
+					return;
 				}
 
-				if (soundMachine.HasSoundSet(soundSet.Furniture.SoundSetId))
+				List<SoundSetData> filledSlots = new();
+				foreach ((int slot, ISoundSetFurniture soundSet) in soundMachine.SoundSets)
 				{
-					continue;
+					filledSlots.Add(new SoundSetData(slot, soundSet.SoundSetId, soundSet.Samples));
 				}
 
-				soundSets.Add(soundSet.Furniture.SoundSetId);
-			}
+				unit.User.SendAsync(new TraxSoundPackagesOutgoingPacket(soundMachine.Furniture.SoundSetSlotCount, filledSlots));
 
-			this.Unit.User.SendAsync(new UserSoundPackagesOutgoingPacket(soundSets));
-		}
+				List<int> soundSets = new();
+				foreach (IFloorInventoryItem item in unit.User.Inventory.FloorItems)
+				{
+					if (item is not ISoundSetInventoryItem soundSet)
+					{
+						continue;
+					}
+
+					if (soundMachine.HasSoundSet(soundSet.Furniture.SoundSetId))
+					{
+						continue;
+					}
+
+					soundSets.Add(soundSet.Furniture.SoundSetId);
+				}
+
+				unit.User.SendAsync(new UserSoundPackagesOutgoingPacket(soundSets));
+			});
+		});
 	}
 }

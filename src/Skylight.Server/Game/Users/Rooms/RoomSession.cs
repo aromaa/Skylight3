@@ -8,7 +8,7 @@ using Skylight.Server.Extensions;
 
 namespace Skylight.Server.Game.Users.Rooms;
 
-internal sealed class RoomSession : IRoomSession
+internal sealed partial class RoomSession : IRoomSession
 {
 	private IRoomSession.SessionState state;
 
@@ -79,11 +79,11 @@ internal sealed class RoomSession : IRoomSession
 			return;
 		}
 
-		this.Room!.ScheduleTask(static (room, session) =>
+		this.Room!.PostTask(room =>
 		{
-			room.Exit(session.Unit!.User);
+			room.Exit(this.User);
 
-			room.UnitManager.RemoveUnit(session.Unit);
-		}, this);
+			room.UnitManager.RemoveUnit(this.Unit!);
+		});
 	}
 }

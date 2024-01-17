@@ -11,7 +11,7 @@ using Skylight.Protocol.Packets.Outgoing.Recycler;
 namespace Skylight.Server.Game.Communication.Recycler;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class RecycleItemsPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class RecycleItemsPacketHandler<T> : UserPacketHandler<T>
 	where T : IRecycleItemsIncomingPacket
 {
 	private readonly IFurniMaticManager furniMaticManager;
@@ -43,10 +43,13 @@ internal sealed class RecycleItemsPacketHandler<T> : UserPacketHandler<T>
 			items[i] = item;
 		}
 
-		bool scheduled = user.Client.ScheduleTask(new RecycleTask
+		bool scheduled = user.Client.ScheduleTask(async client =>
 		{
-			FurniMatic = snapshot,
-			Items = items
+			IFurniMaticPrize? prize = await this.furniMaticManager.RecycleAsync(client.User!, items).ConfigureAwait(false);
+
+			//1 completed
+			//2 closed
+			client.SendAsync(new RecyclerFinishedOutgoingPacket(prize is not null ? 1 : 2, 0));
 		});
 
 		if (!scheduled)
@@ -54,23 +57,6 @@ internal sealed class RecycleItemsPacketHandler<T> : UserPacketHandler<T>
 			//1 completed
 			//2 closed
 			user.SendAsync(new RecyclerFinishedOutgoingPacket(2, 0));
-		}
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	private readonly struct RecycleTask : IClientTask
-	{
-		internal IFurniMaticSnapshot FurniMatic { get; init; }
-
-		internal IFurnitureInventoryItem[] Items { get; init; }
-
-		public async Task ExecuteAsync(IClient client)
-		{
-			IFurniMaticPrize? prize = await this.FurniMatic.RecycleAsync(client.User!, this.Items).ConfigureAwait(false);
-
-			//1 completed
-			//2 closed
-			client.SendAsync(new RecyclerFinishedOutgoingPacket(prize is not null ? 1 : 2, 0));
 		}
 	}
 }

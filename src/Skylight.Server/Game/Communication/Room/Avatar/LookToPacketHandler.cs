@@ -7,7 +7,7 @@ using Skylight.Protocol.Packets.Manager;
 namespace Skylight.Server.Game.Communication.Room.Avatar;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class LookToPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class LookToPacketHandler<T> : UserPacketHandler<T>
 	where T : ILookToIncomingPacket
 {
 	internal override void Handle(IUser user, in T packet)
@@ -19,14 +19,14 @@ internal sealed class LookToPacketHandler<T> : UserPacketHandler<T>
 
 		Point2D location = new(packet.X, packet.Y);
 
-		roomUnit.Room.ScheduleTask(static (_, state) =>
+		roomUnit.Room.PostTask(_ =>
 		{
-			if (!state.RoomUnit.InRoom || state.RoomUnit.Moving)
+			if (!roomUnit.InRoom || roomUnit.Moving)
 			{
 				return;
 			}
 
-			state.RoomUnit.LookTo(state.Location);
-		}, (RoomUnit: roomUnit, Location: location));
+			roomUnit.LookTo(location);
+		});
 	}
 }

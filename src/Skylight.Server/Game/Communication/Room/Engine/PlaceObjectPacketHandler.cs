@@ -21,7 +21,7 @@ using Skylight.Protocol.Packets.Manager;
 namespace Skylight.Server.Game.Communication.Room.Engine;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class PlaceObjectPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class PlaceObjectPacketHandler<T> : UserPacketHandler<T>
 	where T : IPlaceObjectIncomingPacket
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
@@ -59,36 +59,7 @@ internal sealed class PlaceObjectPacketHandler<T> : UserPacketHandler<T>
 
 		if (item is IFloorInventoryItem floorItem)
 		{
-			if (!reader.TryReadTo(out ReadOnlySpan<byte> xBuffer, (byte)' ')
-				|| !Utf8Parser.TryParse(xBuffer, out int x, out _))
-			{
-				return;
-			}
-
-			if (!reader.TryReadTo(out ReadOnlySpan<byte> yBuffer, (byte)' ')
-				|| !Utf8Parser.TryParse(yBuffer, out int y, out _))
-			{
-				return;
-			}
-
-			if (!Utf8Parser.TryParse(reader.UnreadSequence.IsSingleSegment ? reader.UnreadSpan : reader.UnreadSequence.ToArray(), out int direction, out _))
-			{
-				return;
-			}
-
-			user.Client.ScheduleTask(new PlaceFloorItemTask
-			{
-				DbContextFactory = this.dbContextFactory,
-
-				FloorRoomItemStrategy = this.floorRoomItemStrategy,
-
-				RoomUnit = roomUnit,
-
-				Item = floorItem,
-
-				Location = new Point2D(x, y),
-				Direction = direction
-			});
+			this.PlaceFloorItem(roomUnit, floorItem, reader);
 		}
 		else if (item is IWallInventoryItem wallItem)
 		{
@@ -97,166 +68,148 @@ internal sealed class PlaceObjectPacketHandler<T> : UserPacketHandler<T>
 				return;
 			}
 
-			if (reader.IsNext((byte)':', advancePast: true))
-			{
-				if (!reader.IsNext("w="u8, advancePast: true)
-					|| !reader.TryReadTo(out ReadOnlySpan<byte> locationXBuffer, (byte)',')
-					|| !Utf8Parser.TryParse(locationXBuffer, out int xLocation, out _))
-				{
-					return;
-				}
-
-				if (!reader.TryReadTo(out ReadOnlySpan<byte> locationYBuffer, (byte)' ')
-					|| !Utf8Parser.TryParse(locationYBuffer, out int yLocation, out _))
-				{
-					return;
-				}
-
-				if (!reader.IsNext("l="u8, advancePast: true)
-					|| !reader.TryReadTo(out ReadOnlySpan<byte> positionXBuffer, (byte)',')
-					|| !Utf8Parser.TryParse(positionXBuffer, out int xPosition, out _))
-				{
-					return;
-				}
-
-				if (!reader.TryReadTo(out ReadOnlySpan<byte> positionYBuffer, (byte)' ')
-					|| !Utf8Parser.TryParse(positionYBuffer, out int yPosition, out _))
-				{
-					return;
-				}
-
-				if (!reader.TryRead(out byte direction))
-				{
-					return;
-				}
-
-				user.Client.ScheduleTask(new PlaceWallItemTask
-				{
-					DbContextFactory = this.dbContextFactory,
-
-					WallRoomItemStrategy = this.wallRoomItemStrategy,
-
-					RoomUnit = roomUnit,
-
-					Item = wallItem,
-
-					Location = new Point2D(xLocation, yLocation),
-					Position = new Point2D(xPosition, yPosition)
-				});
-			}
+			this.PlaceWallItem(roomUnit, wallItem, reader);
 		}
 	}
 
-	[StructLayout(LayoutKind.Auto)]
-	private readonly struct PlaceFloorItemTask : IClientTask
+	private void PlaceFloorItem(IUserRoomUnit roomUnit, IFloorInventoryItem floorItem, SequenceReader<byte> reader)
 	{
-		internal IDbContextFactory<SkylightContext> DbContextFactory { get; init; }
-
-		internal IFloorRoomItemStrategy FloorRoomItemStrategy { get; init; }
-
-		internal IUserRoomUnit RoomUnit { get; init; }
-
-		internal IFloorInventoryItem Item { get; init; }
-
-		internal Point2D Location { get; init; }
-		internal int Direction { get; init; }
-
-		public async Task ExecuteAsync(IClient client)
+		if (!reader.TryReadTo(out ReadOnlySpan<byte> xBuffer, (byte)' ')
+			|| !Utf8Parser.TryParse(xBuffer, out int x, out _))
 		{
-			Point3D? position = await this.RoomUnit.Room.ScheduleTaskAsync(static (room, state) =>
-			{
-				Point3D position = new(state.Location, room.ItemManager.GetPlacementHeight(state.Item.Furniture, state.Location));
+			return;
+		}
 
-				if (!state.RoomUnit.InRoom || !room.ItemManager.CanPlaceItem(state.Item.Furniture, position)
-										   || !state.RoomUnit.User.Inventory.TryRemoveFloorItem(state.Item))
+		if (!reader.TryReadTo(out ReadOnlySpan<byte> yBuffer, (byte)' ')
+			|| !Utf8Parser.TryParse(yBuffer, out int y, out _))
+		{
+			return;
+		}
+
+		if (!Utf8Parser.TryParse(reader.UnreadSequence.IsSingleSegment ? reader.UnreadSpan : reader.UnreadSequence.ToArray(), out int direction, out _))
+		{
+			return;
+		}
+
+		Point2D location = new(x, y);
+
+		roomUnit.User.Client.ScheduleTask(async _ =>
+		{
+			Point3D? position = await roomUnit.Room.ScheduleTask(room =>
+			{
+				Point3D position = new(location, room.ItemManager.GetPlacementHeight(floorItem.Furniture, location));
+
+				if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(floorItem.Furniture, position)
+										   || !roomUnit.User.Inventory.TryRemoveFloorItem(floorItem))
 				{
 					return default(Point3D?);
 				}
 
-				IFloorRoomItem item = state.FloorRoomItemStrategy.CreateFloorItem(room, state.Item, position, state.Direction);
+				IFloorRoomItem item = this.floorRoomItemStrategy.CreateFloorItem(room, floorItem, position, direction);
 
 				room.ItemManager.AddItem(item);
 
 				return position;
-			}, (this.FloorRoomItemStrategy, this.RoomUnit, this.Item, this.Location, this.Direction)).ConfigureAwait(false);
+			}).ConfigureAwait(false);
 
 			if (position is null)
 			{
 				return;
 			}
 
-			await using SkylightContext dbContext = await this.DbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
+			await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
-			FloorItemEntity item = new()
-			{
-				Id = this.Item.Id,
-				UserId = this.Item.Owner.Id
-			};
+			FloorItemEntity item = new() { Id = floorItem.Id, UserId = floorItem.Owner.Id };
 
 			dbContext.FloorItems.Attach(item);
 
-			item.RoomId = this.RoomUnit.Room.Info.Id;
+			item.RoomId = roomUnit.Room.Info.Id;
 			item.X = position.Value.X;
 			item.Y = position.Value.Y;
 			item.Z = position.Value.Z;
 
 			await dbContext.SaveChangesAsync().ConfigureAwait(false);
-		}
+		});
 	}
 
-	[StructLayout(LayoutKind.Auto)]
-	private readonly struct PlaceWallItemTask : IClientTask
+	private void PlaceWallItem(IUserRoomUnit roomUnit, IWallInventoryItem wallItem, SequenceReader<byte> reader)
 	{
-		internal IDbContextFactory<SkylightContext> DbContextFactory { get; init; }
-
-		internal IWallRoomItemStrategy WallRoomItemStrategy { get; init; }
-
-		internal IUserRoomUnit RoomUnit { get; init; }
-
-		internal IWallInventoryItem Item { get; init; }
-
-		internal Point2D Location { get; init; }
-		internal Point2D Position { get; init; }
-
-		public async Task ExecuteAsync(IClient client)
+		if (reader.IsNext((byte)':', advancePast: true))
 		{
-			(Point2D Location, Point2D Position)? result = await this.RoomUnit.Room.ScheduleTaskAsync(static (room, state) =>
-			{
-				if (!state.RoomUnit.InRoom || !room.ItemManager.CanPlaceItem(state.Item.Furniture, state.Location, state.Position)
-										   || !state.RoomUnit.User.Inventory.TryRemoveWallItem(state.Item))
-				{
-					return default;
-				}
-
-				IWallRoomItem item = state.WallRoomItemStrategy.CreateWallItem(room, state.Item, state.Location, state.Position);
-
-				room.ItemManager.AddItem(item);
-
-				return (item.Location, item.Position);
-			}, (this.RoomUnit, this.Location, this.Position, this.Item, this.WallRoomItemStrategy)).ConfigureAwait(false);
-
-			if (result is null)
+			if (!reader.IsNext("w="u8, advancePast: true)
+				|| !reader.TryReadTo(out ReadOnlySpan<byte> locationXBuffer, (byte)',')
+				|| !Utf8Parser.TryParse(locationXBuffer, out int xLocation, out _))
 			{
 				return;
 			}
 
-			await using SkylightContext dbContext = await this.DbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
-
-			WallItemEntity item = new()
+			if (!reader.TryReadTo(out ReadOnlySpan<byte> locationYBuffer, (byte)' ')
+				|| !Utf8Parser.TryParse(locationYBuffer, out int yLocation, out _))
 			{
-				Id = this.Item.Id,
-				UserId = this.Item.Owner.Id
-			};
+				return;
+			}
 
-			dbContext.WallItems.Attach(item);
+			if (!reader.IsNext("l="u8, advancePast: true)
+				|| !reader.TryReadTo(out ReadOnlySpan<byte> positionXBuffer, (byte)',')
+				|| !Utf8Parser.TryParse(positionXBuffer, out int xPosition, out _))
+			{
+				return;
+			}
 
-			item.RoomId = this.RoomUnit.Room.Info.Id;
-			item.LocationX = result.Value.Location.X;
-			item.LocationY = result.Value.Location.Y;
-			item.PositionX = result.Value.Position.X;
-			item.PositionY = result.Value.Position.Y;
+			if (!reader.TryReadTo(out ReadOnlySpan<byte> positionYBuffer, (byte)' ')
+				|| !Utf8Parser.TryParse(positionYBuffer, out int yPosition, out _))
+			{
+				return;
+			}
 
-			await dbContext.SaveChangesAsync().ConfigureAwait(false);
+			if (!reader.TryRead(out byte direction))
+			{
+				return;
+			}
+
+			Point2D location = new(xLocation, yLocation);
+			Point2D position = new(xPosition, yPosition);
+
+			roomUnit.User.Client.ScheduleTask(async _ =>
+			{
+				(Point2D Location, Point2D Position)? result = await roomUnit.Room.ScheduleTask(room =>
+				{
+					if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(wallItem.Furniture, location, position)
+											   || !roomUnit.User.Inventory.TryRemoveWallItem(wallItem))
+					{
+						return default;
+					}
+
+					IWallRoomItem item = this.wallRoomItemStrategy.CreateWallItem(room, wallItem, location, position);
+
+					room.ItemManager.AddItem(item);
+
+					return (item.Location, item.Position);
+				}).ConfigureAwait(false);
+
+				if (result is null)
+				{
+					return;
+				}
+
+				await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+				WallItemEntity item = new()
+				{
+					Id = wallItem.Id,
+					UserId = wallItem.Owner.Id
+				};
+
+				dbContext.WallItems.Attach(item);
+
+				item.RoomId = roomUnit.Room.Info.Id;
+				item.LocationX = result.Value.Location.X;
+				item.LocationY = result.Value.Location.Y;
+				item.PositionX = result.Value.Position.X;
+				item.PositionY = result.Value.Position.Y;
+
+				await dbContext.SaveChangesAsync().ConfigureAwait(false);
+			});
 		}
 	}
 }

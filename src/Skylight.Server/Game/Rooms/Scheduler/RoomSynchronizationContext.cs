@@ -1,4 +1,6 @@
-﻿namespace Skylight.Server.Game.Rooms.Scheduler;
+﻿using Skylight.API.Game.Rooms;
+
+namespace Skylight.Server.Game.Rooms.Scheduler;
 
 internal sealed class RoomSynchronizationContext : SynchronizationContext
 {
@@ -9,8 +11,13 @@ internal sealed class RoomSynchronizationContext : SynchronizationContext
 		this.roomScheduler = roomScheduler;
 	}
 
-	public override void Post(SendOrPostCallback callback, object? state) => this.roomScheduler.ScheduleTask(static (_, state) => state.callback(state), (callback, state));
-	public override void Send(SendOrPostCallback callback, object? state) => this.roomScheduler.ScheduleTaskAsync(static (_, state) => state.callback(state), (callback, state)).GetAwaiter().GetResult();
+	public override void Post(SendOrPostCallback callback, object? state) => this.roomScheduler.PostTask(new WrappedSendOrPostCallback(callback, state));
+	public override void Send(SendOrPostCallback callback, object? state) => this.roomScheduler.PostTaskAsync(new WrappedSendOrPostCallback(callback, state)).GetAwaiter().GetResult();
 
 	public override RoomSynchronizationContext CreateCopy() => new(this.roomScheduler);
+
+	private readonly struct WrappedSendOrPostCallback(SendOrPostCallback callback, object? state) : IRoomTask
+	{
+		public void Execute(IRoom room) => callback(state);
+	}
 }

@@ -18,7 +18,7 @@ using Skylight.Protocol.Packets.Outgoing.Perk;
 namespace Skylight.Server.Game.Communication.Handshake;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class SSOTicketPacketHandler<T> : ClientPacketHandler<T>
+internal sealed partial class SSOTicketPacketHandler<T> : ClientPacketHandler<T>
 	where T : ISSOTicketIncomingPacket
 {
 	private readonly IUserAuthentication userAuthentication;
@@ -37,37 +37,22 @@ internal sealed class SSOTicketPacketHandler<T> : ClientPacketHandler<T>
 			return;
 		}
 
-		client.ScheduleTask(new SSOTicketTask
-		{
-			UserAuthentication = this.userAuthentication,
-			ClientManager = this.clientManager,
+		string ssoTicket = Encoding.UTF8.GetString(packet.SSOTicket);
 
-			SSOTicket = Encoding.UTF8.GetString(packet.SSOTicket)
-		});
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	private readonly struct SSOTicketTask : IClientTask
-	{
-		internal IUserAuthentication UserAuthentication { get; init; }
-		internal IClientManager ClientManager { get; init; }
-
-		internal string SSOTicket { get; init; }
-
-		public async Task ExecuteAsync(IClient client)
+		client.ScheduleTask(async client =>
 		{
 			if (client.User is not null)
 			{
 				return;
 			}
 
-			IUser? user = await this.UserAuthentication.AuthenticateAsync(client, this.SSOTicket).ConfigureAwait(false);
+			IUser? user = await this.userAuthentication.AuthenticateAsync(client, ssoTicket).ConfigureAwait(false);
 			if (user is null)
 			{
 				return;
 			}
 
-			if (!this.ClientManager.TryAdd(client, user))
+			if (!this.clientManager.TryAdd(client, user))
 			{
 				return;
 			}
@@ -113,6 +98,6 @@ internal sealed class SSOTicketPacketHandler<T> : ClientPacketHandler<T>
 					new("NAVIGATOR_PHASE_TWO_2014", string.Empty, true)
 				}
 			});
-		}
+		});
 	}
 }
