@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Net.Communication.Attributes;
-using Skylight.API.Game.Clients;
 using Skylight.API.Game.Users;
 using Skylight.Domain.Users;
 using Skylight.Infrastructure;
