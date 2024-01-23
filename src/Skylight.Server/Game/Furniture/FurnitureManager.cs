@@ -30,16 +30,22 @@ internal sealed partial class FurnitureManager : IFurnitureManager
 			await foreach (FloorFurnitureEntity furniture in dbContext.FloorFurniture
 							   .AsNoTracking()
 							   .AsAsyncEnumerable()
-							   .WithCancellation(cancellationToken))
+							   .WithCancellation(cancellationToken)
+							   .ConfigureAwait(false))
 			{
+				cancellationToken.ThrowIfCancellationRequested();
+
 				builder.AddFloorItem(furniture);
 			}
 
 			await foreach (WallFurnitureEntity furniture in dbContext.WallFurniture
 							   .AsNoTracking()
 							   .AsAsyncEnumerable()
-							   .WithCancellation(cancellationToken))
+							   .WithCancellation(cancellationToken)
+							   .ConfigureAwait(false))
 			{
+				cancellationToken.ThrowIfCancellationRequested();
+
 				builder.AddWallItem(furniture);
 			}
 		}

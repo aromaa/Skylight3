@@ -56,8 +56,11 @@ internal sealed partial class FurniMaticManager : IFurniMaticManager
 						 .Include(l => l.Prizes!)
 						 .ThenInclude(p => p.Items)
 						 .AsAsyncEnumerable()
-						 .WithCancellation(cancellationToken))
+						 .WithCancellation(cancellationToken)
+						 .ConfigureAwait(false))
 			{
+				cancellationToken.ThrowIfCancellationRequested();
+
 				builder.AddLevel(prizeLevel);
 			}
 

@@ -38,6 +38,8 @@ internal sealed partial class AchievementManager : IAchievementManager
 							   .WithCancellation(cancellationToken)
 							   .ConfigureAwait(false))
 			{
+				cancellationToken.ThrowIfCancellationRequested();
+
 				builder.AddAchievement(entity);
 			}
 		}

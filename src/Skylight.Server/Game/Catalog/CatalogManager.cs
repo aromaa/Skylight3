@@ -49,8 +49,11 @@ internal sealed partial class CatalogManager : ICatalogManager
 						 .Include(p => p.Offers!)
 						 .ThenInclude(o => o.Products)
 						 .AsAsyncEnumerable()
-						 .WithCancellation(cancellationToken))
+						 .WithCancellation(cancellationToken)
+						 .ConfigureAwait(false))
 			{
+				cancellationToken.ThrowIfCancellationRequested();
+
 				builder.AddPage(page);
 			}
 		}

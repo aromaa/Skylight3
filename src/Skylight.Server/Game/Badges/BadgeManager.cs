@@ -33,6 +33,8 @@ internal sealed partial class BadgeManager : IBadgeManager
 							   .WithCancellation(cancellationToken)
 							   .ConfigureAwait(false))
 			{
+				cancellationToken.ThrowIfCancellationRequested();
+
 				builder.AddBadge(badge);
 			}
 		}

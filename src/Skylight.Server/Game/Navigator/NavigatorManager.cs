@@ -45,16 +45,22 @@ internal sealed partial class NavigatorManager : INavigatorManager
 			await foreach (RoomLayoutEntity layout in dbContext.RoomLayouts
 						 .AsNoTracking()
 						 .AsAsyncEnumerable()
-						 .WithCancellation(cancellationToken))
+						 .WithCancellation(cancellationToken)
+						 .ConfigureAwait(false))
 			{
+				cancellationToken.ThrowIfCancellationRequested();
+
 				builder.AddLayout(layout);
 			}
 
 			await foreach (RoomFlatCatEntity flatCat in dbContext.FlatCats
 							  .AsNoTracking()
 							  .AsAsyncEnumerable()
-							  .WithCancellation(cancellationToken))
+							  .WithCancellation(cancellationToken)
+							  .ConfigureAwait(false))
 			{
+				cancellationToken.ThrowIfCancellationRequested();
+
 				builder.AddFlatCat(flatCat);
 			}
 		}

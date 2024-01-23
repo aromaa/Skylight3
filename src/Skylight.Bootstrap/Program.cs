@@ -4,4 +4,29 @@ using Skylight.Server.Extensions;
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 builder.ConfigureSkylightServer();
 
-await builder.Build().RunAsync().ConfigureAwait(false);
+IHost host = builder.Build();
+
+try
+{
+	try
+	{
+		await host.StartAsync().ConfigureAwait(false);
+	}
+	catch (TaskCanceledException)
+	{
+		return;
+	}
+
+	await host.WaitForShutdownAsync().ConfigureAwait(false);
+}
+finally
+{
+	if (host is IAsyncDisposable asyncDisposable)
+	{
+		await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+	}
+	else
+	{
+		host.Dispose();
+	}
+}
