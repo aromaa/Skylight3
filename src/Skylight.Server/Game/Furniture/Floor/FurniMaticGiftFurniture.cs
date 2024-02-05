@@ -2,10 +2,7 @@
 
 namespace Skylight.Server.Game.Furniture.Floor;
 
-internal sealed class FurniMaticGiftFurniture : FloorFurniture, IFurniMaticGiftFurniture
+internal sealed class FurniMaticGiftFurniture(int id, int width, int length, double height) : FloorFurniture(id, width, length), IFurniMaticGiftFurniture
 {
-	public FurniMaticGiftFurniture(int id, int width, int length, double height)
-		: base(id, width, length, height)
-	{
-	}
+	public override double DefaultHeight => height;
 }

@@ -16,8 +16,11 @@ public interface IRoomItemManager
 
 	public Task LoadAsync(CancellationToken cancellationToken = default);
 
-	public bool CanPlaceItem(IFloorFurniture floorFurniture, Point3D position, IUser? source = null);
-	public bool CanPlaceItem(IWallFurniture wallFurniture, Point2D location, Point2D position, IUser? source = null);
+	public bool CanPlaceItem(IFloorFurniture floorFurniture, Point3D position, int direction, IUser? source = null);
+	public bool CanPlaceItem(IWallFurniture wallFurniture, Point2D location, Point2D position, int direction, IUser? source = null);
+
+	public bool ValidItemLocation(IFloorFurniture floorFurniture, Point2D location, int direction);
+	public bool ValidItemLocation(IWallFurniture wallFurniture, Point2D location, Point2D position, int direction);
 
 	public void AddItem(IFloorRoomItem floorItem);
 	public void AddItem(IWallRoomItem wallItem);
@@ -28,10 +31,15 @@ public interface IRoomItemManager
 	public void MoveItem(IFloorRoomItem floorItem, Point3D position) => this.MoveItem(floorItem, position, floorItem.Direction);
 	public void MoveItem(IFloorRoomItem floorItem, Point3D position, int direction);
 
+	public void UpdateItem(IFloorRoomItem floorItem);
+	public void UpdateItem(IWallRoomItem wallItem);
+
 	public void RemoveItem(IFloorRoomItem floorItem);
 	public void RemoveItem(IWallRoomItem wallItem);
 
-	public double GetPlacementHeight(IFloorFurniture furniture, Point2D location);
+	void Tick();
+
+	public double GetPlacementHeight(IFloorFurniture furniture, Point2D location, int direction);
 
 	public bool TryGetFloorItem(int itemId, [NotNullWhen(true)] out IFloorRoomItem? item);
 	public bool TryGetWallItem(int itemId, [NotNullWhen(true)] out IWallRoomItem? item);

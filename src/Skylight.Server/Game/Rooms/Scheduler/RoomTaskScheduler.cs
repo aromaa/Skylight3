@@ -41,6 +41,42 @@ internal sealed class RoomTaskScheduler
 	public ValueTask<TResult> ScheduleTaskAsync<TTask, TResult>(in TTask task)
 		where TTask : IAsyncRoomTask<TResult> => this.ScheduleTaskInternal<AsyncResultRoomTaskScheduler<TTask, TResult>, ValueTask<TResult>>(new AsyncResultRoomTaskScheduler<TTask, TResult>(task));
 
+	public bool PostTask(Action<IRoom> action)
+	{
+#if !DEBUG
+		throw new NotSupportedException();
+#else
+		return this.PostTask(new ActionRoomTaskWrapped(action));
+#endif
+	}
+
+	public ValueTask PostTaskAsync(Action<IRoom> action)
+	{
+#if !DEBUG
+		throw new NotSupportedException();
+#else
+		return this.PostTaskAsync(new ActionRoomTaskWrapped(action));
+#endif
+	}
+
+	public ValueTask<TResult> ScheduleTask<TResult>(Func<IRoom, TResult> func)
+	{
+#if !DEBUG
+		throw new NotSupportedException();
+#else
+		return this.ScheduleTask<FuncRoomTaskWrapped<TResult>, TResult>(new FuncRoomTaskWrapped<TResult>(func));
+#endif
+	}
+
+	public ValueTask<TResult> ScheduleTaskAsync<TResult>(Func<IRoom, ValueTask<TResult>> func)
+	{
+#if !DEBUG
+		throw new NotSupportedException();
+#else
+		return this.ScheduleTaskAsync<AsyncFuncRoomTaskWrapped<TResult>, TResult>(new AsyncFuncRoomTaskWrapped<TResult>(func));
+#endif
+	}
+
 	private TResult ScheduleTaskInternal<TTask, TResult>(in TTask action)
 		where TTask : IRoomTaskScheduler<TResult>
 	{
@@ -53,6 +89,12 @@ internal sealed class RoomTaskScheduler
 				SynchronizationContext.SetSynchronizationContext(this.synchronizationContext);
 
 				return action.Execute(this.room);
+			}
+			catch (Exception exception)
+			{
+				//Cancel room
+
+				return action.HandleException(exception);
 			}
 			finally
 			{
@@ -159,6 +201,8 @@ internal sealed class RoomTaskScheduler
 		}
 
 		public bool CreateTask(RoomTaskScheduler scheduler) => scheduler.ScheduleTaskSlow(task);
+
+		public bool HandleException(Exception exception) => false;
 	}
 
 	private readonly struct AsyncRoomTaskScheduler<TTask>(TTask task) : IRoomTaskScheduler<ValueTask>
@@ -179,6 +223,8 @@ internal sealed class RoomTaskScheduler
 
 			return new ValueTask(asyncTask.Task);
 		}
+
+		public ValueTask HandleException(Exception exception) => ValueTask.FromException(exception);
 	}
 
 	private readonly struct ResultRoomTaskScheduler<TTask, TResult>(TTask task) : IRoomTaskScheduler<ValueTask<TResult>>
@@ -194,6 +240,8 @@ internal sealed class RoomTaskScheduler
 
 			return new ValueTask<TResult>(asyncTask.Task);
 		}
+
+		public ValueTask<TResult> HandleException(Exception exception) => ValueTask.FromException<TResult>(exception);
 	}
 
 	private readonly struct AsyncResultRoomTaskScheduler<TTask, TResult>(TTask task) : IRoomTaskScheduler<ValueTask<TResult>>
@@ -209,5 +257,22 @@ internal sealed class RoomTaskScheduler
 
 			return new ValueTask<TResult>(asyncTask.Task);
 		}
+
+		public ValueTask<TResult> HandleException(Exception exception) => ValueTask.FromException<TResult>(exception);
+	}
+
+	private readonly struct ActionRoomTaskWrapped(Action<IRoom> action) : IRoomTask
+	{
+		public void Execute(IRoom room) => action(room);
+	}
+
+	private readonly struct FuncRoomTaskWrapped<T>(Func<IRoom, T> action) : IRoomTask<T>
+	{
+		public T Execute(IRoom room) => action(room);
+	}
+
+	private readonly struct AsyncFuncRoomTaskWrapped<T>(Func<IRoom, ValueTask<T>> action) : IAsyncRoomTask<T>
+	{
+		public ValueTask<T> Execute(IRoom room) => action(room);
 	}
 }

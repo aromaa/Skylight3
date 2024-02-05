@@ -37,10 +37,10 @@ public interface IRoom
 	public ValueTask<TResult> ScheduleTaskAsync<TTask, TResult>(TTask task)
 		where TTask : IAsyncRoomTask<TResult>;
 
-	public bool PostTask(Action<IRoom> action) => throw new NotSupportedException();
-	public ValueTask PostTaskAsync(Action<IRoom> action) => throw new NotSupportedException();
-	public ValueTask<TReturn> ScheduleTask<TReturn>(Func<IRoom, TReturn> func) => throw new NotSupportedException();
-	public ValueTask<TResult> ScheduleTaskAsync<TResult>(Func<IRoom, ValueTask<TResult>> func) => throw new NotSupportedException();
+	public bool PostTask(Action<IRoom> action);
+	public ValueTask PostTaskAsync(Action<IRoom> action);
+	public ValueTask<TResult> ScheduleTask<TResult>(Func<IRoom, TResult> func);
+	public ValueTask<TResult> ScheduleTaskAsync<TResult>(Func<IRoom, ValueTask<TResult>> func);
 
 	public void ScheduleUpdateTask(IRoomTask task);
 }

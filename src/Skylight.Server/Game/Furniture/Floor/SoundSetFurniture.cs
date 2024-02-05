@@ -3,17 +3,11 @@ using Skylight.API.Game.Furniture.Floor;
 
 namespace Skylight.Server.Game.Furniture.Floor;
 
-internal sealed class SoundSetFurniture : FloorFurniture, ISoundSetFurniture
+internal sealed class SoundSetFurniture(int id, int width, int length, double height, int soundSetId, FrozenSet<int> samples) : FloorFurniture(id, width, length), ISoundSetFurniture
 {
-	public int SoundSetId { get; }
+	public override double DefaultHeight => height;
 
-	public FrozenSet<int> Samples { get; }
+	public int SoundSetId { get; } = soundSetId;
 
-	public SoundSetFurniture(int id, int width, int length, double height, int soundSetId, FrozenSet<int> samples)
-		: base(id, width, length, height)
-	{
-		this.SoundSetId = soundSetId;
-
-		this.Samples = samples;
-	}
+	public FrozenSet<int> Samples { get; } = samples;
 }

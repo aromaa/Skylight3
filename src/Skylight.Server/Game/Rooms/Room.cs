@@ -115,6 +115,7 @@ internal sealed class Room : IRoom
 			}
 
 			this.UnitManager.Tick();
+			this.ItemManager.Tick();
 
 			//After everything is done, run the tasks we received while ticking
 			this.RoomTaskScheduler.ExecuteTasks();
@@ -132,6 +133,11 @@ internal sealed class Room : IRoom
 
 	public ValueTask<TResult> ScheduleTaskAsync<TTask, TResult>(TTask task)
 		where TTask : IAsyncRoomTask<TResult> => this.RoomTaskScheduler.ScheduleTaskAsync<TTask, TResult>(task);
+
+	public bool PostTask(Action<IRoom> action) => this.RoomTaskScheduler.PostTask(action);
+	public ValueTask PostTaskAsync(Action<IRoom> action) => this.RoomTaskScheduler.PostTaskAsync(action);
+	public ValueTask<TResult> ScheduleTask<TResult>(Func<IRoom, TResult> func) => this.RoomTaskScheduler.ScheduleTask(func);
+	public ValueTask<TResult> ScheduleTaskAsync<TResult>(Func<IRoom, ValueTask<TResult>> func) => this.RoomTaskScheduler.ScheduleTaskAsync(func);
 
 	public void ScheduleUpdateTask(IRoomTask task)
 	{

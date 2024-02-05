@@ -70,7 +70,7 @@ internal sealed class UserAuthentication : IUserAuthentication
 
 		await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
 		{
-			UserSettingsEntity? userSettings = await dbContext.UserSettings.FirstOrDefaultAsync(s => s.UserId == profile.Id).ConfigureAwait(false);
+			UserSettingsEntity? userSettings = await dbContext.UserSettings.FirstOrDefaultAsync(s => s.UserId == profile.Id, cancellationToken).ConfigureAwait(false);
 			User user = new(client, profile, new UserSettings(userSettings));
 
 			IBadgeSnapshot badges = this.badgeManager.Current;
@@ -80,7 +80,8 @@ internal sealed class UserAuthentication : IUserAuthentication
 						 .AsNoTracking()
 						 .Where(i => i.UserId == profile.Id && i.RoomId == null)
 						 .AsAsyncEnumerable()
-						 .WithCancellation(cancellationToken))
+						 .WithCancellation(cancellationToken)
+						 .ConfigureAwait(false))
 			{
 				if (!furnitures.TryGetFloorFurniture(item.FurnitureId, out IFloorFurniture? furniture))
 				{
@@ -94,7 +95,8 @@ internal sealed class UserAuthentication : IUserAuthentication
 						 .AsNoTracking()
 						 .Where(i => i.UserId == profile.Id && i.RoomId == null)
 						 .AsAsyncEnumerable()
-						 .WithCancellation(cancellationToken))
+						 .WithCancellation(cancellationToken)
+						 .ConfigureAwait(false))
 			{
 				if (!furnitures.TryGetWallFurniture(item.FurnitureId, out IWallFurniture? furniture))
 				{
@@ -108,7 +110,8 @@ internal sealed class UserAuthentication : IUserAuthentication
 							   .AsNoTracking()
 							   .Where(b => b.UserId == profile.Id)
 							   .AsAsyncEnumerable()
-							   .WithCancellation(cancellationToken))
+							   .WithCancellation(cancellationToken)
+							   .ConfigureAwait(false))
 			{
 				if (!badges.TryGetBadge(entity.BadgeCode, out IBadge? badge))
 				{

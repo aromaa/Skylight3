@@ -11,5 +11,6 @@ public interface IStickyNoteRoomItem : IWallRoomItem, IFurnitureItem<IStickyNote
 	public Color Color { get; set; }
 	public string Text { get; set; }
 
-	IWallFurniture IFurnitureItem<IWallFurniture>.Furniture => this.Furniture;
+	IWallFurniture IWallRoomItem.Furniture => this.Furniture;
+	IStickyNoteFurniture IFurnitureItem<IStickyNoteFurniture>.Furniture => this.Furniture;
 }

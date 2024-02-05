@@ -21,6 +21,8 @@ internal class RollerRoomItem : FloorRoomItem, IRollerRoomItem
 		this.interactionHandler = interactionHandler;
 	}
 
+	public override double Height => this.Furniture.DefaultHeight;
+
 	public override void OnPlace() => this.interactionHandler.OnPlace(this);
 
 	public override void OnMove(Point3D position, int direction)

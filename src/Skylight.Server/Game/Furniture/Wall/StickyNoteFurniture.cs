@@ -5,14 +5,9 @@ using Skylight.API.Game.Furniture.Wall;
 
 namespace Skylight.Server.Game.Furniture.Wall;
 
-internal sealed class StickyNoteFurniture : WallFurniture, IStickyNoteFurniture
+internal sealed class StickyNoteFurniture(int id) : WallFurniture(id), IStickyNoteFurniture
 {
 	public FrozenSet<Color> ValidColors => ImmutableHashSet.Create(Color.FromArgb(0xFFFF33)).ToFrozenSet();
 
 	public Color DefaultColor => Color.FromArgb(0xFFFF33);
-
-	internal StickyNoteFurniture(int id)
-		: base(id)
-	{
-	}
 }

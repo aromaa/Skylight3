@@ -50,6 +50,9 @@ internal sealed class WallItemEntityTypeConfiguration : IEntityTypeConfiguration
 			.OnDelete(DeleteBehavior.SetNull);
 
 		builder.HasIndex(f => f.UserId); //TODO: EFCore bug
-		builder.HasIndex(f => new { f.UserId, f.RoomId }).HasFilter("room_id IS NULL");
+		builder.HasIndex(f => f.UserId, "inventory_items").HasFilter("room_id IS NULL");
+
+		builder.HasIndex(f => f.RoomId); //TODO: EFCore bug
+		builder.HasIndex(f => f.RoomId, "placeholder_items").HasFilter("location_x = -1");
 	}
 }

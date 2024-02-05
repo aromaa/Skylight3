@@ -3,6 +3,7 @@
 internal interface IRoomTaskScheduler<T>
 {
 	public T Execute(Room room);
-
 	public T CreateTask(RoomTaskScheduler scheduler);
+
+	public T HandleException(Exception exception);
 }

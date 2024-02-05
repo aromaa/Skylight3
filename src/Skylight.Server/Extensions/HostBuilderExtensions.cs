@@ -98,6 +98,7 @@ public static class HostBuilderExtensions
 		builder.Services.AddSingleton<IFloorRoomItemFactory, StickyNotePoleRoomItemFactory>();
 		builder.Services.AddSingleton<IFloorRoomItemFactory, SoundMachineRoomItemFactory>();
 		builder.Services.AddSingleton<IFloorRoomItemFactory, RollerRoomItemFactory>();
+		builder.Services.AddSingleton<IFloorRoomItemFactory, MultiStateFloorRoomItemFactory>();
 
 		builder.Services.AddSingleton<IWallRoomItemStrategy, WallRoomItemStrategy>();
 		builder.Services.AddSingleton<IWallRoomItemFactory, BasicWallRoomItemFactory>();

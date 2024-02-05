@@ -2,12 +2,7 @@
 
 namespace Skylight.Server.Game.Furniture;
 
-internal abstract class AbstractFurniture : IFurniture
+internal abstract class AbstractFurniture(int id) : IFurniture
 {
-	public int Id { get; }
-
-	protected AbstractFurniture(int id)
-	{
-		this.Id = id;
-	}
+	public int Id { get; } = id;
 }

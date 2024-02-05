@@ -1,4 +1,5 @@
 ﻿using Net.Communication.Attributes;
+using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Users;
 using Skylight.Protocol.Packets.Incoming.Room.Engine;
@@ -18,13 +19,16 @@ internal sealed partial class UseFurniturePacketHandler<T> : UserPacketHandler<T
 		}
 
 		int itemId = packet.Id;
+		int state = packet.State;
 
 		roomUnit.Room.PostTask(room =>
 		{
-			if (!room.ItemManager.TryGetFloorItem(itemId, out IFloorRoomItem? item))
+			if (!room.ItemManager.TryGetFloorItem(itemId, out IFloorRoomItem? item) || item is not IInteractableRoomItem interactable)
 			{
 				return;
 			}
+
+			interactable.Interact(roomUnit, state);
 		});
 	}
 }

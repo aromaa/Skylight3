@@ -9,5 +9,6 @@ public interface IFurniMaticGiftRoomItem : IFloorRoomItem, IFurnitureItem<IFurni
 
 	public DateTime RecycledAt { get; }
 
-	IFloorFurniture IFurnitureItem<IFloorFurniture>.Furniture => this.Furniture;
+	IFloorFurniture IFloorRoomItem.Furniture => this.Furniture;
+	IFurniMaticGiftFurniture IFurnitureItem<IFurniMaticGiftFurniture>.Furniture => this.Furniture;
 }

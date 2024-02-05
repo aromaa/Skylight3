@@ -26,6 +26,8 @@ internal sealed class SoundMachineRoomItem : FloorRoomItem, ISoundMachineRoomIte
 		this.soundSetSlots = new ISoundSetFurniture[4];
 	}
 
+	public override double Height => this.Furniture.DefaultHeight;
+
 	public ImmutableArray<(int Slot, ISoundSetFurniture SoundSet)> SoundSets => this.soundSetSlots.Select((s, i) => (i + 1, s)).Where(s => s.s is not null).ToImmutableArray()!;
 
 	public bool HasSoundSet(int soundSetId) => this.soundSetSlots.Any(s => s?.SoundSetId == soundSetId);

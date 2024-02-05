@@ -10,11 +10,11 @@ using Skylight.API.Game.Rooms.Items.Interactions;
 using Skylight.API.Game.Rooms.Items.Wall;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
-using Skylight.Domain.Items;
 using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Incoming.Room.Furniture;
 using Skylight.Protocol.Packets.Manager;
 using Skylight.Protocol.Packets.Outgoing.Inventory.Furni;
+using Skylight.Server.Extensions;
 
 namespace Skylight.Server.Game.Communication.Room.Furniture;
 
@@ -99,64 +99,68 @@ internal sealed partial class AddSpamWallPostItPacketHandler<T> : UserPacketHand
 
 			user.Client.ScheduleTask(async _ =>
 			{
-				bool canPlace = await roomUnit.Room.ScheduleTask(room =>
+				bool canPlace = roomUnit.Room.ScheduleTask(room =>
 				{
-					return roomUnit.InRoom && room.ItemManager.CanPlaceItem(postItItem.Furniture, location, position, roomUnit.User)
+					return roomUnit.InRoom && room.ItemManager.CanPlaceItem(postItItem.Furniture, location, position, direction, roomUnit.User)
 											 && room.ItemManager.TryGetInteractionHandler(out IStickyNoteInteractionHandler? handler) && handler.HasStickyNotePole;
-				}).ConfigureAwait(false);
+				}).TryGetOrSuppressThrowing(out bool canPlaceAwait, out ValueTaskExtensions.Awaiter<bool> canPlaceAwaiter) ? canPlaceAwait : await canPlaceAwaiter;
 
 				if (!canPlace)
 				{
 					return;
 				}
 
-				IStickyNoteInventoryItem? item = await postItItem.TryConsumeAsync().ConfigureAwait(false);
-				if (item is not null)
-				{
-					roomUnit.User.SendAsync(new PostItPlacedOutgoingPacket(postItItem.StripId, postItItem.Count));
-
-					roomUnit.User.Inventory.TryAddWallItem(item);
-				}
-				else
-				{
-					item = postItItem;
-				}
-
-				WallItemEntity? result = await roomUnit.Room.ScheduleTask(room =>
-				{
-					if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(postItItem.Furniture, location, position, roomUnit.User)
-										   || !roomUnit.User.Inventory.TryRemoveWallItem(postItItem))
-					{
-						return null;
-					}
-
-					IStickyNoteRoomItem item = this.wallRoomItemStrategy.CreateWallItem(room, postItItem, location, position, color, text);
-
-					room.ItemManager.AddItem(item);
-
-					return new WallItemEntity
-					{
-						Id = item.Id,
-						UserId = postItItem.Owner.Id,
-
-						LocationX = item.Location.X,
-						LocationY = item.Location.Y,
-						PositionX = item.Position.X,
-						PositionY = item.Position.Y,
-						ExtraData = item.AsExtraData()
-					};
-				}).ConfigureAwait(false);
-
-				if (result is null)
+				IStickyNoteInventoryItem? inventoryItem = await postItItem.TryConsumeAsync(roomUnit.Room.Info.Id).ConfigureAwait(false);
+				if (inventoryItem is null)
 				{
 					return;
 				}
+				else if (inventoryItem == postItItem)
+				{
+					if (!user.Inventory.TryRemoveWallItem(inventoryItem))
+					{
+						return;
+					}
+				}
 
-				await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
+				roomUnit.User.SendAsync(new PostItPlacedOutgoingPacket(postItItem.StripId, postItItem.Count));
 
-				dbContext.WallItems.Update(result);
+				bool placed = roomUnit.Room.ScheduleTask(room =>
+				{
+					if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(inventoryItem.Furniture, location, position, direction))
+					{
+						return false;
+					}
 
-				await dbContext.SaveChangesAsync().ConfigureAwait(false);
+					IWallRoomItem item = this.wallRoomItemStrategy.CreateWallItem(room, inventoryItem, location, position, color, text);
+
+					room.ItemManager.AddItem(item);
+
+					return true;
+				}).TryGetOrSuppressThrowing(out bool placeAwait, out ValueTaskExtensions.Awaiter<bool> placeAwaiter) ? placeAwait : await placeAwaiter;
+
+				if (!placed)
+				{
+					await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false))
+					{
+						int itemId = inventoryItem.Id;
+						int userId = roomUnit.User.Profile.Id;
+						int roomId = roomUnit.Room.Info.Id;
+
+						int count = await dbContext.WallItems
+							.Where(i => i.Id == itemId && i.UserId == userId && i.RoomId == roomId && i.LocationX == -1)
+							.ExecuteUpdateAsync(setters =>
+								setters.SetProperty(i => i.RoomId, (int?)null))
+							.ConfigureAwait(false);
+
+						if (count == 0)
+						{
+							return;
+						}
+					}
+
+					roomUnit.User.Inventory.TryAddWallItem(inventoryItem);
+				}
 			});
 		}
 	}

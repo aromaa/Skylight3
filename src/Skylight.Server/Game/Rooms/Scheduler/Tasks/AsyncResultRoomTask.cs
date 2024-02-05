@@ -36,6 +36,8 @@ internal sealed class AsyncResultRoomTask<TTask, TResult> : IRoomTask
 		catch (Exception e)
 		{
 			this.taskCompletionSource.SetException(e);
+
+			throw;
 		}
 	}
 

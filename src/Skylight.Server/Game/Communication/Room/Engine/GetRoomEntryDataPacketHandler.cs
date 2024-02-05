@@ -58,7 +58,7 @@ internal sealed partial class GetRoomEntryDataPacketHandler<T> : UserPacketHandl
 			List<ObjectData> objects = new();
 			foreach (IFloorRoomItem roomItem in room.ItemManager.FloorItems)
 			{
-				objects.Add(new ObjectData(roomItem.Id, roomItem.Furniture.Id, roomItem.Position.X, roomItem.Position.Y, roomItem.Position.Z, 0, 0, 0, roomItem.GetItemData()));
+				objects.Add(new ObjectData(roomItem.Id, roomItem.Furniture.Id, roomItem.Position.X, roomItem.Position.Y, roomItem.Position.Z, 0, 3, 0, roomItem.GetItemData()));
 			}
 
 			List<ItemData> items = new();

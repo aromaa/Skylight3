@@ -58,6 +58,7 @@ internal partial class FurnitureManager
 						"sound_machine" => new SoundMachineFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
 						"sound_set" => CreateSoundSet(entity),
 						"roller" => new RollerFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
+						"multi_state" => new MultiStateFloorFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0], int.Parse(entity.InteractionData)),
 
 						_ => new BasicFloorFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0])
 					};

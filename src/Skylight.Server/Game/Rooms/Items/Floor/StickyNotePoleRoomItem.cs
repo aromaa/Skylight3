@@ -21,6 +21,8 @@ internal sealed class StickyNotePoleRoomItem : FloorRoomItem, IStickyNotePoleRoo
 		this.interactionHandler = interactionHandler;
 	}
 
+	public override double Height => this.Furniture.DefaultHeight;
+
 	public override void OnPlace()
 	{
 		this.interactionHandler.OnPlace(this);

@@ -30,7 +30,7 @@ internal sealed partial class MoveObjectPacketHandler<T> : UserPacketHandler<T>
 				return;
 			}
 
-			if (!room.ItemManager.TryGetFloorItem(itemId, out IFloorRoomItem? item))
+			if (!room.ItemManager.TryGetFloorItem(itemId, out IFloorRoomItem? item) || !room.ItemManager.ValidItemLocation(item.Furniture, location, direction))
 			{
 				return;
 			}

@@ -5,7 +5,6 @@ using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Wall;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
-using Skylight.Domain.Items;
 using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Incoming.Room.Engine;
 using Skylight.Protocol.Packets.Manager;
@@ -71,20 +70,14 @@ internal sealed partial class PickupObjectPacketHandler<T> : UserPacketHandler<T
 				return;
 			}
 
-			FloorItemEntity floorItem = new()
-			{
-				Id = item.Id,
-				UserId = item.Owner.Id,
-				RoomId = roomUnit.Room.Info.Id
-			};
-
 			await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
-			dbContext.FloorItems.Attach(floorItem);
-
-			floorItem.RoomId = null;
-
-			await dbContext.SaveChangesAsync().ConfigureAwait(false);
+			await dbContext.FloorItems
+				.Where(i => i.Id == item.Id)
+				.ExecuteUpdateAsync(setters => setters
+					.SetProperty(i => i.RoomId, (int?)null)
+					.SetProperty(i => i.UserId, roomUnit.User.Profile.Id))
+				.ConfigureAwait(false);
 		});
 	}
 
@@ -111,20 +104,14 @@ internal sealed partial class PickupObjectPacketHandler<T> : UserPacketHandler<T
 				return;
 			}
 
-			WallItemEntity wallItem = new()
-			{
-				Id = item.Id,
-				UserId = item.Owner.Id,
-				RoomId = roomUnit.Room.Info.Id
-			};
-
 			await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
-			dbContext.WallItems.Attach(wallItem);
-
-			wallItem.RoomId = null;
-
-			await dbContext.SaveChangesAsync().ConfigureAwait(false);
+			await dbContext.WallItems
+				.Where(i => i.Id == item.Id)
+				.ExecuteUpdateAsync(setters => setters
+					.SetProperty(i => i.RoomId, (int?)null)
+					.SetProperty(i => i.UserId, roomUnit.User.Profile.Id))
+				.ConfigureAwait(false);
 		});
 	}
 }

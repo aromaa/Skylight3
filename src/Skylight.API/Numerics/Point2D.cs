@@ -2,11 +2,12 @@
 
 namespace Skylight.API.Numerics;
 
-public struct Point2D : IEquatable<Point2D>
+public readonly struct Point2D : IEquatable<Point2D>
 {
-	public int X { get; set; }
-	public int Y { get; set; }
+	public int X { get; }
+	public int Y { get; }
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Point2D(int x, int y)
 	{
 		this.X = x;
@@ -14,7 +15,18 @@ public struct Point2D : IEquatable<Point2D>
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Point2D Swap() => new(this.Y, this.X);
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public bool Equals(Point2D other) => other == this;
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public override bool Equals(object? obj) => obj is Point2D other && this.Equals(other);
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public override int GetHashCode() => HashCode.Combine(this.X, this.Y);
+
+	public override string ToString() => $"({this.X}, {this.Y})";
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static int DistanceSquared(Point2D left, Point2D right)
@@ -53,9 +65,4 @@ public struct Point2D : IEquatable<Point2D>
 	{
 		return !(left == right);
 	}
-
-	public override bool Equals(object? obj) => obj is Point2D other && this.Equals(other);
-	public override int GetHashCode() => HashCode.Combine(this.X, this.Y);
-
-	public override string ToString() => $"({this.X}, {this.Y})";
 }

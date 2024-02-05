@@ -8,12 +8,12 @@
 
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.HighPerformance" Version="8.2.2" />
-		<PackageReference Include="FlexLabs.EntityFrameworkCore.Upsert" Version="7.0.0" />
-		<PackageReference Include="FunctionalInterfaces" Version="1.0.0-alpha.19" />
+		<PackageReference Include="FlexLabs.EntityFrameworkCore.Upsert" Version="8.0.0" />
+		<PackageReference Condition="'$(Configuration)' != 'Debug'" Include="FunctionalInterfaces" Version="1.0.0-alpha.19" />
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
-		<PackageReference Include="StackExchange.Redis" Version="2.7.4" />
+		<PackageReference Include="StackExchange.Redis" Version="2.7.17" />
 	</ItemGroup>
 
 	<ItemGroup>

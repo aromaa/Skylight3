@@ -7,5 +7,6 @@ public interface IStickyNotePoleRoomItem : IFloorRoomItem, IFurnitureItem<IStick
 {
 	public new IStickyNotePoleFurniture Furniture { get; }
 
-	IFloorFurniture IFurnitureItem<IFloorFurniture>.Furniture => this.Furniture;
+	IFloorFurniture IFloorRoomItem.Furniture => this.Furniture;
+	IStickyNotePoleFurniture IFurnitureItem<IStickyNotePoleFurniture>.Furniture => this.Furniture;
 }

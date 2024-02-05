@@ -1,34 +1,44 @@
-﻿namespace Skylight.API.Numerics;
+﻿using System.Runtime.CompilerServices;
 
-public struct Point3D : IEquatable<Point3D>
+namespace Skylight.API.Numerics;
+
+public readonly struct Point3D : IEquatable<Point3D>
 {
-	public Point2D XY { get; set; }
-	public double Z { get; set; }
+	public Point2D XY { get; }
+	public double Z { get; }
 
 	public int X => this.XY.X;
 	public int Y => this.XY.Y;
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Point3D(int x, int y, double z)
 		: this(new Point2D(x, y), z)
 	{
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Point3D(Point2D xy, double z)
 	{
 		this.XY = xy;
 		this.Z = z;
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public override bool Equals(object? obj) => obj is Point3D other && this.Equals(other);
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public override int GetHashCode() => HashCode.Combine(this.XY, this.Z);
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public bool Equals(Point3D other) => other.XY.Equals(this.XY) && other.Z == this.Z;
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator ==(Point3D left, Point3D right)
 	{
 		return left.XY == right.XY && left.Z == right.Z;
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator !=(Point3D left, Point3D right)
 	{
 		return !(left == right);

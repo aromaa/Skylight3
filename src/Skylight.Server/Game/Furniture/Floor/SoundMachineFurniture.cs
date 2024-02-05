@@ -2,12 +2,9 @@
 
 namespace Skylight.Server.Game.Furniture.Floor;
 
-internal sealed class SoundMachineFurniture : FloorFurniture, ISoundMachineFurniture
+internal sealed class SoundMachineFurniture(int id, int width, int length, double height) : FloorFurniture(id, width, length), ISoundMachineFurniture
 {
-	public SoundMachineFurniture(int id, int width, int length, double height)
-		: base(id, width, length, height)
-	{
-	}
+	public override double DefaultHeight => height;
 
 	public int SoundSetSlotCount => 4;
 }

@@ -12,4 +12,5 @@ public interface IWallRoomItem : IRoomItem, IFurnitureItem<IWallFurniture>
 	public Point2D Position { get; }
 
 	IFurniture IFurnitureItem<IFurniture>.Furniture => this.Furniture;
+	IWallFurniture IFurnitureItem<IWallFurniture>.Furniture => this.Furniture;
 }

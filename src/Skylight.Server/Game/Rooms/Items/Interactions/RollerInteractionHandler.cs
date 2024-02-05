@@ -49,21 +49,21 @@ internal sealed class RollerInteractionHandler : IRollerInteractionHandler, IRoo
 			double z;
 			if (targetTile.Roller is { } targetRoller)
 			{
-				z = targetRoller.Position.Z + targetRoller.Furniture.Height;
+				z = targetRoller.Position.Z + targetRoller.Height;
 			}
 			else
 			{
 				z = roller.Position.Z;
 			}
 
-			foreach (IFloorRoomItem item in rollerTile.RoomTile.GetFloorItemsBetween(roller.Position.Z + roller.Furniture.Height, double.MaxValue).ToArray())
+			foreach (IFloorRoomItem item in rollerTile.RoomTile.GetFloorItemsBetween(roller.Position.Z + roller.Height, double.MaxValue).ToArray())
 			{
 				if (!itemsMoved.Add(item.Id))
 				{
 					continue;
 				}
 
-				this.room.ItemManager.MoveItem(item, new Point3D(targetTile.Position.XY, z + (item.Position.Z - (roller.Position.Z + roller.Furniture.Height))));
+				this.room.ItemManager.MoveItem(item, new Point3D(targetTile.Position.XY, z + (item.Position.Z - (roller.Position.Z + roller.Height))));
 			}
 
 			foreach (IRoomUnit roomTileUnit in rollerTile.RoomTile.Units)

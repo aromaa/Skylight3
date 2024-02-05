@@ -49,7 +49,7 @@ internal sealed class RoomTile : IRoomTile
 		SortedSet<IFloorRoomItem>? values = this.heightMap.FindNearestValues(z, range, emptySpace);
 		if (values?.Max is { } topItem)
 		{
-			return topItem.Position.Z + topItem.Furniture.Height;
+			return topItem.Position.Z + topItem.Height;
 		}
 
 		return this.position.Z;
@@ -57,16 +57,16 @@ internal sealed class RoomTile : IRoomTile
 
 	public void AddItem(IFloorRoomItem item)
 	{
-		this.heightMap.Add(item.Position.Z, item.Position.Z + item.Furniture.Height, item);
+		this.heightMap.Add(item.Position.Z, item.Position.Z + item.Height, item);
 
-		this.position.Z = this.heightMap.Max is { } highestItem ? highestItem.Position.Z + highestItem.Furniture.Height : this.LayoutTile.Height;
+		this.position = new Point3D(this.position.XY, this.heightMap.Max is { } highestItem ? highestItem.Position.Z + highestItem.Height : this.LayoutTile.Height);
 	}
 
 	public void RemoveItem(IFloorRoomItem item)
 	{
-		this.heightMap.Remove(item.Position.Z, item.Position.Z + item.Furniture.Height, item);
+		this.heightMap.Remove(item.Position.Z, item.Position.Z + item.Height, item);
 
-		this.position.Z = this.heightMap.Max is { } highestItem ? highestItem.Position.Z + highestItem.Furniture.Height : this.LayoutTile.Height;
+		this.position = new Point3D(this.position.XY, this.heightMap.Max is { } highestItem ? highestItem.Position.Z + highestItem.Height : this.LayoutTile.Height);
 	}
 
 	public void WalkOff(IRoomUnit unit)

@@ -43,6 +43,15 @@ internal sealed class Client : IClient
 		where T : IClientTask
 		=> this.packetScheduler.ScheduleTask(task);
 
+	public bool ScheduleTask(Func<IClient, Task> task)
+	{
+#if !DEBUG
+		throw new NotSupportedException();
+#else
+		return this.ScheduleTask(new FuncClientTaskWrapper(task));
+#endif
+	}
+
 	public void Disconnect()
 	{
 		this.User?.Disconnect();
@@ -196,5 +205,10 @@ internal sealed class Client : IClient
 				Unsafe.As<PacketScheduler>(state!).ScheduledTaskCompletion(typeof(T), task, ContinuationHolder<T>.Continuation!);
 			};
 		}
+	}
+
+	private readonly struct FuncClientTaskWrapper(Func<IClient, Task> action) : IClientTask
+	{
+		public Task ExecuteAsync(IClient client) => action(client);
 	}
 }

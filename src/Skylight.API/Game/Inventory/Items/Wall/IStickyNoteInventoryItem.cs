@@ -9,7 +9,7 @@ public interface IStickyNoteInventoryItem : IWallInventoryItem, IFurnitureItem<I
 
 	public int Count { get; }
 
-	public Task<IStickyNoteInventoryItem?> TryConsumeAsync(CancellationToken cancellationToken = default);
+	public Task<IStickyNoteInventoryItem?> TryConsumeAsync(int roomId, CancellationToken cancellationToken = default);
 
 	IWallFurniture IFurnitureItem<IWallFurniture>.Furniture => this.Furniture;
 }

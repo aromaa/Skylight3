@@ -46,6 +46,10 @@ internal static class ItemExtensions
 		{
 			return new PostItRoomData(stickyNote.Color, stickyNote.Text);
 		}
+		else if (item is IMultiStateRoomItem multiState)
+		{
+			return new LegacyItemData(multiState.State.ToString());
+		}
 
 		return EmptyItemData.Instance;
 	}

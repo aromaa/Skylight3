@@ -15,4 +15,6 @@ internal sealed class BasicFloorRoomItem : FloorRoomItem, IBasicFloorRoomItem
 	{
 		this.Furniture = furniture;
 	}
+
+	public override double Height => this.Furniture.DefaultHeight;
 }

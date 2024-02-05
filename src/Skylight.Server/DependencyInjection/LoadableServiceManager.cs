@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using Skylight.API.DependencyInjection;
+using Skylight.Server.Extensions;
 
 namespace Skylight.Server.DependencyInjection;
 
@@ -63,9 +64,10 @@ internal sealed class LoadableServiceManager : ILoadableServiceManager
 			{
 				_ = context.LoadAsync(service, cancellationToken);
 			}
-
-			this.initialLoad.TrySetResult();
-		}, cancellationToken);
+		}, cancellationToken).ContinueWith(static (task, state) =>
+		{
+			((TaskCompletionSource)state!).SetFromTask(task);
+		}, this.initialLoad, cancellationToken, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Current);
 	}
 
 	public Task LoadAsync(Type serviceType, CancellationToken cancellationToken = default)

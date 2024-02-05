@@ -15,5 +15,6 @@ public interface ISoundMachineRoomItem : IFloorRoomItem, IFurnitureItem<ISoundMa
 	public void AddSoundSet(int slot, ISoundSetFurniture soundSet);
 	public void RemoveSoundSet(int slot);
 
-	IFloorFurniture IFurnitureItem<IFloorFurniture>.Furniture => this.Furniture;
+	IFloorFurniture IFloorRoomItem.Furniture => this.Furniture;
+	ISoundMachineFurniture IFurnitureItem<ISoundMachineFurniture>.Furniture => this.Furniture;
 }

@@ -1,6 +1,7 @@
 ﻿using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Floor;
+using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
 
@@ -17,7 +18,10 @@ internal abstract class FloorRoomItem : IFloorRoomItem
 	public abstract IFloorFurniture Furniture { get; }
 
 	public Point3D Position { get; internal set; }
+
 	public int Direction { get; internal set; }
+
+	public abstract double Height { get; }
 
 	internal FloorRoomItem(IRoom room, int id, IUserInfo owner, Point3D position, int direction)
 	{
@@ -30,6 +34,8 @@ internal abstract class FloorRoomItem : IFloorRoomItem
 		this.Position = position;
 		this.Direction = direction;
 	}
+
+	public EffectiveTilesEnumerator EffectiveTiles => new(this.Furniture.EffectiveTiles, this.Direction);
 
 	public virtual void OnPlace()
 	{

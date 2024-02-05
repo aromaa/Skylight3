@@ -11,10 +11,10 @@ using Skylight.API.Game.Rooms.Items.Wall;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
-using Skylight.Domain.Items;
 using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Incoming.Room.Engine;
 using Skylight.Protocol.Packets.Manager;
+using Skylight.Server.Extensions;
 
 namespace Skylight.Server.Game.Communication.Room.Engine;
 
@@ -93,40 +93,71 @@ internal sealed partial class PlaceObjectPacketHandler<T> : UserPacketHandler<T>
 
 		roomUnit.User.Client.ScheduleTask(async _ =>
 		{
-			Point3D? position = await roomUnit.Room.ScheduleTask(room =>
+			bool canPlace = roomUnit.Room.ScheduleTask(room =>
 			{
-				Point3D position = new(location, room.ItemManager.GetPlacementHeight(floorItem.Furniture, location));
+				Point3D position = new(location, room.ItemManager.GetPlacementHeight(floorItem.Furniture, location, direction));
 
-				if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(floorItem.Furniture, position)
-										   || !roomUnit.User.Inventory.TryRemoveFloorItem(floorItem))
+				return roomUnit.InRoom && room.ItemManager.CanPlaceItem(floorItem.Furniture, position, direction) && roomUnit.User.Inventory.TryRemoveFloorItem(floorItem);
+			}).TryGetOrSuppressThrowing(out bool canPlaceAwait, out ValueTaskExtensions.Awaiter<bool> canPlaceAwaiter) ? canPlaceAwait : await canPlaceAwaiter;
+
+			if (!canPlace)
+			{
+				return;
+			}
+
+			int itemId = floorItem.Id;
+			int userId = roomUnit.User.Profile.Id;
+			int roomId = roomUnit.Room.Info.Id;
+
+			await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false))
+			{
+				int count = await dbContext.FloorItems
+					.Where(i => i.Id == itemId && i.UserId == userId && i.RoomId == null)
+					.ExecuteUpdateAsync(setters => setters
+						.SetProperty(i => i.RoomId, roomId)
+						.SetProperty(i => i.X, -1)
+						.SetProperty(i => i.Y, -1))
+					.ConfigureAwait(false);
+
+				if (count == 0)
 				{
-					return default(Point3D?);
+					return;
+				}
+			}
+
+			bool placed = roomUnit.Room.ScheduleTask(room =>
+			{
+				Point3D position = new(location, room.ItemManager.GetPlacementHeight(floorItem.Furniture, location, direction));
+				if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(floorItem.Furniture, position, direction))
+				{
+					return false;
 				}
 
 				IFloorRoomItem item = this.floorRoomItemStrategy.CreateFloorItem(room, floorItem, position, direction);
 
 				room.ItemManager.AddItem(item);
 
-				return position;
-			}).ConfigureAwait(false);
+				return true;
+			}).TryGetOrSuppressThrowing(out bool placeAwait, out ValueTaskExtensions.Awaiter<bool> placeAwaiter) ? placeAwait : await placeAwaiter;
 
-			if (position is null)
+			if (!placed)
 			{
-				return;
+				await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false))
+				{
+					int count = await dbContext.FloorItems
+						.Where(i => i.Id == itemId && i.UserId == userId && i.RoomId == roomId && i.X == -1)
+						.ExecuteUpdateAsync(setters =>
+							setters.SetProperty(i => i.RoomId, (int?)null))
+						.ConfigureAwait(false);
+
+					if (count == 0)
+					{
+						return;
+					}
+				}
+
+				roomUnit.User.Inventory.TryAddFloorItem(floorItem);
 			}
-
-			await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
-
-			FloorItemEntity item = new() { Id = floorItem.Id, UserId = floorItem.Owner.Id };
-
-			dbContext.FloorItems.Attach(item);
-
-			item.RoomId = roomUnit.Room.Info.Id;
-			item.X = position.Value.X;
-			item.Y = position.Value.Y;
-			item.Z = position.Value.Z;
-
-			await dbContext.SaveChangesAsync().ConfigureAwait(false);
 		});
 	}
 
@@ -170,43 +201,67 @@ internal sealed partial class PlaceObjectPacketHandler<T> : UserPacketHandler<T>
 
 			roomUnit.User.Client.ScheduleTask(async _ =>
 			{
-				(Point2D Location, Point2D Position)? result = await roomUnit.Room.ScheduleTask(room =>
+				bool canPlace = roomUnit.Room.ScheduleTask(room =>
+						roomUnit.InRoom && room.ItemManager.CanPlaceItem(wallItem.Furniture, location, position, direction) && roomUnit.User.Inventory.TryRemoveWallItem(wallItem))
+					.TryGetOrSuppressThrowing(out bool canPlaceAwait, out ValueTaskExtensions.Awaiter<bool> canPlaceAwaiter) ? canPlaceAwait : await canPlaceAwaiter;
+
+				if (!canPlace)
 				{
-					if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(wallItem.Furniture, location, position)
-											   || !roomUnit.User.Inventory.TryRemoveWallItem(wallItem))
+					return;
+				}
+
+				int itemId = wallItem.Id;
+				int userId = roomUnit.User.Profile.Id;
+				int roomId = roomUnit.Room.Info.Id;
+
+				await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false))
+				{
+					int count = await dbContext.WallItems
+						.Where(i => i.Id == itemId && i.UserId == userId && i.RoomId == null)
+						.ExecuteUpdateAsync(setters => setters
+							.SetProperty(i => i.RoomId, roomId)
+							.SetProperty(i => i.LocationX, -1)
+							.SetProperty(i => i.LocationY, -1))
+						.ConfigureAwait(false);
+
+					if (count == 0)
 					{
-						return default;
+						return;
+					}
+				}
+
+				bool placed = roomUnit.Room.ScheduleTask(room =>
+				{
+					if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(wallItem.Furniture, location, position, direction))
+					{
+						return false;
 					}
 
 					IWallRoomItem item = this.wallRoomItemStrategy.CreateWallItem(room, wallItem, location, position);
 
 					room.ItemManager.AddItem(item);
 
-					return (item.Location, item.Position);
-				}).ConfigureAwait(false);
+					return true;
+				}).TryGetOrSuppressThrowing(out bool placeAwait, out ValueTaskExtensions.Awaiter<bool> placeAwaiter) ? placeAwait : await placeAwaiter;
 
-				if (result is null)
+				if (!placed)
 				{
-					return;
+					await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false))
+					{
+						int count = await dbContext.WallItems
+							.Where(i => i.Id == itemId && i.UserId == userId && i.RoomId == roomId && i.LocationX == -1)
+							.ExecuteUpdateAsync(setters =>
+								setters.SetProperty(i => i.RoomId, (int?)null))
+							.ConfigureAwait(false);
+
+						if (count == 0)
+						{
+							return;
+						}
+					}
+
+					roomUnit.User.Inventory.TryAddWallItem(wallItem);
 				}
-
-				await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
-
-				WallItemEntity item = new()
-				{
-					Id = wallItem.Id,
-					UserId = wallItem.Owner.Id
-				};
-
-				dbContext.WallItems.Attach(item);
-
-				item.RoomId = roomUnit.Room.Info.Id;
-				item.LocationX = result.Value.Location.X;
-				item.LocationY = result.Value.Location.Y;
-				item.PositionX = result.Value.Position.X;
-				item.PositionY = result.Value.Position.Y;
-
-				await dbContext.SaveChangesAsync().ConfigureAwait(false);
 			});
 		}
 	}

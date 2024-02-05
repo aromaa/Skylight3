@@ -44,7 +44,7 @@ public class RoomTileTests
 			{
 				Mock<IFloorRoomItem> itemMock = new();
 				itemMock.SetupGet(i => i.Position).Returns(new Point3D(location, z));
-				itemMock.SetupGet(i => i.Furniture.Height).Returns(height);
+				itemMock.SetupGet(i => i.Height).Returns(height);
 
 				rangeMap.AddItem(itemMock.Object);
 			}

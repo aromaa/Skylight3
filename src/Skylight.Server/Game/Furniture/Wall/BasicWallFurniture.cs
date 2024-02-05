@@ -2,10 +2,6 @@
 
 namespace Skylight.Server.Game.Furniture.Wall;
 
-internal sealed class BasicWallFurniture : WallFurniture, IBasicWallFurniture
+internal sealed class BasicWallFurniture(int id) : WallFurniture(id), IBasicWallFurniture
 {
-	internal BasicWallFurniture(int id)
-		: base(id)
-	{
-	}
 }

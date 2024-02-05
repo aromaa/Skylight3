@@ -1,9 +1,10 @@
-﻿namespace Skylight.Server.Game.Furniture.Floor;
+﻿using Skylight.API.Game.Furniture.Floor;
 
-internal class MultiStateFloorFurniture : FloorFurniture
+namespace Skylight.Server.Game.Furniture.Floor;
+
+internal sealed class MultiStateFloorFurniture(int id, int width, int length, double height, int stateCount) : FloorFurniture(id, width, length), IMultiStateFloorFurniture
 {
-	public MultiStateFloorFurniture(int id, int width, int length, double height)
-		: base(id, width, length, height)
-	{
-	}
+	public override double DefaultHeight => height;
+
+	public int StateCount => stateCount;
 }

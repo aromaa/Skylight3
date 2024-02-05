@@ -7,5 +7,6 @@ public interface IBasicFloorRoomItem : IFloorRoomItem, IFurnitureItem<IBasicFloo
 {
 	public new IBasicFloorFurniture Furniture { get; }
 
-	IFloorFurniture IFurnitureItem<IFloorFurniture>.Furniture => this.Furniture;
+	IFloorFurniture IFloorRoomItem.Furniture => this.Furniture;
+	IBasicFloorFurniture IFurnitureItem<IBasicFloorFurniture>.Furniture => this.Furniture;
 }

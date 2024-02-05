@@ -16,7 +16,7 @@ internal sealed class RoomItemHeightComparer : IComparer<IFloorRoomItem>
 		}
 
 		//Item with highest height
-		result = x.Furniture.Height.CompareTo(y.Furniture.Height);
+		result = x.Height.CompareTo(y.Height);
 		if (result != 0)
 		{
 			return result;
