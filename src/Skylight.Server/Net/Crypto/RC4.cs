@@ -41,34 +41,30 @@ internal sealed class RC4
 		return this.table[(byte)(this.table[q] + this.table[j])];
 	}
 
-	internal byte[] Write(byte[] data)
+	internal void Write(ReadOnlySpan<byte> data, ref PacketWriter writer)
 	{
 		ref byte encodingMap = ref MemoryMarshal.GetReference("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"u8);
-
-		List<byte> temp = new();
 
 		for (int i = 0; i < data.Length; i += 3)
 		{
 			int firstByte = data[i] ^ this.MoveUp();
 			int secondByte = data.Length > i + 1 ? (data[i + 1] ^ this.MoveUp()) : 0;
 
-			temp.Add(Unsafe.Add(ref encodingMap, firstByte >> 2));
-			temp.Add(Unsafe.Add(ref encodingMap, ((firstByte & 0x3) << 4) | (secondByte >> 4)));
+			writer.WriteByte(Unsafe.Add(ref encodingMap, firstByte >> 2));
+			writer.WriteByte(Unsafe.Add(ref encodingMap, ((firstByte & 0x3) << 4) | (secondByte >> 4)));
 
 			if (data.Length > i + 1)
 			{
 				int thirdByte = data.Length > i + 2 ? (data[i + 2] ^ this.MoveUp()) : 0;
 
-				temp.Add(Unsafe.Add(ref encodingMap, ((secondByte & 0xF) << 2) | (thirdByte >> 6)));
+				writer.WriteByte(Unsafe.Add(ref encodingMap, ((secondByte & 0xF) << 2) | (thirdByte >> 6)));
 
 				if (data.Length > i + 2)
 				{
-					temp.Add(Unsafe.Add(ref encodingMap, thirdByte & 0x3F));
+					writer.WriteByte(Unsafe.Add(ref encodingMap, thirdByte & 0x3F));
 				}
 			}
 		}
-
-		return temp.ToArray();
 	}
 
 	internal PacketReader Read(scoped ref PacketReader reader)

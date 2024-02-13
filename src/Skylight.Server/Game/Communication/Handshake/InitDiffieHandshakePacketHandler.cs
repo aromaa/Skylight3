@@ -29,7 +29,7 @@ internal sealed class InitDiffieHandshakePacketHandler<T> : ClientPacketHandler<
 
 				handler.SetToken(token);
 
-				client.SendAsync(new InitDiffieHandshakeOutgoingPacket(token.ToString("X")));
+				client.SendAsync(new InitDiffieHandshakeOutgoingPacket(token.ToString("X"), true));
 
 				return;
 			}
@@ -37,6 +37,6 @@ internal sealed class InitDiffieHandshakePacketHandler<T> : ClientPacketHandler<
 			context = context.Next;
 		}
 
-		client.SendAsync(new InitDiffieHandshakeOutgoingPacket(string.Empty));
+		client.SendAsync(new InitDiffieHandshakeOutgoingPacket(string.Empty, false));
 	}
 }

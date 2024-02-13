@@ -1,5 +1,7 @@
 ﻿using System.Globalization;
+using System.IO.Pipelines;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
 using Net.Buffers;
 using Net.Communication.Incoming.Consumer;
@@ -9,6 +11,7 @@ using Net.Sockets.Pipeline.Handler.Incoming;
 using Net.Sockets.Pipeline.Handler.Outgoing;
 using Skylight.Protocol.Extensions;
 using Skylight.Protocol.Packets.Manager;
+using Skylight.Protocol.Packets.Outgoing.Handshake;
 using Skylight.Server.Net.Crypto;
 
 namespace Skylight.Server.Net.Handlers;
@@ -21,10 +24,15 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 
 	private uint currentPacketLength;
 
-	private RC4? headerDecoder;
-	private RC4? messageDecoder;
+	private RC4? incomingHeaderDecoder;
+	private RC4? incomingMessageDecoder;
+
+	private Pipe? outgoingEncoderPipe;
+	private RC4? outgoingHeaderEncoder;
+	private RC4? outgoingMessageEncoder;
 
 	private int incomingPaddingDecoder;
+	private int outgoingPaddingEncoder;
 
 	internal BigInteger Prime { get; }
 	internal BigInteger Generator { get; }
@@ -41,7 +49,7 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 
 	protected override void Decode(IPipelineHandlerContext context, ref PacketReader reader)
 	{
-		if (this.headerDecoder is not null)
+		if (this.incomingHeaderDecoder is not null)
 		{
 			if (this.currentPacketLength == 0)
 			{
@@ -51,12 +59,12 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 				}
 
 				PacketReader headerSliced = reader.Slice(6);
-				PacketReader headerReader = this.headerDecoder.Read(ref headerSliced);
+				PacketReader headerReader = this.incomingHeaderDecoder.Read(ref headerSliced);
 
 				headerReader.Skip(1); //Random, nice one
 				headerReader.TryReadBase64UInt32(3, out this.currentPacketLength);
 
-				this.headerDecoder.AdvanceReader(headerReader.UnreadSequence.End);
+				this.incomingHeaderDecoder.AdvanceReader(headerReader.UnreadSequence.End);
 			}
 		}
 		else
@@ -82,7 +90,7 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 
 	public void Read(IPipelineHandlerContext context, ref PacketReader reader)
 	{
-		RC4? messageDecoder = this.messageDecoder;
+		RC4? messageDecoder = this.incomingMessageDecoder;
 		if (messageDecoder is not null)
 		{
 			reader = messageDecoder.Read(ref reader);
@@ -116,11 +124,61 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 		{
 			this.logger.LogDebug("Outgoing: " + typeof(T));
 
-			writer.WriteBase64UInt32(2, header);
+			if (this.outgoingEncoderPipe is not null && typeof(T) != typeof(CompleteDiffieHandshakeOutgoingPacket))
+			{
+				//Reserve space for the header
+				PacketWriter headerSlice = writer.ReservedFixedSlice(6);
 
-			composer.Compose(ref writer, packet);
+				int offset = writer.Length;
 
-			writer.WriteByte(1);
+				{
+					ReadOnlySpan<byte> padding = [0, 0, 0, 0, 0];
+
+					PacketWriter packetWriter = new(this.outgoingEncoderPipe.Writer);
+					packetWriter.WriteBytes(padding.Slice(0, this.IterateTokenRandom(ref this.outgoingPaddingEncoder)));
+					WritePacket(ref packetWriter, composer, header, packet);
+					packetWriter.Dispose();
+
+					this.outgoingEncoderPipe.Reader.TryRead(out ReadResult readResult);
+
+					foreach (ReadOnlyMemory<byte> readOnlyMemory in readResult.Buffer)
+					{
+						this.outgoingMessageEncoder!.Write(readOnlyMemory.Span, ref writer);
+					}
+
+					this.outgoingEncoderPipe.Reader.AdvanceTo(readResult.Buffer.End);
+				}
+
+				{
+					PacketWriter packetWriter = new(this.outgoingEncoderPipe.Writer);
+					packetWriter.WriteByte(0); //Ignored byte
+					packetWriter.WriteBase64UInt32(3, (uint)(writer.Length - offset));
+					packetWriter.Dispose();
+
+					this.outgoingEncoderPipe.Reader.TryRead(out ReadResult readResult);
+
+					foreach (ReadOnlyMemory<byte> readOnlyMemory in readResult.Buffer)
+					{
+						this.outgoingHeaderEncoder!.Write(readOnlyMemory.Span, ref headerSlice);
+					}
+
+					this.outgoingEncoderPipe.Reader.AdvanceTo(readResult.Buffer.End);
+				}
+			}
+			else
+			{
+				WritePacket(ref writer, composer, header, packet);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			static void WritePacket(ref PacketWriter writer, IOutgoingPacketComposer composer, uint header, in T packet)
+			{
+				writer.WriteBase64UInt32(2, header);
+
+				composer.Compose(ref writer, packet);
+
+				writer.WriteByte(1);
+			}
 		}
 		else
 		{
@@ -132,8 +190,12 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 	{
 		byte[] rc4Table = sharedKey.ToByteArray(isUnsigned: true, isBigEndian: true);
 
-		this.headerDecoder = new RC4(rc4Table);
-		this.messageDecoder = new RC4(rc4Table);
+		this.incomingHeaderDecoder = new RC4(rc4Table);
+		this.incomingMessageDecoder = new RC4(rc4Table);
+
+		this.outgoingEncoderPipe = new Pipe();
+		this.outgoingHeaderEncoder = new RC4(rc4Table);
+		this.outgoingMessageEncoder = new RC4(rc4Table);
 	}
 
 	internal void SetToken(BigInteger integer)
@@ -143,6 +205,7 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 		if (integer.TryFormat(chars, out int writtenChars, "X"))
 		{
 			this.incomingPaddingDecoder = int.Parse(chars.Slice(Math.Max(0, writtenChars - 4), writtenChars), NumberStyles.AllowHexSpecifier);
+			this.outgoingPaddingEncoder = int.Parse(chars.Slice(0, Math.Min(4, writtenChars)), NumberStyles.AllowHexSpecifier);
 		}
 		else
 		{
