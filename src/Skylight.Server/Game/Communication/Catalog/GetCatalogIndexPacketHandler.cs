@@ -10,7 +10,7 @@ using Skylight.Protocol.Packets.Outgoing.Catalog;
 namespace Skylight.Server.Game.Communication.Catalog;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class GetCatalogIndexPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class GetCatalogIndexPacketHandler<T> : UserPacketHandler<T>
 	where T : IGetCatalogIndexIncomingPacket
 {
 	private readonly ICatalogManager catalogManager;
@@ -45,16 +45,23 @@ internal sealed class GetCatalogIndexPacketHandler<T> : UserPacketHandler<T>
 			return nodes;
 		}
 
-		user.SendAsync(new CatalogIndexOutgoingPacket(Encoding.UTF8.GetString(packet.CatalogType), new CatalogNodeData
+		string catalogType = Encoding.UTF8.GetString(packet.CatalogType);
+
+		user.Client.ScheduleTask(async client =>
 		{
-			Id = 0,
-			Visible = true,
-			Icon = 0,
-			Color = 0,
-			Name = "root",
-			Localization = "Root",
-			OfferIds = Array.Empty<int>(),
-			Children = BuildChildren(this.catalogManager.RootPages)
-		}, false));
+			ICatalogSnapshot catalog = await this.catalogManager.GetAsync().ConfigureAwait(false);
+
+			client.SendAsync(new CatalogIndexOutgoingPacket(catalogType, new CatalogNodeData
+			{
+				Id = 0,
+				Visible = true,
+				Icon = 0,
+				Color = 0,
+				Name = "root",
+				Localization = "Root",
+				OfferIds = Array.Empty<int>(),
+				Children = BuildChildren(catalog.RootPages)
+			}, false));
+		});
 	}
 }

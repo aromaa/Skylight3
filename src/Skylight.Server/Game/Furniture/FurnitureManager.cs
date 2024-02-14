@@ -3,25 +3,21 @@ using Skylight.API.DependencyInjection;
 using Skylight.API.Game.Furniture;
 using Skylight.Domain.Furniture;
 using Skylight.Infrastructure;
+using Skylight.Server.DependencyInjection;
 
 namespace Skylight.Server.Game.Furniture;
 
-internal sealed partial class FurnitureManager : IFurnitureManager
+internal sealed partial class FurnitureManager : LoadableServiceBase<IFurnitureSnapshot>, IFurnitureManager
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
 
-	private Snapshot snapshot;
-
 	public FurnitureManager(IDbContextFactory<SkylightContext> dbContextFactory)
+		: base(new Snapshot(Cache.CreateBuilder().ToImmutable()))
 	{
 		this.dbContextFactory = dbContextFactory;
-
-		this.snapshot = new Snapshot(Cache.CreateBuilder().ToImmutable());
 	}
 
-	public IFurnitureSnapshot Current => this.snapshot;
-
-	public async Task<IFurnitureSnapshot> LoadAsync(ILoadableServiceContext context, CancellationToken cancellationToken)
+	public override async Task<IFurnitureSnapshot> LoadAsyncCore(ILoadableServiceContext context, CancellationToken cancellationToken = default)
 	{
 		Cache.Builder builder = Cache.CreateBuilder();
 
@@ -50,8 +46,6 @@ internal sealed partial class FurnitureManager : IFurnitureManager
 			}
 		}
 
-		Snapshot snapshot = new(builder.ToImmutable());
-
-		return context.Commit(() => this.snapshot = snapshot, snapshot);
+		return new Snapshot(builder.ToImmutable());
 	}
 }

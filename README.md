@@ -69,6 +69,8 @@ All of the configuration nobs:
 	- ItemsRequired - How many items are required to recyclate.
 	- GiftFurnitureId - The furniture id used for the gift.
 - Network
+	- EarlyBind - Whatever to bind listeners as soon as possible or after the initialization. Allows the client to establish the connection early to prepare for authentication. If initialization fails the connections are ungracefully dropped.
+	- EarlyAccept - Whatever to let users in before the initialization has finished. If initialization fails the server is ungracefully killed and no state will be saved. Has no effect if EarlyBind is false.
 	- Listeners
 		- EndPoints - The end points that accept the connection.
 		- Revision - The revision that is required.

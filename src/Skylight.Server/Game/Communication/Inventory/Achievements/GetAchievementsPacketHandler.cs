@@ -9,7 +9,7 @@ using Skylight.Protocol.Packets.Outgoing.Inventory.Achievements;
 namespace Skylight.Server.Game.Communication.Inventory.Achievements;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class GetAchievementsPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class GetAchievementsPacketHandler<T> : UserPacketHandler<T>
 	where T : IGetAchievementsIncomingPacket
 {
 	private readonly IAchievementManager achievementManager;
@@ -21,40 +21,44 @@ internal sealed class GetAchievementsPacketHandler<T> : UserPacketHandler<T>
 
 	internal override void Handle(IUser user, in T packet)
 	{
-		List<AchievementData> achievements = new();
-
-		foreach (IAchievement achievement in this.achievementManager.Achievements)
+		user.Client.ScheduleTask(async client =>
 		{
-			//Level 0: currentLevel = null and nextLevel = achievement.Levels[0]
-			//Level 1: currentLevel = non null and nextLevel = currentLevel.NextLevel
-			//Level max: currentLevel = non null and nextLevel = currentLevel
-			IAchievementLevel? currentLevel = null;
-			IAchievementLevel nextLevel = currentLevel is not null ? (currentLevel.NextLevel ?? currentLevel) : achievement.Levels[0];
+			IAchievementSnapshot snapshot = await this.achievementManager.GetAsync().ConfigureAwait(false);
 
-			achievements.Add(new AchievementData
+			List<AchievementData> achievements = new();
+			foreach (IAchievement achievement in snapshot.Achievements)
 			{
-				Id = achievement.Id,
+				//Level 0: currentLevel = null and nextLevel = achievement.Levels[0]
+				//Level 1: currentLevel = non null and nextLevel = currentLevel.NextLevel
+				//Level max: currentLevel = non null and nextLevel = currentLevel
+				IAchievementLevel? currentLevel = null;
+				IAchievementLevel nextLevel = currentLevel is not null ? (currentLevel.NextLevel ?? currentLevel) : achievement.Levels[0];
 
-				Category = achievement.Category,
+				achievements.Add(new AchievementData
+				{
+					Id = achievement.Id,
 
-				NextLevel = nextLevel.Level,
-				NextLevelBadgeCode = nextLevel.Badge.Code,
+					Category = achievement.Category,
 
-				MaximumLevel = achievement.Levels.Length,
-				Completed = currentLevel == nextLevel,
+					NextLevel = nextLevel.Level,
+					NextLevelBadgeCode = nextLevel.Badge.Code,
 
-				CurrentProgress = 0,
-				PreviousProgressRequirement = currentLevel?.ProgressRequirement ?? 0,
-				CurrentProgressRequirement = nextLevel.ProgressRequirement,
+					MaximumLevel = achievement.Levels.Length,
+					Completed = currentLevel == nextLevel,
 
-				NextLevelRewardPoints = 0,
-				NextLevelRewardPointsType = 0,
+					CurrentProgress = 0,
+					PreviousProgressRequirement = currentLevel?.ProgressRequirement ?? 0,
+					CurrentProgressRequirement = nextLevel.ProgressRequirement,
 
-				DisplayMode = achievement.DisplayProgress ? 0 : 1,
-				State = 0
-			});
-		}
+					NextLevelRewardPoints = 0,
+					NextLevelRewardPointsType = 0,
 
-		user.SendAsync(new AchievementsOutgoingPacket(achievements, string.Empty));
+					DisplayMode = achievement.DisplayProgress ? 0 : 1,
+					State = 0
+				});
+			}
+
+			client.SendAsync(new AchievementsOutgoingPacket(achievements, string.Empty));
+		});
 	}
 }

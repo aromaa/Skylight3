@@ -4,9 +4,9 @@ namespace Skylight.Server.Game.Achievements;
 
 internal partial class AchievementManager
 {
-	public IEnumerable<IAchievement> Achievements => this.snapshot.Achievements;
+	public IEnumerable<IAchievement> Achievements => this.Current.Achievements;
 
-	public IEnumerable<KeyValuePair<string, int>> BadgePointLimits => this.snapshot.BadgePointLimits;
+	public IEnumerable<KeyValuePair<string, int>> BadgePointLimits => this.Current.BadgePointLimits;
 
 	private sealed class Snapshot : IAchievementSnapshot
 	{

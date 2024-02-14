@@ -4,25 +4,21 @@ using Skylight.API.Game.Achievements;
 using Skylight.API.Game.Badges;
 using Skylight.Domain.Achievements;
 using Skylight.Infrastructure;
+using Skylight.Server.DependencyInjection;
 
 namespace Skylight.Server.Game.Achievements;
 
-internal sealed partial class AchievementManager : IAchievementManager
+internal sealed partial class AchievementManager : LoadableServiceBase<IAchievementSnapshot>, IAchievementManager
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
 
-	private Snapshot snapshot;
-
 	public AchievementManager(IDbContextFactory<SkylightContext> dbContextFactory, IBadgeManager badgeManager)
+		: base(new Snapshot(Cache.CreateBuilder().ToImmutable(badgeManager)))
 	{
 		this.dbContextFactory = dbContextFactory;
-
-		this.snapshot = new Snapshot(Cache.CreateBuilder().ToImmutable(badgeManager));
 	}
 
-	public IAchievementSnapshot Current => this.snapshot;
-
-	public async Task<IAchievementSnapshot> LoadAsync(ILoadableServiceContext context, CancellationToken cancellationToken = default)
+	public override async Task<IAchievementSnapshot> LoadAsyncCore(ILoadableServiceContext context, CancellationToken cancellationToken = default)
 	{
 		Task<IBadgeSnapshot> badgeSnapshot = context.RequestDependencyAsync<IBadgeSnapshot>(cancellationToken);
 
@@ -44,8 +40,6 @@ internal sealed partial class AchievementManager : IAchievementManager
 			}
 		}
 
-		Snapshot snapshot = new(builder.ToImmutable(await badgeSnapshot.ConfigureAwait(false)));
-
-		return context.Commit(() => this.snapshot = snapshot, snapshot);
+		return new Snapshot(builder.ToImmutable(await badgeSnapshot.ConfigureAwait(false)));
 	}
 }

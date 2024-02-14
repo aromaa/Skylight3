@@ -5,7 +5,7 @@ namespace Skylight.Server.Game.Badges;
 
 internal partial class BadgeManager
 {
-	public bool TryGetBadge(string badgeCode, [NotNullWhen(true)] out IBadge? badge) => this.snapshot.TryGetBadge(badgeCode, out badge);
+	public bool TryGetBadge(string badgeCode, [NotNullWhen(true)] out IBadge? badge) => this.Current.TryGetBadge(badgeCode, out badge);
 
 	private sealed class Snapshot : IBadgeSnapshot
 	{

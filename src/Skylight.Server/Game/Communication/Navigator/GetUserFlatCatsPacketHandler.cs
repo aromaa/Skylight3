@@ -22,13 +22,17 @@ internal sealed class GetUserFlatCatsPacketHandler<T> : UserPacketHandler<T>
 
 	internal override void Handle(IUser user, in T packet)
 	{
-		List<FlatCategoryData> cats = new();
-
-		foreach (IRoomFlatCat flatCat in this.navigatorManager.FlatCats)
+		user.Client.ScheduleTask(async client =>
 		{
-			cats.Add(new FlatCategoryData(flatCat.Id, flatCat.Caption, true, false, flatCat.Caption, string.Empty, false));
-		}
+			INavigatorSnapshot navigator = await this.navigatorManager.GetAsync().ConfigureAwait(false);
 
-		user.SendAsync(new UserFlatCatsOutgoingPacket(cats));
+			List<FlatCategoryData> cats = new();
+			foreach (IRoomFlatCat flatCat in navigator.FlatCats)
+			{
+				cats.Add(new FlatCategoryData(flatCat.Id, flatCat.Caption, true, false, flatCat.Caption, string.Empty, false));
+			}
+
+			client.SendAsync(new UserFlatCatsOutgoingPacket(cats));
+		});
 	}
 }

@@ -4,6 +4,9 @@ internal sealed class NetworkSettings
 {
 	public List<ListenerSettings> Listeners { get; set; } = new();
 
+	public bool EarlyBind { get; set; } = false;
+	public bool EarlyAccept { get; set; } = false;
+
 	internal sealed class ListenerSettings
 	{
 		public List<string> EndPoints { get; set; } = null!;

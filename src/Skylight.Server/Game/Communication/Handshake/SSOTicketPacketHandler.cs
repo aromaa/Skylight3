@@ -1,5 +1,7 @@
 ﻿using System.Text;
+using Microsoft.Extensions.Options;
 using Net.Communication.Attributes;
+using Skylight.API.DependencyInjection;
 using Skylight.API.Game.Clients;
 using Skylight.API.Game.Users;
 using Skylight.API.Game.Users.Authentication;
@@ -13,6 +15,7 @@ using Skylight.Protocol.Packets.Outgoing.Handshake;
 using Skylight.Protocol.Packets.Outgoing.Navigator;
 using Skylight.Protocol.Packets.Outgoing.Notifications;
 using Skylight.Protocol.Packets.Outgoing.Perk;
+using Skylight.Server.Net;
 
 namespace Skylight.Server.Game.Communication.Handshake;
 
@@ -23,10 +26,18 @@ internal sealed partial class SSOTicketPacketHandler<T> : ClientPacketHandler<T>
 	private readonly IUserAuthentication userAuthentication;
 	private readonly IClientManager clientManager;
 
-	public SSOTicketPacketHandler(IUserAuthentication userAuthentication, IClientManager clientManager)
+	private readonly Lazy<ILoadableServiceManager> loadableServiceManager;
+
+	private readonly NetworkSettings networkSettings;
+
+	public SSOTicketPacketHandler(IUserAuthentication userAuthentication, IClientManager clientManager, Lazy<ILoadableServiceManager> loadableServiceManager, IOptions<NetworkSettings> networkSettings)
 	{
 		this.userAuthentication = userAuthentication;
 		this.clientManager = clientManager;
+
+		this.loadableServiceManager = loadableServiceManager;
+
+		this.networkSettings = networkSettings.Value;
 	}
 
 	internal override void Handle(IClient client, in T packet)
@@ -43,6 +54,11 @@ internal sealed partial class SSOTicketPacketHandler<T> : ClientPacketHandler<T>
 			if (client.User is not null)
 			{
 				return;
+			}
+
+			if (!this.networkSettings.EarlyAccept)
+			{
+				await this.loadableServiceManager.Value.WaitForInitialization().ConfigureAwait(false);
 			}
 
 			IUser? user = await this.userAuthentication.AuthenticateAsync(client, ssoTicket).ConfigureAwait(false);

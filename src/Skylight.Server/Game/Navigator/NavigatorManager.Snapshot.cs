@@ -7,19 +7,17 @@ namespace Skylight.Server.Game.Navigator;
 
 internal partial class NavigatorManager
 {
-	public IEnumerable<IRoomFlatCat> FlatCats => this.snapshot.FlatCats;
+	public IEnumerable<IRoomFlatCat> FlatCats => this.Current.FlatCats;
 
-	public bool TryGetFlatCat(int id, [NotNullWhen(true)] out IRoomFlatCat? flatCat) => this.snapshot.TryGetFlatCat(id, out flatCat);
-	public bool TryGetLayout(string id, [NotNullWhen(true)] out IRoomLayout? layout) => this.snapshot.TryGetLayout(id, out layout);
+	public bool TryGetFlatCat(int id, [NotNullWhen(true)] out IRoomFlatCat? flatCat) => this.Current.TryGetFlatCat(id, out flatCat);
+	public bool TryGetLayout(string id, [NotNullWhen(true)] out IRoomLayout? layout) => this.Current.TryGetLayout(id, out layout);
 
 	private sealed class Snapshot : INavigatorSnapshot
 	{
-		private readonly NavigatorManager navigatorManager;
 		private readonly Cache cache;
 
-		internal Snapshot(NavigatorManager navigatorManager, Cache cache)
+		internal Snapshot(Cache cache)
 		{
-			this.navigatorManager = navigatorManager;
 			this.cache = cache;
 		}
 

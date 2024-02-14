@@ -17,12 +17,12 @@ internal partial class CatalogManager
 
 	private sealed class Snapshot : ICatalogSnapshot
 	{
-		private readonly CatalogManager catalogManager;
+		private readonly ICatalogTransactionFactory catalogTransactionFactory;
 		private readonly Cache cache;
 
-		internal Snapshot(CatalogManager catalogManager, Cache cache)
+		internal Snapshot(ICatalogTransactionFactory catalogTransactionFactory, Cache cache)
 		{
-			this.catalogManager = catalogManager;
+			this.catalogTransactionFactory = catalogTransactionFactory;
 			this.cache = cache;
 		}
 
@@ -32,7 +32,7 @@ internal partial class CatalogManager
 
 		public async Task PurchaseOfferAsync(IUser user, ICatalogOffer offer, string extraData, int amount, CancellationToken cancellationToken)
 		{
-			await using ICatalogTransaction transaction = await this.catalogManager.catalogTransactionFactory.CreateTransactionAsync(this.cache.Furnitures, user, extraData, cancellationToken).ConfigureAwait(false);
+			await using ICatalogTransaction transaction = await this.catalogTransactionFactory.CreateTransactionAsync(this.cache.Furnitures, user, extraData, cancellationToken).ConfigureAwait(false);
 
 			for (int i = 0; i < amount; i++)
 			{

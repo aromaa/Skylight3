@@ -9,11 +9,12 @@ using Skylight.Domain.Rooms;
 using Skylight.Domain.Rooms.Layout;
 using Skylight.Infrastructure;
 using Skylight.Server.Collections.Cache;
+using Skylight.Server.DependencyInjection;
 using Skylight.Server.Game.Rooms;
 
 namespace Skylight.Server.Game.Navigator;
 
-internal sealed partial class NavigatorManager : INavigatorManager
+internal sealed partial class NavigatorManager : LoadableServiceBase<INavigatorSnapshot>, INavigatorManager
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
 
@@ -21,22 +22,17 @@ internal sealed partial class NavigatorManager : INavigatorManager
 
 	private readonly AsyncTypedCache<int, IRoomInfo?> roomData;
 
-	private Snapshot snapshot;
-
 	public NavigatorManager(IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager)
+		: base(new Snapshot(Cache.CreateBuilder().ToImmutable()))
 	{
 		this.dbContextFactory = dbContextFactory;
 
 		this.userManager = userManager;
 
 		this.roomData = new AsyncTypedCache<int, IRoomInfo?>(this.InternalLoadRoomDataAsync);
-
-		this.snapshot = new Snapshot(this, Cache.CreateBuilder().ToImmutable());
 	}
 
-	public INavigatorSnapshot Current => this.snapshot;
-
-	public async Task<INavigatorSnapshot> LoadAsync(ILoadableServiceContext context, CancellationToken cancellationToken)
+	public override async Task<INavigatorSnapshot> LoadAsyncCore(ILoadableServiceContext context, CancellationToken cancellationToken)
 	{
 		Cache.Builder builder = Cache.CreateBuilder();
 
@@ -65,9 +61,7 @@ internal sealed partial class NavigatorManager : INavigatorManager
 			}
 		}
 
-		Snapshot snapshot = new(this, builder.ToImmutable());
-
-		return context.Commit(() => this.snapshot = snapshot, snapshot);
+		return new Snapshot(builder.ToImmutable());
 	}
 
 	public ValueTask<IRoomInfo?> GetRoomDataAsync(int id, CancellationToken cancellationToken)

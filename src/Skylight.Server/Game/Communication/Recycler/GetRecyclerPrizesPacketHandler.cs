@@ -25,30 +25,35 @@ internal sealed class GetRecyclerPrizesPacketHandler<T> : UserPacketHandler<T>
 
 	internal override void Handle(IUser user, in T packet)
 	{
-		List<RecyclerPrizeLevelData> rewards = new();
-
-		ImmutableArray<IFurniMaticPrizeLevel> levels = this.furniMaticManager.Prizes.Levels;
-		for (int i = levels.Length - 1; i >= 0; i--)
+		user.Client.ScheduleTask(async client =>
 		{
-			IFurniMaticPrizeLevel prizeLevel = levels[i];
+			List<RecyclerPrizeLevelData> rewards = new();
 
-			List<RecyclerPrizeData> prizes = new();
+			IFurniMaticSnapshot furniMatic = await this.furniMaticManager.GetAsync().ConfigureAwait(false);
 
-			foreach (IFurniMaticPrize prize in prizeLevel.Prizes)
+			ImmutableArray<IFurniMaticPrizeLevel> levels = furniMatic.Prizes.Levels;
+			for (int i = levels.Length - 1; i >= 0; i--)
 			{
-				List<RecyclerItemData> items = new();
+				IFurniMaticPrizeLevel prizeLevel = levels[i];
 
-				foreach (IFurniture item in prize.Furnitures)
+				List<RecyclerPrizeData> prizes = new();
+
+				foreach (IFurniMaticPrize prize in prizeLevel.Prizes)
 				{
-					items.Add(new RecyclerItemData(item is IFloorFurniture ? FurnitureType.Floor : FurnitureType.Wall, item.Id));
+					List<RecyclerItemData> items = new();
+
+					foreach (IFurniture item in prize.Furnitures)
+					{
+						items.Add(new RecyclerItemData(item is IFloorFurniture ? FurnitureType.Floor : FurnitureType.Wall, item.Id));
+					}
+
+					prizes.Add(new RecyclerPrizeData(prize.Name, items));
 				}
 
-				prizes.Add(new RecyclerPrizeData(prize.Name, items));
+				rewards.Add(new RecyclerPrizeLevelData(prizeLevel.Level, prizeLevel.Odds, prizes));
 			}
 
-			rewards.Add(new RecyclerPrizeLevelData(prizeLevel.Level, prizeLevel.Odds, prizes));
-		}
-
-		user.SendAsync(new RecyclerPrizesOutgoingPacket(rewards));
+			client.SendAsync(new RecyclerPrizesOutgoingPacket(rewards));
+		});
 	}
 }

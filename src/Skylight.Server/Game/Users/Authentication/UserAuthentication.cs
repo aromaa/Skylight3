@@ -73,8 +73,7 @@ internal sealed class UserAuthentication : IUserAuthentication
 			UserSettingsEntity? userSettings = await dbContext.UserSettings.FirstOrDefaultAsync(s => s.UserId == profile.Id, cancellationToken).ConfigureAwait(false);
 			User user = new(client, profile, new UserSettings(userSettings));
 
-			IBadgeSnapshot badges = this.badgeManager.Current;
-			IFurnitureSnapshot furnitures = this.furnitureManager.Current;
+			IFurnitureSnapshot furnitures = await this.furnitureManager.GetAsync().ConfigureAwait(false);
 
 			await foreach (FloorItemEntity item in dbContext.FloorItems
 						 .AsNoTracking()
@@ -105,6 +104,8 @@ internal sealed class UserAuthentication : IUserAuthentication
 
 				user.Inventory.TryAddWallItem(this.furnitureInventoryItemFactory.CreateFurnitureItem(item.Id, profile, furniture, item.ExtraData));
 			}
+
+			IBadgeSnapshot badges = await this.badgeManager.GetAsync().ConfigureAwait(false);
 
 			await foreach (UserBadgeEntity entity in dbContext.UserBadges
 							   .AsNoTracking()

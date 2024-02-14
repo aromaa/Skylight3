@@ -27,20 +27,36 @@ internal partial class FurniMaticManager
 
 	private sealed class Snapshot : IFurniMaticSnapshot
 	{
-		private readonly FurniMaticManager manager;
+		private readonly IDbContextFactory<SkylightContext> dbContextFactory;
+
+		private readonly IFurnitureManager furnitureManager;
+		private readonly IFurnitureInventoryItemStrategy furnitureInventoryItemStrategy;
+		private readonly ICatalogTransactionFactory catalogTransactionFactory;
+
 		private readonly TimeProvider timeProvider;
+
+		private readonly FurniMaticSettings settings;
+
 		private readonly Cache cache;
 
-		internal Snapshot(FurniMaticManager manager, TimeProvider timeProvider, Cache cache)
+		internal Snapshot(IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, IFurnitureInventoryItemStrategy furnitureInventoryItemStrategy, ICatalogTransactionFactory catalogTransactionFactory, FurniMaticSettings settings, TimeProvider timeProvider, Cache cache)
 		{
-			this.manager = manager;
+			this.dbContextFactory = dbContextFactory;
+
+			this.furnitureManager = furnitureManager;
+			this.furnitureInventoryItemStrategy = furnitureInventoryItemStrategy;
+			this.catalogTransactionFactory = catalogTransactionFactory;
+
+			this.settings = settings;
+
 			this.timeProvider = timeProvider;
+
 			this.cache = cache;
 		}
 
 		public IFurniMaticPrizes Prizes => this.cache.Prizes;
 
-		public int ItemsRequiredToRecycle => this.manager.settings.ItemsRequired;
+		public int ItemsRequiredToRecycle => this.settings.ItemsRequired;
 
 		internal (IFloorFurniture? GiftFurniture, IFurniMaticPrize? Prize) RollRandomPrice() => (this.cache.GiftFurniture, this.cache.Prizes.RollRandomPrice());
 
@@ -62,7 +78,7 @@ internal partial class FurniMaticManager
 
 			try
 			{
-				await using SkylightContext dbContext = await this.manager.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+				await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
 				foreach (IFurnitureInventoryItem item in items)
 				{
@@ -110,14 +126,14 @@ internal partial class FurniMaticManager
 				return null;
 			}
 
-			user.Inventory.AddUnseenFloorItem(this.manager.furnitureInventoryItemStrategy.CreateFurnitureItem(giftItemEntity.Id, user.Profile, giftFurniture, giftItemEntity.ExtraData));
+			user.Inventory.AddUnseenFloorItem(this.furnitureInventoryItemStrategy.CreateFurnitureItem(giftItemEntity.Id, user.Profile, giftFurniture, giftItemEntity.ExtraData));
 
 			return prize;
 		}
 
 		public async Task<IFurniMaticPrize?> OpenGiftAsync(IUser user, IFurniMaticGiftRoomItem gift, CancellationToken cancellationToken)
 		{
-			await using SkylightContext dbContext = await this.manager.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+			await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
 			FurniMaticGiftEntity? giftEntity = await dbContext.FurniMaticGifts.FirstOrDefaultAsync(i => i.ItemId == gift.Id, cancellationToken).ConfigureAwait(false);
 			if (giftEntity is null || !this.cache.Prizes.TryGetPrize(giftEntity.PrizeId, out IFurniMaticPrize? prize))
@@ -125,7 +141,7 @@ internal partial class FurniMaticManager
 				return null;
 			}
 
-			await using ICatalogTransaction transaction = await this.manager.catalogTransactionFactory.CreateTransactionAsync(this.manager.furnitureManager, dbContext.Database.GetDbConnection(), user, string.Empty, cancellationToken).ConfigureAwait(false);
+			await using ICatalogTransaction transaction = await this.catalogTransactionFactory.CreateTransactionAsync(this.furnitureManager, dbContext.Database.GetDbConnection(), user, string.Empty, cancellationToken).ConfigureAwait(false);
 
 			await using (await dbContext.Database.UseTransactionAsync(transaction.Transaction, cancellationToken).ConfigureAwait(false))
 			{

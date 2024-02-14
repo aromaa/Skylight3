@@ -8,10 +8,11 @@ using Skylight.API.Game.Inventory.Items;
 using Skylight.API.Game.Recycler.FurniMatic;
 using Skylight.Domain.Recycler.FurniMatic;
 using Skylight.Infrastructure;
+using Skylight.Server.DependencyInjection;
 
 namespace Skylight.Server.Game.Catalog.Recycler.FurniMatic;
 
-internal sealed partial class FurniMaticManager : IFurniMaticManager
+internal sealed partial class FurniMaticManager : LoadableServiceBase<IFurniMaticSnapshot>, IFurniMaticManager
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
 
@@ -23,9 +24,8 @@ internal sealed partial class FurniMaticManager : IFurniMaticManager
 
 	private readonly TimeProvider timeProvider;
 
-	private Snapshot snapshot;
-
 	public FurniMaticManager(IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, ICatalogTransactionFactory catalogTransactionFactory, IFurnitureInventoryItemStrategy furnitureInventoryItemStrategy, IOptions<FurniMaticSettings> settings, TimeProvider timeProvider)
+		: base(new Snapshot(dbContextFactory, furnitureManager, furnitureInventoryItemStrategy, catalogTransactionFactory, settings.Value, timeProvider, Cache.CreateBuilder().ToImmutable(furnitureManager.Current)))
 	{
 		this.dbContextFactory = dbContextFactory;
 
@@ -36,13 +36,9 @@ internal sealed partial class FurniMaticManager : IFurniMaticManager
 		this.settings = settings.Value;
 
 		this.timeProvider = timeProvider;
-
-		this.snapshot = new Snapshot(this, this.timeProvider, Cache.CreateBuilder().ToImmutable(furnitureManager.Current));
 	}
 
-	public IFurniMaticSnapshot Current => this.snapshot;
-
-	public async Task<IFurniMaticSnapshot> LoadAsync(ILoadableServiceContext context, CancellationToken cancellationToken)
+	public override async Task<IFurniMaticSnapshot> LoadAsyncCore(ILoadableServiceContext context, CancellationToken cancellationToken)
 	{
 		Task<IFurnitureSnapshot> furnitures = context.RequestDependencyAsync<IFurnitureSnapshot>(cancellationToken);
 
@@ -74,8 +70,6 @@ internal sealed partial class FurniMaticManager : IFurniMaticManager
 			}
 		}
 
-		Snapshot snapshot = new(this, this.timeProvider, builder.ToImmutable(await furnitures.ConfigureAwait(false)));
-
-		return context.Commit(() => this.snapshot = snapshot, snapshot);
+		return new Snapshot(this.dbContextFactory, this.furnitureManager, this.furnitureInventoryItemStrategy, this.catalogTransactionFactory, this.settings, this.timeProvider, builder.ToImmutable(await furnitures.ConfigureAwait(false)));
 	}
 }

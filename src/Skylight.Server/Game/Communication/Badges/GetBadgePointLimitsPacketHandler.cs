@@ -22,22 +22,26 @@ internal sealed partial class GetBadgePointLimitsPacketHandler<T> : UserPacketHa
 
 	internal override void Handle(IUser user, in T packet)
 	{
-		Dictionary<string, BadgePointLimitData> badgePointLimits = new();
-
-		foreach ((string badgeCode, int limit) in this.achievementManager.BadgePointLimits)
+		user.Client.ScheduleTask(async client =>
 		{
-			Match match = GetBadgePointLimitsPacketHandler<T>.ParseAchievementBadge().Match(badgeCode);
+			IAchievementSnapshot snapshot = await this.achievementManager.GetAsync().ConfigureAwait(false);
 
-			string badgeGroup = match.Groups[1].Value;
-			if (!badgePointLimits.TryGetValue(badgeGroup, out BadgePointLimitData? badgePointLimit))
+			Dictionary<string, BadgePointLimitData> badgePointLimits = new();
+			foreach ((string badgeCode, int limit) in snapshot.BadgePointLimits)
 			{
-				badgePointLimit = badgePointLimits[badgeGroup] = new BadgePointLimitData(badgeGroup, new List<(int Level, int Limit)>());
+				Match match = GetBadgePointLimitsPacketHandler<T>.ParseAchievementBadge().Match(badgeCode);
+
+				string badgeGroup = match.Groups[1].Value;
+				if (!badgePointLimits.TryGetValue(badgeGroup, out BadgePointLimitData? badgePointLimit))
+				{
+					badgePointLimit = badgePointLimits[badgeGroup] = new BadgePointLimitData(badgeGroup, new List<(int Level, int Limit)>());
+				}
+
+				((List<(int Level, int Limit)>)badgePointLimit.Limits).Add((int.Parse(match.Groups[2].ValueSpan), limit));
 			}
 
-			((List<(int Level, int Limit)>)badgePointLimit.Limits).Add((int.Parse(match.Groups[2].ValueSpan), limit));
-		}
-
-		user.SendAsync(new BadgePointLimitsOutgoingPacket(badgePointLimits.Values));
+			client.SendAsync(new BadgePointLimitsOutgoingPacket(badgePointLimits.Values));
+		});
 	}
 
 	[GeneratedRegex("ACH_(.+?)([0-9]+)$")]

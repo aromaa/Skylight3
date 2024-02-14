@@ -4,6 +4,7 @@
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net8.0</TargetFramework>
 		<UserSecretsId>cc2c8427-3173-434a-9cb5-3a511fb8b81f</UserSecretsId>
+		<ServerGarbageCollection>true</ServerGarbageCollection>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(BuildingInsideVisualStudio)' == 'true'">

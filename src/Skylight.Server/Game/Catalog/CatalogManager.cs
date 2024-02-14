@@ -5,10 +5,11 @@ using Skylight.API.Game.Catalog;
 using Skylight.API.Game.Furniture;
 using Skylight.Domain.Catalog;
 using Skylight.Infrastructure;
+using Skylight.Server.DependencyInjection;
 
 namespace Skylight.Server.Game.Catalog;
 
-internal sealed partial class CatalogManager : ICatalogManager
+internal sealed partial class CatalogManager : LoadableServiceBase<ICatalogSnapshot>, ICatalogManager
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
 
@@ -17,9 +18,8 @@ internal sealed partial class CatalogManager : ICatalogManager
 	private readonly IFurnitureManager furnitureManager;
 	private readonly ICatalogTransactionFactory catalogTransactionFactory;
 
-	private Snapshot snapshot;
-
 	public CatalogManager(IDbContextFactory<SkylightContext> dbContextFactory, IBadgeManager badgeManager, IFurnitureManager furnitureManager, ICatalogTransactionFactory catalogTransactionFactory)
+		: base(new Snapshot(catalogTransactionFactory, Cache.CreateBuilder().ToImmutable(badgeManager.Current, furnitureManager.Current)))
 	{
 		this.dbContextFactory = dbContextFactory;
 
@@ -27,13 +27,9 @@ internal sealed partial class CatalogManager : ICatalogManager
 
 		this.furnitureManager = furnitureManager;
 		this.catalogTransactionFactory = catalogTransactionFactory;
-
-		this.snapshot = new Snapshot(this, Cache.CreateBuilder().ToImmutable(badgeManager.Current, furnitureManager.Current));
 	}
 
-	public ICatalogSnapshot Current => this.snapshot;
-
-	public async Task<ICatalogSnapshot> LoadAsync(ILoadableServiceContext context, CancellationToken cancellationToken)
+	public override async Task<ICatalogSnapshot> LoadAsyncCore(ILoadableServiceContext context, CancellationToken cancellationToken)
 	{
 		Task<IBadgeSnapshot> badgeSnapshot = context.RequestDependencyAsync<IBadgeSnapshot>(cancellationToken);
 		Task<IFurnitureSnapshot> furnitureSnapshot = context.RequestDependencyAsync<IFurnitureSnapshot>(cancellationToken);
@@ -58,8 +54,6 @@ internal sealed partial class CatalogManager : ICatalogManager
 			}
 		}
 
-		Snapshot snapshot = new(this, builder.ToImmutable(await badgeSnapshot.ConfigureAwait(false), await furnitureSnapshot.ConfigureAwait(false)));
-
-		return context.Commit(() => this.snapshot = snapshot, snapshot);
+		return new Snapshot(this.catalogTransactionFactory, builder.ToImmutable(await badgeSnapshot.ConfigureAwait(false), await furnitureSnapshot.ConfigureAwait(false)));
 	}
 }

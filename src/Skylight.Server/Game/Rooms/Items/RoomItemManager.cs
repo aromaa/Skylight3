@@ -70,7 +70,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 
 	public async Task LoadAsync(CancellationToken cancellationToken)
 	{
-		IFurnitureSnapshot furnitures = this.furnitureManager.Current;
+		IFurnitureSnapshot furnitures = await this.furnitureManager.GetAsync().ConfigureAwait(false);
 
 		await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 

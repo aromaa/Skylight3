@@ -3,25 +3,21 @@ using Skylight.API.DependencyInjection;
 using Skylight.API.Game.Badges;
 using Skylight.Domain.Badges;
 using Skylight.Infrastructure;
+using Skylight.Server.DependencyInjection;
 
 namespace Skylight.Server.Game.Badges;
 
-internal sealed partial class BadgeManager : IBadgeManager
+internal sealed partial class BadgeManager : LoadableServiceBase<IBadgeSnapshot>, IBadgeManager
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
 
-	private Snapshot snapshot;
-
 	public BadgeManager(IDbContextFactory<SkylightContext> dbContextFactory)
+		: base(new Snapshot(Cache.CreateBuilder().ToImmutable()))
 	{
 		this.dbContextFactory = dbContextFactory;
-
-		this.snapshot = new Snapshot(Cache.CreateBuilder().ToImmutable());
 	}
 
-	public IBadgeSnapshot Current => this.snapshot;
-
-	public async Task<IBadgeSnapshot> LoadAsync(ILoadableServiceContext context, CancellationToken cancellationToken)
+	public override async Task<IBadgeSnapshot> LoadAsyncCore(ILoadableServiceContext context, CancellationToken cancellationToken)
 	{
 		Cache.Builder builder = Cache.CreateBuilder();
 
@@ -39,8 +35,6 @@ internal sealed partial class BadgeManager : IBadgeManager
 			}
 		}
 
-		Snapshot snapshot = new(builder.ToImmutable());
-
-		return context.Commit(() => this.snapshot = snapshot, snapshot);
+		return new Snapshot(builder.ToImmutable());
 	}
 }

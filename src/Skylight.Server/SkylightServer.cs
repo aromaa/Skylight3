@@ -30,9 +30,18 @@ internal sealed class SkylightServer : IServer
 		this.packetManagerCache.ScanAppDomain();
 		this.packetManagerCache.Load(this.hostEnvironment.ContentRootFileProvider.GetDirectoryContents("Protocol"));
 
-		this.networkManager.Start();
+		bool earlyBind = this.networkManager.Settings.EarlyBind;
+		if (earlyBind)
+		{
+			this.networkManager.Start();
+		}
 
-		await this.loadableServiceManager.Value.LoadAsync(cancellationToken).ConfigureAwait(false);
+		await this.loadableServiceManager.Value.LoadAsync(cancellationToken, useTransaction: !earlyBind || !this.networkManager.Settings.EarlyAccept).ConfigureAwait(false);
+
+		if (!earlyBind)
+		{
+			this.networkManager.Start();
+		}
 	}
 
 	public Task StopAsync(CancellationToken cancellationToken)

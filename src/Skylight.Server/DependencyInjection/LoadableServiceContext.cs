@@ -9,12 +9,16 @@ internal sealed class LoadableServiceContext : ILoadableServiceContext
 
 	private readonly LoadableServiceManager loader;
 
+	private readonly bool useTransaction;
+
 	private readonly Dictionary<ILoadableService, Task> loading;
 	private readonly List<Action> transactions;
 
-	internal LoadableServiceContext(LoadableServiceManager loader)
+	internal LoadableServiceContext(LoadableServiceManager loader, bool useTransaction = true)
 	{
 		this.loader = loader;
+
+		this.useTransaction = useTransaction;
 
 		this.loading = new Dictionary<ILoadableService, Task>();
 		this.transactions = new List<Action>();
@@ -102,14 +106,18 @@ internal sealed class LoadableServiceContext : ILoadableServiceContext
 		return ((Task<T>)original).Result;
 	}
 
-	public TState Commit<TState>(Action action, TState state)
+	public void Commit(Action action)
 	{
+		if (!this.useTransaction)
+		{
+			action();
+			return;
+		}
+
 		lock (this.transactions)
 		{
 			this.transactions.Add(action);
 		}
-
-		return state;
 	}
 
 	public async Task CompleteAsync(CancellationToken cancellationToken = default)
