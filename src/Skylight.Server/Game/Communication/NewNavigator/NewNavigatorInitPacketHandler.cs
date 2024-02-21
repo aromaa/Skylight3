@@ -15,13 +15,13 @@ internal sealed class NewNavigatorInitPacketHandler<T> : UserPacketHandler<T>
 	{
 		user.SendAsync(new NavigatorMetaDataOutgoingPacket
 		{
-			TopLevelContexts = new List<TopLevelContext>
-			{
+			TopLevelContexts =
+			[
 				new TopLevelContext("official_view", Array.Empty<SavedSearchData>()),
 				new TopLevelContext("hotel_view", Array.Empty<SavedSearchData>()),
 				new TopLevelContext("roomads_view", Array.Empty<SavedSearchData>()),
 				new TopLevelContext("myworld_view", Array.Empty<SavedSearchData>())
-			}
+			]
 		});
 
 		user.SendAsync(new NavigatorLiftedRoomsOutgoingPacket(Array.Empty<LiftedRoomData>()));

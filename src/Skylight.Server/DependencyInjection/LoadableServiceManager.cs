@@ -29,7 +29,7 @@ internal sealed class LoadableServiceManager : ILoadableServiceManager
 
 		foreach (ILoadableService service in services)
 		{
-			this.services[service] = new HashSet<ILoadableService>();
+			this.services[service] = [];
 		}
 	}
 

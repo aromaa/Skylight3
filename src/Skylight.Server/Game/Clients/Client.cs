@@ -69,9 +69,9 @@ internal sealed class Client : IClient
 		{
 			this.client = client;
 
-			this.taskLimits = new Dictionary<Type, int>();
+			this.taskLimits = [];
 
-			this.scheduledTasks = new Dictionary<Type, object?>();
+			this.scheduledTasks = [];
 		}
 
 		internal bool ScheduleTask<T>(in T task)

@@ -2,7 +2,7 @@
 
 internal sealed class NetworkSettings
 {
-	public List<ListenerSettings> Listeners { get; set; } = new();
+	public List<ListenerSettings> Listeners { get; set; } = [];
 
 	public bool EarlyBind { get; set; } = false;
 	public bool EarlyAccept { get; set; } = false;

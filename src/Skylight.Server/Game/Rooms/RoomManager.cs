@@ -36,15 +36,15 @@ internal sealed class RoomManager(IServiceProvider serviceProvider, IDbContextFa
 			return null;
 		}
 
-		ObjectFactory roomFactory = ActivatorUtilities.CreateFactory(typeof(Room), new Type[]
-		{
+		ObjectFactory roomFactory = ActivatorUtilities.CreateFactory(typeof(Room),
+		[
 			typeof(RoomData)
-		});
+		]);
 
-		room = (Room)roomFactory(this.serviceProvider, new object[]
-		{
+		room = (Room)roomFactory(this.serviceProvider,
+		[
 			roomInfo
-		});
+		]);
 
 		this.loadedRooms.TryAdd(id, room);
 

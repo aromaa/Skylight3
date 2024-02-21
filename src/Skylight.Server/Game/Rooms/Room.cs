@@ -104,7 +104,7 @@ internal sealed class Room : IRoom
 			IRoomTask[] tasks;
 			lock (this.scheduledUpdateTasks)
 			{
-				tasks = this.scheduledUpdateTasks.ToArray();
+				tasks = [.. this.scheduledUpdateTasks];
 
 				this.scheduledUpdateTasks.Clear();
 			}

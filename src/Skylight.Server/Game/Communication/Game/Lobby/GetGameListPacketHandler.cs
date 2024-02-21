@@ -13,9 +13,9 @@ internal sealed class GetGameListPacketHandler<T> : UserPacketHandler<T>
 {
 	internal override void Handle(IUser user, in T packet)
 	{
-		user.SendAsync(new GameListOutgoingPacket(new List<GameData>
-		{
-			new(3, "basejump", "68bbd2", string.Empty, "/c_images/gamecenter_basejump/")
-		}));
+		user.SendAsync(new GameListOutgoingPacket(
+		[
+			new GameData(3, "basejump", "68bbd2", string.Empty, "/c_images/gamecenter_basejump/")
+		]));
 	}
 }

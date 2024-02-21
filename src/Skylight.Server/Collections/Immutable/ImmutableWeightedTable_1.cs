@@ -5,7 +5,7 @@ namespace Skylight.Server.Collections.Immutable;
 internal sealed class ImmutableWeightedTable<TKey>
 	where TKey : notnull
 {
-	internal static readonly ImmutableWeightedTable<TKey> Empty = new(ImmutableArray<Entry>.Empty);
+	internal static readonly ImmutableWeightedTable<TKey> Empty = new([]);
 
 	private readonly ImmutableArray<Entry> entries;
 
@@ -50,7 +50,7 @@ internal sealed class ImmutableWeightedTable<TKey>
 
 		internal Builder()
 		{
-			this.entries = new Dictionary<TKey, double>();
+			this.entries = [];
 		}
 
 		internal void Add(TKey key, double probability) => this.entries.Add(key, probability);

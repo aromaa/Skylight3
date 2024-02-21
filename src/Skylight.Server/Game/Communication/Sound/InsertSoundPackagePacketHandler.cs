@@ -46,7 +46,7 @@ internal sealed partial class InsertSoundPackagePacketHandler<T> : UserPacketHan
 				}
 			}
 
-			List<SoundSetData> filledSlots = new();
+			List<SoundSetData> filledSlots = [];
 			foreach ((int slot, ISoundSetFurniture soundSet) in soundMachine.SoundSets)
 			{
 				filledSlots.Add(new SoundSetData(slot, soundSet.SoundSetId, soundSet.Samples));

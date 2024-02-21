@@ -24,7 +24,7 @@ internal sealed class RoomUnitManager : IRoomUnitManager
 	{
 		this.room = room;
 
-		this.roomUnits = new Dictionary<int, IRoomUnit>();
+		this.roomUnits = [];
 
 		this.movingUnits = new LinkedList<IRoomUnit>();
 
@@ -44,10 +44,10 @@ internal sealed class RoomUnitManager : IRoomUnitManager
 				IRoomUnit roomUnit = node.Value;
 				roomUnit.Tick();
 
-				this.room.SendAsync(new UserUpdateOutgoingPacket(new List<RoomUnitUpdateData>
-				{
-					new(roomUnit.Id, roomUnit.Position.X, roomUnit.Position.Y, roomUnit.Position.Z, roomUnit.Rotation.X, roomUnit.Rotation.Y, roomUnit.Moving ? $"mv {roomUnit.NextStepPosition.X},{roomUnit.NextStepPosition.Y},{roomUnit.NextStepPosition.Z.ToString(CultureInfo.InvariantCulture)}" : string.Empty)
-				}));
+				this.room.SendAsync(new UserUpdateOutgoingPacket(
+				[
+					new RoomUnitUpdateData(roomUnit.Id, roomUnit.Position.X, roomUnit.Position.Y, roomUnit.Position.Z, roomUnit.Rotation.X, roomUnit.Rotation.Y, roomUnit.Moving ? $"mv {roomUnit.NextStepPosition.X},{roomUnit.NextStepPosition.Y},{roomUnit.NextStepPosition.Z.ToString(CultureInfo.InvariantCulture)}" : string.Empty)
+				]));
 
 				if (!roomUnit.Moving)
 				{
@@ -79,9 +79,9 @@ internal sealed class RoomUnitManager : IRoomUnitManager
 
 		if (unit is IUserRoomUnit userUnit)
 		{
-			this.room.SendAsync(new UsersOutgoingPacket(new List<RoomUnitData>
-			{
-				new()
+			this.room.SendAsync(new UsersOutgoingPacket(
+			[
+				new RoomUnitData
 				{
 					IdentifierId = userUnit.User.Profile.Id,
 					Name = userUnit.User.Profile.Username,
@@ -101,7 +101,7 @@ internal sealed class RoomUnitManager : IRoomUnitManager
 					AchievementScore = 666,
 					IsModerator = true
 				}
-			}));
+			]));
 		}
 	}
 

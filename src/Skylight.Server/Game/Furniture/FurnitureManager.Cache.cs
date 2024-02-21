@@ -29,8 +29,8 @@ internal partial class FurnitureManager
 
 			internal Builder()
 			{
-				this.floorFurnitures = new Dictionary<int, FloorFurnitureEntity>();
-				this.wallFurnitures = new Dictionary<int, WallFurnitureEntity>();
+				this.floorFurnitures = [];
+				this.wallFurnitures = [];
 			}
 
 			internal void AddFloorItem(FloorFurnitureEntity floorItem)
@@ -45,8 +45,8 @@ internal partial class FurnitureManager
 
 			internal Cache ToImmutable()
 			{
-				Dictionary<int, IFloorFurniture> floorFurnitures = new();
-				Dictionary<int, IWallFurniture> wallFurnitures = new();
+				Dictionary<int, IFloorFurniture> floorFurnitures = [];
+				Dictionary<int, IWallFurniture> wallFurnitures = [];
 
 				foreach (FloorFurnitureEntity entity in this.floorFurnitures.Values)
 				{

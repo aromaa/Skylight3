@@ -31,7 +31,7 @@ internal partial class AchievementManager
 
 			internal Builder()
 			{
-				this.achievements = new Dictionary<int, AchievementEntity>();
+				this.achievements = [];
 			}
 
 			internal void AddAchievement(AchievementEntity achievement)
@@ -41,8 +41,8 @@ internal partial class AchievementManager
 
 			internal Cache ToImmutable(IBadgeSnapshot badges)
 			{
-				Dictionary<int, IAchievement> achievements = new();
-				Dictionary<string, int> badgePointLimits = new();
+				Dictionary<int, IAchievement> achievements = [];
+				Dictionary<string, int> badgePointLimits = [];
 
 				foreach (AchievementEntity achievementEntity in this.achievements.Values)
 				{

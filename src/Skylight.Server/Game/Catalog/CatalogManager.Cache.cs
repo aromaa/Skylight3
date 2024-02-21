@@ -40,7 +40,7 @@ internal partial class CatalogManager
 
 			internal Builder()
 			{
-				this.rootPages = new List<CatalogPageEntity>();
+				this.rootPages = [];
 			}
 
 			internal void AddPage(CatalogPageEntity page)
@@ -53,12 +53,12 @@ internal partial class CatalogManager
 
 			internal Cache ToImmutable(IBadgeSnapshot badges, IFurnitureSnapshot furnitures)
 			{
-				Dictionary<int, ICatalogPage> catalogPages = new();
-				Dictionary<int, ICatalogOffer> catalogOffers = new();
+				Dictionary<int, ICatalogPage> catalogPages = [];
+				Dictionary<int, ICatalogOffer> catalogOffers = [];
 
 				CatalogPage CreatePage(CatalogPageEntity pageEntity)
 				{
-					Dictionary<int, ICatalogOffer> offers = new();
+					Dictionary<int, ICatalogOffer> offers = [];
 					foreach (CatalogOfferEntity offerEntity in pageEntity.Offers!)
 					{
 						CatalogOffer offer = CreateOffer(offerEntity);
@@ -66,7 +66,7 @@ internal partial class CatalogManager
 						offers.Add(offer.Id, offer);
 					}
 
-					Dictionary<int, ICatalogPage> children = new();
+					Dictionary<int, ICatalogPage> children = [];
 					foreach (CatalogPageEntity childEntity in pageEntity.Children!)
 					{
 						CatalogPage child = CreatePage(childEntity);
@@ -74,7 +74,7 @@ internal partial class CatalogManager
 						children.Add(child.Id, child);
 					}
 
-					CatalogPage page = new(pageEntity.Id, pageEntity.Name, pageEntity.Localization, pageEntity.OrderNum, pageEntity.Enabled, pageEntity.Visible, pageEntity.MinRank, pageEntity.ClubRank, pageEntity.IconColor, pageEntity.IconImage, pageEntity.Layout, pageEntity.Texts.ToImmutableArray(), pageEntity.Images.ToImmutableArray(), pageEntity.AcceptSeasonCurrencyAsCredits, offers, children);
+					CatalogPage page = new(pageEntity.Id, pageEntity.Name, pageEntity.Localization, pageEntity.OrderNum, pageEntity.Enabled, pageEntity.Visible, pageEntity.MinRank, pageEntity.ClubRank, pageEntity.IconColor, pageEntity.IconImage, pageEntity.Layout, [.. pageEntity.Texts], [.. pageEntity.Images], pageEntity.AcceptSeasonCurrencyAsCredits, offers, children);
 
 					catalogPages.Add(page.Id, page);
 

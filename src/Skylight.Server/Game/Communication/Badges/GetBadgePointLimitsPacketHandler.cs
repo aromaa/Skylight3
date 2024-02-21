@@ -21,7 +21,7 @@ internal sealed partial class GetBadgePointLimitsPacketHandler<T>(IAchievementMa
 		{
 			IAchievementSnapshot snapshot = await this.achievementManager.GetAsync().ConfigureAwait(false);
 
-			Dictionary<string, BadgePointLimitData> badgePointLimits = new();
+			Dictionary<string, BadgePointLimitData> badgePointLimits = [];
 			foreach ((string badgeCode, int limit) in snapshot.BadgePointLimits)
 			{
 				Match match = GetBadgePointLimitsPacketHandler<T>.ParseAchievementBadge().Match(badgeCode);
@@ -29,7 +29,7 @@ internal sealed partial class GetBadgePointLimitsPacketHandler<T>(IAchievementMa
 				string badgeGroup = match.Groups[1].Value;
 				if (!badgePointLimits.TryGetValue(badgeGroup, out BadgePointLimitData? badgePointLimit))
 				{
-					badgePointLimit = badgePointLimits[badgeGroup] = new BadgePointLimitData(badgeGroup, new List<(int Level, int Limit)>());
+					badgePointLimit = badgePointLimits[badgeGroup] = new BadgePointLimitData(badgeGroup, []);
 				}
 
 				((List<(int Level, int Limit)>)badgePointLimit.Limits).Add((int.Parse(match.Groups[2].ValueSpan), limit));

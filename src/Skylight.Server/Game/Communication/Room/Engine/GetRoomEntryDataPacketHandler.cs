@@ -52,16 +52,16 @@ internal sealed partial class GetRoomEntryDataPacketHandler<T> : UserPacketHandl
 				HeightMap = room.Map.Layout.HeightMap
 			});
 
-			List<PublicRoomObjectData> publicRoomObjects = new();
+			List<PublicRoomObjectData> publicRoomObjects = [];
 			//TODO: Public items
 
-			List<ObjectData> objects = new();
+			List<ObjectData> objects = [];
 			foreach (IFloorRoomItem roomItem in room.ItemManager.FloorItems)
 			{
 				objects.Add(new ObjectData(roomItem.Id, roomItem.Furniture.Id, roomItem.Position.X, roomItem.Position.Y, roomItem.Position.Z, 0, 3, 0, roomItem.GetItemData()));
 			}
 
-			List<ItemData> items = new();
+			List<ItemData> items = [];
 			foreach (IWallRoomItem roomItem in room.ItemManager.WallItems)
 			{
 				items.Add(new ItemData(roomItem.Id, roomItem.Furniture.Id, new WallPosition(roomItem.Location.X, roomItem.Location.Y, roomItem.Position.X, roomItem.Position.Y), roomItem.GetItemData()));
@@ -71,7 +71,7 @@ internal sealed partial class GetRoomEntryDataPacketHandler<T> : UserPacketHandl
 			roomSession.User.SendAsync(new ObjectsOutgoingPacket(objects, Array.Empty<(int, string)>()));
 			roomSession.User.SendAsync(new ItemsOutgoingPacket(items, Array.Empty<(int, string)>()));
 
-			List<RoomUnitData> units = new();
+			List<RoomUnitData> units = [];
 
 			foreach (IUserRoomUnit unit in room.UnitManager.Units)
 			{

@@ -20,8 +20,8 @@ internal sealed class LoadableServiceContext : ILoadableServiceContext
 
 		this.useTransaction = useTransaction;
 
-		this.loading = new Dictionary<ILoadableService, Task>();
-		this.transactions = new List<Action>();
+		this.loading = [];
+		this.transactions = [];
 	}
 
 	private (Action? RunAction, Task Task) Prepare(ILoadableService service, CancellationToken cancellationToken = default)

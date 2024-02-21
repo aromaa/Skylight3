@@ -56,8 +56,8 @@ internal sealed class RoomItemManager : IRoomItemManager
 
 		this.userManager = userManager;
 
-		this.floorItems = new Dictionary<int, IFloorRoomItem>();
-		this.wallItems = new Dictionary<int, IWallRoomItem>();
+		this.floorItems = [];
+		this.wallItems = [];
 
 		this.interactionHandlers = this.itemInteractionManager.CreateHandlers(this.room);
 

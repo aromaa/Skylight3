@@ -7,7 +7,7 @@ internal static class CatalogPageExtensions
 {
 	internal static List<CatalogOfferData> BuildOffersData(this ICatalogPage page)
 	{
-		List<CatalogOfferData> offers = new();
+		List<CatalogOfferData> offers = [];
 
 		foreach (ICatalogOffer offer in page.Offers)
 		{

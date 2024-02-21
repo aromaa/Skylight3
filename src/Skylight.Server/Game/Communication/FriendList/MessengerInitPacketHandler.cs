@@ -13,9 +13,9 @@ internal sealed class MessengerInitPacketHandler<T> : UserPacketHandler<T>
 {
 	internal override void Handle(IUser user, in T packet)
 	{
-		user.SendAsync(new MessengerInitOutgoingPacket(100, 200, 300, 600, new List<FriendCategoryData>
-		{
-			new(3, "Skylight")
-		}));
+		user.SendAsync(new MessengerInitOutgoingPacket(100, 200, 300, 600,
+		[
+			new FriendCategoryData(3, "Skylight")
+		]));
 	}
 }

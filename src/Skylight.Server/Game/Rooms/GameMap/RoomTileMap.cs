@@ -10,7 +10,8 @@ namespace Skylight.Server.Game.Rooms.GameMap;
 
 internal sealed class RoomTileMap : IRoomMap
 {
-	private static readonly Point2D[] directions = { new(0, 1), new(1, 0), new(0, -1), new(-1, 0), new(1, 1), new(-1, -1), new(1, -1), new(-1, 1) };
+	private static readonly Point2D[] directions =
+		[new Point2D(0, 1), new Point2D(1, 0), new Point2D(0, -1), new Point2D(-1, 0), new Point2D(1, 1), new Point2D(-1, -1), new Point2D(1, -1), new Point2D(-1, 1)];
 
 	internal Room Room { get; }
 

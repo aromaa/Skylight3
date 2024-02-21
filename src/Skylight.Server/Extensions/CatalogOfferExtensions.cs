@@ -10,7 +10,7 @@ internal static class CatalogOfferExtensions
 {
 	internal static CatalogOfferData BuildOfferData(this ICatalogOffer offer)
 	{
-		List<CatalogProductData> products = new();
+		List<CatalogProductData> products = [];
 
 		foreach (ICatalogProduct product in offer.Products)
 		{

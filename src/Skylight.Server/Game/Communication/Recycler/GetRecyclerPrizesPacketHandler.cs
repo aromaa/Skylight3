@@ -22,7 +22,7 @@ internal sealed class GetRecyclerPrizesPacketHandler<T>(IFurniMaticManager furni
 	{
 		user.Client.ScheduleTask(async client =>
 		{
-			List<RecyclerPrizeLevelData> rewards = new();
+			List<RecyclerPrizeLevelData> rewards = [];
 
 			IFurniMaticSnapshot furniMatic = await this.furniMaticManager.GetAsync().ConfigureAwait(false);
 
@@ -31,11 +31,11 @@ internal sealed class GetRecyclerPrizesPacketHandler<T>(IFurniMaticManager furni
 			{
 				IFurniMaticPrizeLevel prizeLevel = levels[i];
 
-				List<RecyclerPrizeData> prizes = new();
+				List<RecyclerPrizeData> prizes = [];
 
 				foreach (IFurniMaticPrize prize in prizeLevel.Prizes)
 				{
-					List<RecyclerItemData> items = new();
+					List<RecyclerItemData> items = [];
 
 					foreach (IFurniture item in prize.Furnitures)
 					{

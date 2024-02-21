@@ -37,7 +37,7 @@ internal sealed class FurniMaticPrizes : IFurniMaticPrizes
 
 		ImmutableWeightedTable<IFurniMaticPrize>.Builder builder = ImmutableWeightedTable.CreateBuilder<IFurniMaticPrize>();
 
-		List<IFurniMaticPrize> commonPrizes = new();
+		List<IFurniMaticPrize> commonPrizes = [];
 		double commonPrizeChance = 1;
 
 		foreach (IFurniMaticPrizeLevel level in levels)

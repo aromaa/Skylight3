@@ -20,7 +20,7 @@ internal sealed partial class GetCatalogIndexPacketHandler<T>(ICatalogManager ca
 		//TODO: Caching
 		static List<CatalogNodeData> BuildChildren(IEnumerable<ICatalogPage> pages)
 		{
-			List<CatalogNodeData> nodes = new();
+			List<CatalogNodeData> nodes = [];
 
 			foreach (ICatalogPage page in pages)
 			{

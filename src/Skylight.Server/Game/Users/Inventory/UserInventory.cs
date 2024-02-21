@@ -60,10 +60,10 @@ internal sealed class UserInventory : IInventory
 	{
 		if (this.floorItems.TryAdd(item.Id, item))
 		{
-			this.user.SendAsync(new FurniListAddOrUpdateOutgoingPacket(new List<InventoryItemData>
-			{
-				new(item.StripId, item.Id, item.Furniture.Id, FurnitureType.Floor, 1, item.GetItemData())
-			}));
+			this.user.SendAsync(new FurniListAddOrUpdateOutgoingPacket(
+			[
+				new InventoryItemData(item.StripId, item.Id, item.Furniture.Id, FurnitureType.Floor, 1, item.GetItemData())
+			]));
 
 			return true;
 		}
@@ -75,10 +75,10 @@ internal sealed class UserInventory : IInventory
 	{
 		if (this.wallItems.TryAdd(item.Id, item))
 		{
-			this.user.SendAsync(new FurniListAddOrUpdateOutgoingPacket(new List<InventoryItemData>
-			{
-				new(item.StripId, item.Id, item.Furniture.Id, FurnitureType.Wall, 1, item.GetItemData())
-			}));
+			this.user.SendAsync(new FurniListAddOrUpdateOutgoingPacket(
+			[
+				new InventoryItemData(item.StripId, item.Id, item.Furniture.Id, FurnitureType.Wall, 1, item.GetItemData())
+			]));
 
 			return true;
 		}
@@ -97,40 +97,40 @@ internal sealed class UserInventory : IInventory
 			{
 				this.TryAddFloorItem(floorItem);
 
-				furnitureIds ??= new List<int>();
+				furnitureIds ??= [];
 				furnitureIds.Add(floorItem.StripId);
 			}
 			else if (item is IWallInventoryItem wallItem)
 			{
 				this.TryAddWallItem(wallItem);
 
-				furnitureIds ??= new List<int>();
+				furnitureIds ??= [];
 				furnitureIds.Add(wallItem.StripId);
 			}
 			else if (item is IBadgeInventoryItem badgeItem)
 			{
 				this.TryAddBadge(badgeItem);
 
-				badgeIds ??= new List<int>();
+				badgeIds ??= [];
 				badgeIds.Add(badgeItem.Badge.Id);
 			}
 		}
 
-		this.user.SendAsync(new UnseenItemsOutgoingPacket(new List<UnseenItemData>
-		{
-			new(1, furnitureIds is not null ? furnitureIds : Array.Empty<int>()),
-			new(4, badgeIds is not null ? badgeIds : Array.Empty<int>())
-		}));
+		this.user.SendAsync(new UnseenItemsOutgoingPacket(
+		[
+			new UnseenItemData(1, furnitureIds is not null ? furnitureIds : Array.Empty<int>()),
+			new UnseenItemData(4, badgeIds is not null ? badgeIds : Array.Empty<int>())
+		]));
 	}
 
 	public void AddUnseenFloorItem(IFloorInventoryItem item)
 	{
 		this.TryAddFloorItem(item);
 
-		this.user.SendAsync(new UnseenItemsOutgoingPacket(new List<UnseenItemData>(1)
-		{
-			new(1, new List<int>(1) { item.StripId })
-		}));
+		this.user.SendAsync(new UnseenItemsOutgoingPacket(
+		[
+			new UnseenItemData(1, [item.StripId])
+		]));
 	}
 
 	public bool TryRemoveFloorItem(IFloorInventoryItem item)

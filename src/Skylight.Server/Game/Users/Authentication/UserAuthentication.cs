@@ -20,7 +20,7 @@ internal sealed class UserAuthentication(IConnectionMultiplexer redis, IDbContex
 	: IUserAuthentication
 {
 	private static readonly RedisKey redisSsoTicketKeyPrefix = new("sso-ticket:");
-	private static readonly RedisValue[] redisSsoTicketValues = { "user-id", "user-ip" };
+	private static readonly RedisValue[] redisSsoTicketValues = ["user-id", "user-ip"];
 
 	private readonly IDatabase redis = redis.GetDatabase();
 
@@ -39,10 +39,10 @@ internal sealed class UserAuthentication(IConnectionMultiplexer redis, IDbContex
 		local result = redis.call('HMGET', KEYS[1], unpack(ARGV))
 		redis.call('DEL', KEYS[1])
 		return result
-		""", new[]
-		{
+		""",
+		[
 			UserAuthentication.redisSsoTicketKeyPrefix.Append(ssoTicket)
-		}, UserAuthentication.redisSsoTicketValues).ConfigureAwait(false);
+		], UserAuthentication.redisSsoTicketValues).ConfigureAwait(false);
 
 		if (result is not [RedisValue ssoUserId, RedisValue ssoIp] || ssoUserId.IsNull)
 		{

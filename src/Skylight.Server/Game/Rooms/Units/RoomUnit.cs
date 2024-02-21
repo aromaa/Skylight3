@@ -154,10 +154,10 @@ internal sealed class RoomUnit : IUserRoomUnit
 		{
 			this.rotation = new Point2D(newRotation, newRotation);
 
-			this.Room.SendAsync(new UserUpdateOutgoingPacket(new List<RoomUnitUpdateData>
-			{
-				new(this.Id, this.Position.X, this.Position.Y, this.Position.Z, this.Rotation.X, this.Rotation.Y, string.Empty)
-			}));
+			this.Room.SendAsync(new UserUpdateOutgoingPacket(
+			[
+				new RoomUnitUpdateData(this.Id, this.Position.X, this.Position.Y, this.Position.Z, this.Rotation.X, this.Rotation.Y, string.Empty)
+			]));
 		}
 	}
 }

@@ -20,7 +20,7 @@ internal sealed class MyRoomsSearchPacketHandler<T>(IDbContextFactory<SkylightCo
 	{
 		using SkylightContext dbContext = this.dbContextFactory.CreateDbContext();
 
-		List<GuestRoomData> rooms = new();
+		List<GuestRoomData> rooms = [];
 
 		foreach (RoomEntity room in dbContext.Rooms
 					 .AsNoTracking()

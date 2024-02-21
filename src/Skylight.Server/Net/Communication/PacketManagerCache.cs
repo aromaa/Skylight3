@@ -27,7 +27,7 @@ internal sealed class PacketManagerCache
 	{
 		this.serviceProvider = serviceProvider;
 
-		this.protocols = new Dictionary<string, ProtocolData>();
+		this.protocols = [];
 
 		this.logger = logger;
 

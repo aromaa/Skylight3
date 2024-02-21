@@ -28,7 +28,7 @@ internal sealed partial class NewSongPacketHandler<T> : UserPacketHandler<T>
 				return;
 			}
 
-			List<SoundSetData> filledSlots = new();
+			List<SoundSetData> filledSlots = [];
 			foreach ((int slot, ISoundSetFurniture soundSet) in soundMachine.SoundSets)
 			{
 				filledSlots.Add(new SoundSetData(slot, soundSet.SoundSetId, soundSet.Samples));
@@ -36,7 +36,7 @@ internal sealed partial class NewSongPacketHandler<T> : UserPacketHandler<T>
 
 			unit.User.SendAsync(new TraxSoundPackagesOutgoingPacket(soundMachine.Furniture.SoundSetSlotCount, filledSlots));
 
-			List<int> soundSets = new();
+			List<int> soundSets = [];
 			foreach (IFloorInventoryItem item in unit.User.Inventory.FloorItems)
 			{
 				if (item is not ISoundSetInventoryItem soundSet)

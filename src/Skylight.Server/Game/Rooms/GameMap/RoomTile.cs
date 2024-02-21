@@ -28,7 +28,7 @@ internal sealed class RoomTile : IRoomTile
 
 		this.heightMap = new RangeMap<double, IFloorRoomItem>(RoomItemHeightComparer.Instance);
 
-		this.roomUnits = new Dictionary<int, IRoomUnit>();
+		this.roomUnits = [];
 
 		this.position = new Point3D(location, layoutTile.Height);
 

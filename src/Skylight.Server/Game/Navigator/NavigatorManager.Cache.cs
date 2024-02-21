@@ -30,8 +30,8 @@ internal partial class NavigatorManager
 
 			internal Builder()
 			{
-				this.layouts = new Dictionary<string, RoomLayoutEntity>();
-				this.flatCats = new Dictionary<int, RoomFlatCatEntity>();
+				this.layouts = [];
+				this.flatCats = [];
 			}
 
 			internal void AddLayout(RoomLayoutEntity layout)
@@ -46,8 +46,8 @@ internal partial class NavigatorManager
 
 			internal Cache ToImmutable()
 			{
-				Dictionary<string, IRoomLayout> layouts = new();
-				Dictionary<int, IRoomFlatCat> flatCats = new();
+				Dictionary<string, IRoomLayout> layouts = [];
+				Dictionary<int, IRoomFlatCat> flatCats = [];
 
 				foreach (RoomLayoutEntity entity in this.layouts.Values)
 				{

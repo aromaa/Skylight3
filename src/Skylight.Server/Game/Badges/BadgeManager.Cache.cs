@@ -23,7 +23,7 @@ internal partial class BadgeManager
 
 			internal Builder()
 			{
-				this.badges = new Dictionary<int, BadgeEntity>();
+				this.badges = [];
 			}
 
 			internal void AddBadge(BadgeEntity badge)

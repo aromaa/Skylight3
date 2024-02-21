@@ -13,10 +13,10 @@ internal sealed class GetUserEventCatsPacketHandler<T> : UserPacketHandler<T>
 {
 	internal override void Handle(IUser user, in T packet)
 	{
-		user.SendAsync(new UserEventCatsOutgoingPacket(new List<EventCategoryData>
-		{
-			new(1, "Visible", true),
-			new(2, "Hidden", false)
-		}));
+		user.SendAsync(new UserEventCatsOutgoingPacket(
+		[
+			new EventCategoryData(1, "Visible", true),
+			new EventCategoryData(2, "Hidden", false)
+		]));
 	}
 }

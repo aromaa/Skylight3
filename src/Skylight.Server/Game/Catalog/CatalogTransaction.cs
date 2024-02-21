@@ -61,7 +61,7 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 			BadgeCode = badge.Code
 		};
 
-		this.badges ??= new List<IBadge>();
+		this.badges ??= [];
 		this.badges.Add(badge);
 		this.dbContext.Add(entity);
 	}
@@ -78,7 +78,7 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 			ExtraData = extraData
 		};
 
-		this.floorItems ??= new List<FloorItemEntity>();
+		this.floorItems ??= [];
 		this.floorItems.Add(entity);
 		this.dbContext.Add(entity);
 	}
@@ -95,7 +95,7 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 			ExtraData = extraData
 		};
 
-		this.wallItems ??= new List<WallItemEntity>();
+		this.wallItems ??= [];
 		this.wallItems.Add(entity);
 		this.dbContext.Add(entity);
 	}
@@ -113,7 +113,7 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 		await this.dbContext.DisposeAsync().ConfigureAwait(false);
 		await this.transaction.DisposeAsync().ConfigureAwait(false);
 
-		List<IInventoryItem> items = new();
+		List<IInventoryItem> items = [];
 		if (this.badges is not null)
 		{
 			foreach (IBadge badge in this.badges)

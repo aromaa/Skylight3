@@ -32,7 +32,7 @@ internal sealed partial class EjectSoundPackagePacketHandler<T> : UserPacketHand
 
 			soundMachine.RemoveSoundSet(slot);
 
-			List<int> soundSets = new();
+			List<int> soundSets = [];
 			foreach (IFloorInventoryItem item in unit.User.Inventory.FloorItems)
 			{
 				if (item is not ISoundSetInventoryItem soundSet)
@@ -50,7 +50,7 @@ internal sealed partial class EjectSoundPackagePacketHandler<T> : UserPacketHand
 
 			unit.User.SendAsync(new UserSoundPackagesOutgoingPacket(soundSets));
 
-			List<SoundSetData> filledSlots = new();
+			List<SoundSetData> filledSlots = [];
 			foreach ((int slot, ISoundSetFurniture soundSet) in soundMachine.SoundSets)
 			{
 				filledSlots.Add(new SoundSetData(slot, soundSet.SoundSetId, soundSet.Samples));

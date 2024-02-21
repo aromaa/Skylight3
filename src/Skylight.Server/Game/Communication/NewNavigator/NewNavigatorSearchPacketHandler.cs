@@ -23,7 +23,7 @@ internal sealed class NewNavigatorSearchPacketHandler<T>(IDbContextFactory<Skyli
 		string searchCode = Encoding.UTF8.GetString(packet.SearchCode);
 		string filtering = Encoding.UTF8.GetString(packet.Filtering);
 
-		List<GuestRoomData> rooms = new();
+		List<GuestRoomData> rooms = [];
 
 		if (searchCode == "myworld_view")
 		{
@@ -42,10 +42,10 @@ internal sealed class NewNavigatorSearchPacketHandler<T>(IDbContextFactory<Skyli
 			SearchCode = searchCode,
 			Filtering = filtering,
 
-			Results = new List<SearchResultData>
-			{
+			Results =
+			[
 				new SearchResultData(searchCode, filtering, 0, false, 0, rooms)
-			}
+			]
 		});
 	}
 }

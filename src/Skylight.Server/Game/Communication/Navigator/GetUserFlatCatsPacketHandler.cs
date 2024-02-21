@@ -21,7 +21,7 @@ internal sealed class GetUserFlatCatsPacketHandler<T>(INavigatorManager navigato
 		{
 			INavigatorSnapshot navigator = await this.navigatorManager.GetAsync().ConfigureAwait(false);
 
-			List<FlatCategoryData> cats = new();
+			List<FlatCategoryData> cats = [];
 			foreach (IRoomFlatCat flatCat in navigator.FlatCats)
 			{
 				cats.Add(new FlatCategoryData(flatCat.Id, flatCat.Caption, true, false, flatCat.Caption, string.Empty, false));

@@ -32,7 +32,7 @@ internal partial class FurniMaticManager
 
 			internal Builder()
 			{
-				this.prizeLevels = new Dictionary<int, FurniMaticPrizeLevelEntity>();
+				this.prizeLevels = [];
 			}
 
 			internal void AddLevel(FurniMaticPrizeLevelEntity prizeLevel)

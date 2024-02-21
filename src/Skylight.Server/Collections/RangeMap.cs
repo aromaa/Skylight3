@@ -60,8 +60,8 @@ internal sealed class RangeMap<TKey, TValue>
 	{
 		Debug.Assert(min >= TKey.Zero);
 
-		List<Slice> slicesToRemove = new();
-		List<Slice> slicesToAdd = new();
+		List<Slice> slicesToRemove = [];
+		List<Slice> slicesToAdd = [];
 		foreach (Slice freeSlice in this.slices.GetViewBetween(new Slice(min, min), new Slice(max, max)))
 		{
 			slicesToRemove.Add(freeSlice);
@@ -147,7 +147,7 @@ internal sealed class RangeMap<TKey, TValue>
 
 			Slice sliceToAdd = new(minCanRestore, maxCanRestore);
 
-			List<Slice> slicesToRemove = new();
+			List<Slice> slicesToRemove = [];
 			foreach (Slice freeSlice in this.slices.GetViewBetween(new Slice(minCanRestore, minCanRestore), new Slice(maxCanRestore, maxCanRestore)))
 			{
 				slicesToRemove.Add(freeSlice);

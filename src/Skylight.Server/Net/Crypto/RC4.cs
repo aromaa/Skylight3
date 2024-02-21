@@ -69,8 +69,8 @@ internal sealed class RC4
 
 	internal PacketReader Read(scoped ref PacketReader reader)
 	{
-		ReadOnlySpan<sbyte> decodingMapTable = new sbyte[]
-		{
+		ReadOnlySpan<sbyte> decodingMapTable =
+		[
 			-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 			-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 			-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63,
@@ -87,7 +87,7 @@ internal sealed class RC4
 			-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 			-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 			-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-		};
+		];
 
 		ref sbyte decodingMap = ref MemoryMarshal.GetReference(decodingMapTable);
 

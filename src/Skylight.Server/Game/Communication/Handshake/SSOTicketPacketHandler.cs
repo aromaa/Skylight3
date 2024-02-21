@@ -85,24 +85,24 @@ internal sealed partial class SSOTicketPacketHandler<T>(IUserAuthentication user
 
 			client.SendAsync(new PerkAllowancesOutgoingPacket
 			{
-				Perks = new List<PerkAllowanceData>
-				{
-					new("USE_GUIDE_TOOL", string.Empty, true),
-					new("GIVE_GUIDE_TOURS", string.Empty, true),
-					new("JUDGE_CHAT_REVIEWS", string.Empty, true),
-					new("VOTE_IN_COMPETITIONS", string.Empty, true),
-					new("SAFE_CHAT", string.Empty, true),
-					new("FULL_CHAT", string.Empty, true),
-					new("CALL_ON_HELPERS", string.Empty, true),
-					new("CITIZEN", string.Empty, true),
-					new("TRADE", string.Empty, true),
-					new("BUILDER_AT_WORK", string.Empty, true),
-					new("CAMERA", string.Empty, true),
-					new("NAVIGATOR_ROOM_THUMBNAIL_CAMERA", string.Empty, true),
-					new("MOUSE_ZOOM", string.Empty, true),
-					new("NAVIGATOR_PHASE_ONE_2014", string.Empty, true),
-					new("NAVIGATOR_PHASE_TWO_2014", string.Empty, true)
-				}
+				Perks =
+				[
+					new PerkAllowanceData("USE_GUIDE_TOOL", string.Empty, true),
+					new PerkAllowanceData("GIVE_GUIDE_TOURS", string.Empty, true),
+					new PerkAllowanceData("JUDGE_CHAT_REVIEWS", string.Empty, true),
+					new PerkAllowanceData("VOTE_IN_COMPETITIONS", string.Empty, true),
+					new PerkAllowanceData("SAFE_CHAT", string.Empty, true),
+					new PerkAllowanceData("FULL_CHAT", string.Empty, true),
+					new PerkAllowanceData("CALL_ON_HELPERS", string.Empty, true),
+					new PerkAllowanceData("CITIZEN", string.Empty, true),
+					new PerkAllowanceData("TRADE", string.Empty, true),
+					new PerkAllowanceData("BUILDER_AT_WORK", string.Empty, true),
+					new PerkAllowanceData("CAMERA", string.Empty, true),
+					new PerkAllowanceData("NAVIGATOR_ROOM_THUMBNAIL_CAMERA", string.Empty, true),
+					new PerkAllowanceData("MOUSE_ZOOM", string.Empty, true),
+					new PerkAllowanceData("NAVIGATOR_PHASE_ONE_2014", string.Empty, true),
+					new PerkAllowanceData("NAVIGATOR_PHASE_TWO_2014", string.Empty, true)
+				]
 			});
 		});
 	}

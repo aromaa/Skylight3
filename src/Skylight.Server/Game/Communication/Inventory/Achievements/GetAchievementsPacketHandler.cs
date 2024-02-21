@@ -20,7 +20,7 @@ internal sealed partial class GetAchievementsPacketHandler<T>(IAchievementManage
 		{
 			IAchievementSnapshot snapshot = await this.achievementManager.GetAsync().ConfigureAwait(false);
 
-			List<AchievementData> achievements = new();
+			List<AchievementData> achievements = [];
 			foreach (IAchievement achievement in snapshot.Achievements)
 			{
 				//Level 0: currentLevel = null and nextLevel = achievement.Levels[0]

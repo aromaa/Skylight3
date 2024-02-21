@@ -36,7 +36,7 @@ internal sealed class RoomLayout : IRoomLayout
 
 		this.Tiles = RoomLayout.ParseHeightMap(layout.HeightMap, width, height);
 
-		this.Items = new List<PublicRoomItemEntity>();
+		this.Items = [];
 	}
 
 	private static ImmutableArray2D<RoomLayoutTile> ParseHeightMap(string heightMap, int width, int height)
