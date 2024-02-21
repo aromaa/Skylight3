@@ -26,7 +26,7 @@ using Skylight.Infrastructure.EntityConfigurations.Users;
 
 namespace Skylight.Infrastructure;
 
-public sealed class SkylightContext : DbContext
+public sealed class SkylightContext(DbContextOptions<SkylightContext> options) : DbContext(options)
 {
 	public DbSet<AchievementEntity> Achievements { get; init; } = null!;
 	public DbSet<AchievementLevelEntity> AchievementLevels { get; init; } = null!;
@@ -68,11 +68,6 @@ public sealed class SkylightContext : DbContext
 	public DbSet<UserEntity> Users { get; init; } = null!;
 
 	public DbSet<UserSettingsEntity> UserSettings { get; init; } = null!;
-
-	public SkylightContext(DbContextOptions<SkylightContext> options)
-		: base(options)
-	{
-	}
 
 	protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 	{

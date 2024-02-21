@@ -193,11 +193,15 @@ internal sealed class PacketManagerCache
 	{
 		internal static PacketManagerCache? PacketManagerCache { get; set; }
 
+#pragma warning disable IDE0051 // Remove unused private members
 		private static void ClearCache(Type[]? updatedTypes)
+#pragma warning restore IDE0051 // Remove unused private members
 		{
 		}
 
+#pragma warning disable IDE0051 // Remove unused private members
 		private static void UpdateApplication(Type[]? updatedTypes)
+#pragma warning restore IDE0051 // Remove unused private members
 		{
 			if (MetadataUpdateHandler.PacketManagerCache is not { } packetManagerCache)
 			{

@@ -18,19 +18,19 @@ public class RoomTileTests
 
 	public static IEnumerable<object[]> StepHeightData()
 	{
-		yield return new object[] { CreateTile(), 123, 0, 0, 0 };
-		yield return new object[] { CreateTile((123, 0)), 123, 0, 0, 123 };
-		yield return new object[] { CreateTile((123, 0)), 23, 0, 100, 123 };
-		yield return new object[] { CreateTile((123, 0.5)), 123, 0, 0.5, 123.5 };
-		yield return new object[] { CreateTile((123, 0), (124, 0)), 123, 0, 1, 123 };
-		yield return new object[] { CreateTile((123, 0.5), (124, 0.5)), 123, 0.5, 0.5, 123.5 };
-		yield return new object[] { CreateTile((122, 0), (124, 0)), 123, 1, 0, 124 };
-		yield return new object[] { CreateTile((120, 0), (126, 0)), 123, 10, 100, 126 };
-		yield return new object[] { CreateTile((122.1, 0), (124, 0)), 123, 1, 0, 122.1 };
-		yield return new object[] { CreateTile((123, 0), (123.99, 0)), 123, 0, 1, 123.99 };
-		yield return new object[] { CreateTile((123, 3), (124, 0)), 124, 10, 1, 124 };
-		yield return new object[] { CreateTile((123, 0)), double.BitDecrement(123), 0, 0, 123 };
-		yield return new object[] { CreateTile((123, 0)), double.BitIncrement(123), 0, 0, 123 };
+		yield return [CreateTile(), 123, 0, 0, 0];
+		yield return [CreateTile((123, 0)), 123, 0, 0, 123];
+		yield return [CreateTile((123, 0)), 23, 0, 100, 123];
+		yield return [CreateTile((123, 0.5)), 123, 0, 0.5, 123.5];
+		yield return [CreateTile((123, 0), (124, 0)), 123, 0, 1, 123];
+		yield return [CreateTile((123, 0.5), (124, 0.5)), 123, 0.5, 0.5, 123.5];
+		yield return [CreateTile((122, 0), (124, 0)), 123, 1, 0, 124];
+		yield return [CreateTile((120, 0), (126, 0)), 123, 10, 100, 126];
+		yield return [CreateTile((122.1, 0), (124, 0)), 123, 1, 0, 122.1];
+		yield return [CreateTile((123, 0), (123.99, 0)), 123, 0, 1, 123.99];
+		yield return [CreateTile((123, 3), (124, 0)), 124, 10, 1, 124];
+		yield return [CreateTile((123, 0)), double.BitDecrement(123), 0, 0, 123];
+		yield return [CreateTile((123, 0)), double.BitIncrement(123), 0, 0, 123];
 
 		static RoomTile CreateTile(params (double Z, double Height)[] slices)
 		{

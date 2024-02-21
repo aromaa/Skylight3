@@ -117,6 +117,9 @@ dotnet_diagnostic.IDE0230.severity = suggestion
 # VSTHRD002: Avoid problematic synchronous waits
 dotnet_diagnostic.VSTHRD002.severity = none
 
+# VSTHRD003: Avoid awaiting foreign Tasks
+dotnet_diagnostic.VSTHRD003.severity = none
+
 # VSTHRD011: Call async methods when in an async method
 dotnet_diagnostic.VSTHRD011.severity = none
 
