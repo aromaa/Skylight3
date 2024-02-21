@@ -12,19 +12,13 @@ using Skylight.Protocol.Packets.Manager;
 namespace Skylight.Server.Game.Communication.Room.Engine;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed partial class PickupObjectPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class PickupObjectPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureInventoryItemStrategy furnitureInventoryItemFactory)
+	: UserPacketHandler<T>
 	where T : IPickupObjectIncomingPacket
 {
-	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
+	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
-	private readonly IFurnitureInventoryItemStrategy furnitureInventoryItemFactory;
-
-	public PickupObjectPacketHandler(IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureInventoryItemStrategy furnitureInventoryItemFactory)
-	{
-		this.dbContextFactory = dbContextFactory;
-
-		this.furnitureInventoryItemFactory = furnitureInventoryItemFactory;
-	}
+	private readonly IFurnitureInventoryItemStrategy furnitureInventoryItemFactory = furnitureInventoryItemFactory;
 
 	internal override void Handle(IUser user, in T packet)
 	{

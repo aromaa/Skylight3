@@ -8,26 +8,16 @@ using Skylight.Infrastructure;
 
 namespace Skylight.Server.Game.Rooms;
 
-internal sealed class RoomManager : IRoomManager
+internal sealed class RoomManager(IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, INavigatorManager navigatorManager)
+	: IRoomManager
 {
-	private readonly IServiceProvider serviceProvider;
+	private readonly IServiceProvider serviceProvider = serviceProvider;
 
-	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
+	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
-	private readonly INavigatorManager navigatorManager;
+	private readonly INavigatorManager navigatorManager = navigatorManager;
 
-	private readonly ConcurrentDictionary<int, IRoom> loadedRooms;
-
-	public RoomManager(IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, INavigatorManager navigatorManager)
-	{
-		this.serviceProvider = serviceProvider;
-
-		this.dbContextFactory = dbContextFactory;
-
-		this.navigatorManager = navigatorManager;
-
-		this.loadedRooms = new ConcurrentDictionary<int, IRoom>();
-	}
+	private readonly ConcurrentDictionary<int, IRoom> loadedRooms = new();
 
 	public ICollection<IRoom> Rooms => this.loadedRooms.Values;
 

@@ -7,19 +7,12 @@ using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor;
 
-internal sealed class FurniMaticGiftRoomItem : FloorRoomItem, IFurniMaticGiftRoomItem
+internal sealed class FurniMaticGiftRoomItem(IRoom room, int id, IUserInfo owner, IFurniMaticGiftFurniture furniture, Point3D position, int direction, DateTime recycledAt)
+	: FloorRoomItem(room, id, owner, position, direction), IFurniMaticGiftRoomItem
 {
-	public override IFurniMaticGiftFurniture Furniture { get; }
+	public override IFurniMaticGiftFurniture Furniture { get; } = furniture;
 
-	public DateTime RecycledAt { get; }
-
-	public FurniMaticGiftRoomItem(IRoom room, int id, IUserInfo owner, IFurniMaticGiftFurniture furniture, Point3D position, int direction, DateTime recycledAt)
-		: base(room, id, owner, position, direction)
-	{
-		this.Furniture = furniture;
-
-		this.RecycledAt = recycledAt;
-	}
+	public DateTime RecycledAt { get; } = recycledAt;
 
 	public override double Height => this.Furniture.DefaultHeight;
 

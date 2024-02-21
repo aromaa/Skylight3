@@ -9,25 +9,15 @@ using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Rooms.Items.Wall;
 
-internal sealed class PostItRoomItem : WallRoomItem, IStickyNoteRoomItem
+internal sealed class PostItRoomItem(IRoom room, int id, IUserInfo owner, IStickyNoteFurniture furniture, Point2D location, Point2D position, int direction, Color color, string text, IStickyNoteInteractionHandler handler)
+	: WallRoomItem(room, id, owner, location, position, direction), IStickyNoteRoomItem
 {
-	public override IStickyNoteFurniture Furniture { get; }
+	public override IStickyNoteFurniture Furniture { get; } = furniture;
 
-	public Color Color { get; set; }
-	public string Text { get; set; }
+	public Color Color { get; set; } = color;
+	public string Text { get; set; } = text;
 
-	private readonly IStickyNoteInteractionHandler handler;
-
-	public PostItRoomItem(IRoom room, int id, IUserInfo owner, IStickyNoteFurniture furniture, Point2D location, Point2D position, int direction, Color color, string text, IStickyNoteInteractionHandler handler)
-		: base(room, id, owner, location, position, direction)
-	{
-		this.Furniture = furniture;
-
-		this.Color = color;
-		this.Text = text;
-
-		this.handler = handler;
-	}
+	private readonly IStickyNoteInteractionHandler handler = handler;
 
 	public override void OnPlace()
 	{

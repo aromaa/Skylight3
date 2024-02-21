@@ -7,18 +7,13 @@ using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor;
 
-internal class MultiStateFloorRoomItem<T> : FloorRoomItem, IMultiStateFloorItem
+internal class MultiStateFloorRoomItem<T>(IRoom room, int id, IUserInfo owner, T furniture, Point3D position, int direction)
+	: FloorRoomItem(room, id, owner, position, direction), IMultiStateFloorItem
 	where T : IMultiStateFloorFurniture
 {
-	private readonly T furniture;
+	private readonly T furniture = furniture;
 
 	public int State { get; private set; }
-
-	public MultiStateFloorRoomItem(IRoom room, int id, IUserInfo owner, T furniture, Point3D position, int direction)
-		: base(room, id, owner, position, direction)
-	{
-		this.furniture = furniture;
-	}
 
 	public override double Height => this.Furniture.DefaultHeight;
 

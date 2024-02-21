@@ -6,24 +6,15 @@ using Skylight.Server.Net.Communication;
 
 namespace Skylight.Server;
 
-internal sealed class SkylightServer : IServer
+internal sealed class SkylightServer(IHostEnvironment hostEnvironment, PacketManagerCache packetManagerCache, NetworkManager networkManager, Lazy<ILoadableServiceManager> loadableServiceManager)
+	: IServer
 {
-	private readonly IHostEnvironment hostEnvironment;
+	private readonly IHostEnvironment hostEnvironment = hostEnvironment;
 
-	private readonly PacketManagerCache packetManagerCache;
-	private readonly NetworkManager networkManager;
+	private readonly PacketManagerCache packetManagerCache = packetManagerCache;
+	private readonly NetworkManager networkManager = networkManager;
 
-	private readonly Lazy<ILoadableServiceManager> loadableServiceManager;
-
-	public SkylightServer(IHostEnvironment hostEnvironment, PacketManagerCache packetManagerCache, NetworkManager networkManager, Lazy<ILoadableServiceManager> loadableServiceManager)
-	{
-		this.hostEnvironment = hostEnvironment;
-
-		this.packetManagerCache = packetManagerCache;
-		this.networkManager = networkManager;
-
-		this.loadableServiceManager = loadableServiceManager;
-	}
+	private readonly Lazy<ILoadableServiceManager> loadableServiceManager = loadableServiceManager;
 
 	public async Task StartAsync(CancellationToken cancellationToken)
 	{

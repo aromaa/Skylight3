@@ -16,35 +16,22 @@ using StackExchange.Redis;
 
 namespace Skylight.Server.Game.Users.Authentication;
 
-internal sealed class UserAuthentication : IUserAuthentication
+internal sealed class UserAuthentication(IConnectionMultiplexer redis, IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager, IBadgeManager badgeManager, IFurnitureManager furnitureManager, IFurnitureInventoryItemStrategy furnitureInventoryItemFactory)
+	: IUserAuthentication
 {
 	private static readonly RedisKey redisSsoTicketKeyPrefix = new("sso-ticket:");
 	private static readonly RedisValue[] redisSsoTicketValues = { "user-id", "user-ip" };
 
-	private readonly IDatabase redis;
+	private readonly IDatabase redis = redis.GetDatabase();
 
-	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
+	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
-	private readonly IUserManager userManager;
+	private readonly IUserManager userManager = userManager;
 
-	private readonly IBadgeManager badgeManager;
+	private readonly IBadgeManager badgeManager = badgeManager;
 
-	private readonly IFurnitureManager furnitureManager;
-	private readonly IFurnitureInventoryItemStrategy furnitureInventoryItemFactory;
-
-	public UserAuthentication(IConnectionMultiplexer redis, IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager, IBadgeManager badgeManager, IFurnitureManager furnitureManager, IFurnitureInventoryItemStrategy furnitureInventoryItemFactory)
-	{
-		this.redis = redis.GetDatabase();
-
-		this.dbContextFactory = dbContextFactory;
-
-		this.userManager = userManager;
-
-		this.badgeManager = badgeManager;
-
-		this.furnitureManager = furnitureManager;
-		this.furnitureInventoryItemFactory = furnitureInventoryItemFactory;
-	}
+	private readonly IFurnitureManager furnitureManager = furnitureManager;
+	private readonly IFurnitureInventoryItemStrategy furnitureInventoryItemFactory = furnitureInventoryItemFactory;
 
 	public async Task<IUser?> AuthenticateAsync(IClient client, string ssoTicket, CancellationToken cancellationToken)
 	{

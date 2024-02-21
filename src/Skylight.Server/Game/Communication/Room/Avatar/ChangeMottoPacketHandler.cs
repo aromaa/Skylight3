@@ -11,15 +11,10 @@ using Skylight.Protocol.Packets.Outgoing.Room.Engine;
 namespace Skylight.Server.Game.Communication.Room.Avatar;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed partial class ChangeMottoPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class ChangeMottoPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory) : UserPacketHandler<T>
 	where T : IChangeMottoIncomingPacket
 {
-	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
-
-	public ChangeMottoPacketHandler(IDbContextFactory<SkylightContext> dbContextFactory)
-	{
-		this.dbContextFactory = dbContextFactory;
-	}
+	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
 	internal override void Handle(IUser user, in T packet)
 	{

@@ -15,19 +15,13 @@ using Skylight.Protocol.Packets.Outgoing.Navigator;
 namespace Skylight.Server.Game.Communication.Navigator;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed partial class CreateFlatPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class CreateFlatPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory, INavigatorManager navigatorManager)
+	: UserPacketHandler<T>
 	where T : ICreateFlatIncomingPacket
 {
-	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
+	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
-	private readonly INavigatorManager navigatorManager;
-
-	public CreateFlatPacketHandler(IDbContextFactory<SkylightContext> dbContextFactory, INavigatorManager navigatorManager)
-	{
-		this.dbContextFactory = dbContextFactory;
-
-		this.navigatorManager = navigatorManager;
-	}
+	private readonly INavigatorManager navigatorManager = navigatorManager;
 
 	internal override void Handle(IUser user, in T packet)
 	{

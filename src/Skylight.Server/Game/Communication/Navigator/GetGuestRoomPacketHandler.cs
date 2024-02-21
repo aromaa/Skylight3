@@ -10,15 +10,10 @@ using Skylight.Protocol.Packets.Outgoing.Navigator;
 namespace Skylight.Server.Game.Communication.Navigator;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed partial class GetGuestRoomPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class GetGuestRoomPacketHandler<T>(INavigatorManager navigatorManager) : UserPacketHandler<T>
 	where T : IGetGuestRoomIncomingPacket
 {
-	private readonly INavigatorManager navigatorManager;
-
-	public GetGuestRoomPacketHandler(INavigatorManager navigatorManager)
-	{
-		this.navigatorManager = navigatorManager;
-	}
+	private readonly INavigatorManager navigatorManager = navigatorManager;
 
 	internal override void Handle(IUser user, in T packet)
 	{

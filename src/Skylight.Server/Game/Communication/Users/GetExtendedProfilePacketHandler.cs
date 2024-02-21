@@ -8,15 +8,10 @@ using Skylight.Protocol.Packets.Outgoing.Users;
 namespace Skylight.Server.Game.Communication.Users;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed partial class GetExtendedProfilePacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class GetExtendedProfilePacketHandler<T>(IUserManager userManager) : UserPacketHandler<T>
 	where T : IGetExtendedProfileIncomingPacket
 {
-	private readonly IUserManager userManager;
-
-	public GetExtendedProfilePacketHandler(IUserManager userManager)
-	{
-		this.userManager = userManager;
-	}
+	private readonly IUserManager userManager = userManager;
 
 	internal override void Handle(IUser user, in T packet)
 	{

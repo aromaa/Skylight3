@@ -13,15 +13,10 @@ using Skylight.Protocol.Packets.Outgoing.NewNavigator;
 namespace Skylight.Server.Game.Communication.NewNavigator;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class NewNavigatorSearchPacketHandler<T> : UserPacketHandler<T>
+internal sealed class NewNavigatorSearchPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory) : UserPacketHandler<T>
 	where T : INewNavigatorSearchIncomingPacket
 {
-	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
-
-	public NewNavigatorSearchPacketHandler(IDbContextFactory<SkylightContext> dbContextFactory)
-	{
-		this.dbContextFactory = dbContextFactory;
-	}
+	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
 	internal override void Handle(IUser user, in T packet)
 	{

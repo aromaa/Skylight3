@@ -3,14 +3,9 @@ using Skylight.API.Server;
 
 namespace Skylight.Server.Host;
 
-internal sealed class ServerHostService : IHostedService
+internal sealed class ServerHostService(IServer server) : IHostedService
 {
-	private readonly IServer server;
-
-	public ServerHostService(IServer server)
-	{
-		this.server = server;
-	}
+	private readonly IServer server = server;
 
 	public async Task StartAsync(CancellationToken cancellationToken)
 	{

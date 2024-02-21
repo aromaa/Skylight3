@@ -10,15 +10,10 @@ using Skylight.Protocol.Packets.Outgoing.RoomSettings;
 namespace Skylight.Server.Game.Communication.Room.Session;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed partial class OpenFlatConnectionPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class OpenFlatConnectionPacketHandler<T>(IRoomManager roomManager) : UserPacketHandler<T>
 	where T : IOpenFlatConnectionIncomingPacket
 {
-	private readonly IRoomManager roomManager;
-
-	public OpenFlatConnectionPacketHandler(IRoomManager roomManager)
-	{
-		this.roomManager = roomManager;
-	}
+	private readonly IRoomManager roomManager = roomManager;
 
 	internal override void Handle(IUser user, in T packet)
 	{

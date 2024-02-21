@@ -11,15 +11,10 @@ using Skylight.Protocol.Packets.Outgoing.Room.Furniture;
 namespace Skylight.Server.Game.Communication.Room.Furniture;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed partial class PresentOpenPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class PresentOpenPacketHandler<T>(IFurniMaticManager furniMaticManager) : UserPacketHandler<T>
 	where T : IPresentOpenIncomingPacket
 {
-	private readonly IFurniMaticManager furniMaticManager;
-
-	public PresentOpenPacketHandler(IFurniMaticManager furniMaticManager)
-	{
-		this.furniMaticManager = furniMaticManager;
-	}
+	private readonly IFurniMaticManager furniMaticManager = furniMaticManager;
 
 	internal override void Handle(IUser user, in T packet)
 	{

@@ -13,15 +13,10 @@ using Skylight.Protocol.Packets.Outgoing.Sound;
 namespace Skylight.Server.Game.Communication.Sound;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed partial class SaveSongNewPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class SaveSongNewPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory) : UserPacketHandler<T>
 	where T : ISaveSongNewIncomingPacket
 {
-	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
-
-	public SaveSongNewPacketHandler(IDbContextFactory<SkylightContext> dbContextFactory)
-	{
-		this.dbContextFactory = dbContextFactory;
-	}
+	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
 	internal override void Handle(IUser user, in T packet)
 	{

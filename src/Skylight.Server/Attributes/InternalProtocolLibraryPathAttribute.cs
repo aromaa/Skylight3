@@ -4,12 +4,7 @@ namespace Skylight.Server.Attributes;
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-public sealed class InternalProtocolLibraryPathAttribute : Attribute
+public sealed class InternalProtocolLibraryPathAttribute(string path) : Attribute
 {
-	public string Path { get; }
-
-	public InternalProtocolLibraryPathAttribute(string path)
-	{
-		this.Path = path;
-	}
+	public string Path { get; } = path;
 }

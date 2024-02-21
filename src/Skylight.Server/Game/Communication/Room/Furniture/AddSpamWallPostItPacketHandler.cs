@@ -19,19 +19,13 @@ using Skylight.Server.Extensions;
 namespace Skylight.Server.Game.Communication.Room.Furniture;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed partial class AddSpamWallPostItPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class AddSpamWallPostItPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory, IWallRoomItemStrategy wallRoomItemStrategy)
+	: UserPacketHandler<T>
 	where T : IAddSpamWallPostItIncomingPacket
 {
-	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
+	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
-	private readonly IWallRoomItemStrategy wallRoomItemStrategy;
-
-	public AddSpamWallPostItPacketHandler(IDbContextFactory<SkylightContext> dbContextFactory, IWallRoomItemStrategy wallRoomItemStrategy)
-	{
-		this.dbContextFactory = dbContextFactory;
-
-		this.wallRoomItemStrategy = wallRoomItemStrategy;
-	}
+	private readonly IWallRoomItemStrategy wallRoomItemStrategy = wallRoomItemStrategy;
 
 	internal override void Handle(IUser user, in T packet)
 	{

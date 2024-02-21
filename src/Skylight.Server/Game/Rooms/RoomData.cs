@@ -5,24 +5,13 @@ using Skylight.Domain.Rooms;
 
 namespace Skylight.Server.Game.Rooms;
 
-internal sealed class RoomData : IRoomInfo
+internal sealed class RoomData(RoomEntity entity, IUserInfo owner, IRoomLayout layout) : IRoomInfo
 {
-	public int Id { get; }
+	public int Id { get; } = entity.Id;
 
-	public string Name { get; }
+	public string Name { get; } = entity.Name;
 
-	public IUserInfo Owner { get; }
+	public IUserInfo Owner { get; } = owner;
 
-	public IRoomLayout Layout { get; }
-
-	public RoomData(RoomEntity entity, IUserInfo owner, IRoomLayout layout)
-	{
-		this.Id = entity.Id;
-
-		this.Name = entity.Name;
-
-		this.Owner = owner;
-
-		this.Layout = layout;
-	}
+	public IRoomLayout Layout { get; } = layout;
 }

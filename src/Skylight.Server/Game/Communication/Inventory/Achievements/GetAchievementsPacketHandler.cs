@@ -9,15 +9,10 @@ using Skylight.Protocol.Packets.Outgoing.Inventory.Achievements;
 namespace Skylight.Server.Game.Communication.Inventory.Achievements;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed partial class GetAchievementsPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class GetAchievementsPacketHandler<T>(IAchievementManager achievementManager) : UserPacketHandler<T>
 	where T : IGetAchievementsIncomingPacket
 {
-	private readonly IAchievementManager achievementManager;
-
-	public GetAchievementsPacketHandler(IAchievementManager achievementManager)
-	{
-		this.achievementManager = achievementManager;
-	}
+	private readonly IAchievementManager achievementManager = achievementManager;
 
 	internal override void Handle(IUser user, in T packet)
 	{

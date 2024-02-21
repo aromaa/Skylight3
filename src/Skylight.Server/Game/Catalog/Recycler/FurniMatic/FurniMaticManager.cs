@@ -12,31 +12,18 @@ using Skylight.Server.DependencyInjection;
 
 namespace Skylight.Server.Game.Catalog.Recycler.FurniMatic;
 
-internal sealed partial class FurniMaticManager : LoadableServiceBase<IFurniMaticSnapshot>, IFurniMaticManager
+internal sealed partial class FurniMaticManager(IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, ICatalogTransactionFactory catalogTransactionFactory, IFurnitureInventoryItemStrategy furnitureInventoryItemStrategy, IOptions<FurniMaticSettings> settings, TimeProvider timeProvider)
+	: LoadableServiceBase<IFurniMaticSnapshot>(new Snapshot(dbContextFactory, furnitureManager, furnitureInventoryItemStrategy, catalogTransactionFactory, settings.Value, timeProvider, Cache.CreateBuilder().ToImmutable(furnitureManager.Current))), IFurniMaticManager
 {
-	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
+	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
-	private readonly IFurnitureManager furnitureManager;
-	private readonly IFurnitureInventoryItemStrategy furnitureInventoryItemStrategy;
-	private readonly ICatalogTransactionFactory catalogTransactionFactory;
+	private readonly IFurnitureManager furnitureManager = furnitureManager;
+	private readonly IFurnitureInventoryItemStrategy furnitureInventoryItemStrategy = furnitureInventoryItemStrategy;
+	private readonly ICatalogTransactionFactory catalogTransactionFactory = catalogTransactionFactory;
 
-	private readonly FurniMaticSettings settings;
+	private readonly FurniMaticSettings settings = settings.Value;
 
-	private readonly TimeProvider timeProvider;
-
-	public FurniMaticManager(IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, ICatalogTransactionFactory catalogTransactionFactory, IFurnitureInventoryItemStrategy furnitureInventoryItemStrategy, IOptions<FurniMaticSettings> settings, TimeProvider timeProvider)
-		: base(new Snapshot(dbContextFactory, furnitureManager, furnitureInventoryItemStrategy, catalogTransactionFactory, settings.Value, timeProvider, Cache.CreateBuilder().ToImmutable(furnitureManager.Current)))
-	{
-		this.dbContextFactory = dbContextFactory;
-
-		this.furnitureManager = furnitureManager;
-		this.furnitureInventoryItemStrategy = furnitureInventoryItemStrategy;
-		this.catalogTransactionFactory = catalogTransactionFactory;
-
-		this.settings = settings.Value;
-
-		this.timeProvider = timeProvider;
-	}
+	private readonly TimeProvider timeProvider = timeProvider;
 
 	public override async Task<IFurniMaticSnapshot> LoadAsyncCore(ILoadableServiceContext context, CancellationToken cancellationToken)
 	{

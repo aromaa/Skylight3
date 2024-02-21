@@ -13,15 +13,10 @@ using Skylight.Protocol.Packets.Outgoing.Recycler;
 namespace Skylight.Server.Game.Communication.Recycler;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class GetRecyclerPrizesPacketHandler<T> : UserPacketHandler<T>
+internal sealed class GetRecyclerPrizesPacketHandler<T>(IFurniMaticManager furniMaticManager) : UserPacketHandler<T>
 	where T : IGetRecyclerPrizesIncomingPacket
 {
-	private readonly IFurniMaticManager furniMaticManager;
-
-	public GetRecyclerPrizesPacketHandler(IFurniMaticManager furniMaticManager)
-	{
-		this.furniMaticManager = furniMaticManager;
-	}
+	private readonly IFurniMaticManager furniMaticManager = furniMaticManager;
 
 	internal override void Handle(IUser user, in T packet)
 	{

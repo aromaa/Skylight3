@@ -18,21 +18,14 @@ using Skylight.Server.Extensions;
 namespace Skylight.Server.Game.Communication.Room.Engine;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed partial class PlaceObjectPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class PlaceObjectPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory, IFloorRoomItemStrategy floorRoomItemStrategy, IWallRoomItemStrategy wallRoomRoomItemStrategy)
+	: UserPacketHandler<T>
 	where T : IPlaceObjectIncomingPacket
 {
-	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
+	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
-	private readonly IFloorRoomItemStrategy floorRoomItemStrategy;
-	private readonly IWallRoomItemStrategy wallRoomItemStrategy;
-
-	public PlaceObjectPacketHandler(IDbContextFactory<SkylightContext> dbContextFactory, IFloorRoomItemStrategy floorRoomItemStrategy, IWallRoomItemStrategy wallRoomRoomItemStrategy)
-	{
-		this.dbContextFactory = dbContextFactory;
-
-		this.floorRoomItemStrategy = floorRoomItemStrategy;
-		this.wallRoomItemStrategy = wallRoomRoomItemStrategy;
-	}
+	private readonly IFloorRoomItemStrategy floorRoomItemStrategy = floorRoomItemStrategy;
+	private readonly IWallRoomItemStrategy wallRoomItemStrategy = wallRoomRoomItemStrategy;
 
 	internal override void Handle(IUser user, in T packet)
 	{

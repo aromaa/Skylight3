@@ -7,19 +7,12 @@ using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor;
 
-internal sealed class StickyNotePoleRoomItem : FloorRoomItem, IStickyNotePoleRoomItem
+internal sealed class StickyNotePoleRoomItem(IRoom room, int id, IUserInfo owner, IStickyNotePoleFurniture furniture, Point3D position, int direction, IStickyNoteInteractionHandler interactionHandler)
+	: FloorRoomItem(room, id, owner, position, direction), IStickyNotePoleRoomItem
 {
-	public override IStickyNotePoleFurniture Furniture { get; }
+	public override IStickyNotePoleFurniture Furniture { get; } = furniture;
 
-	private readonly IStickyNoteInteractionHandler interactionHandler;
-
-	public StickyNotePoleRoomItem(IRoom room, int id, IUserInfo owner, IStickyNotePoleFurniture furniture, Point3D position, int direction, IStickyNoteInteractionHandler interactionHandler)
-		: base(room, id, owner, position, direction)
-	{
-		this.Furniture = furniture;
-
-		this.interactionHandler = interactionHandler;
-	}
+	private readonly IStickyNoteInteractionHandler interactionHandler = interactionHandler;
 
 	public override double Height => this.Furniture.DefaultHeight;
 

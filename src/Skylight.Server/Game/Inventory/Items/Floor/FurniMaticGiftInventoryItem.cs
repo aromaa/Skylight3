@@ -5,19 +5,12 @@ using Skylight.API.Game.Users;
 
 namespace Skylight.Server.Game.Inventory.Items.Floor;
 
-internal sealed class FurniMaticGiftInventoryItem : FloorInventoryItem, IFurniMaticGiftInventoryItem
+internal sealed class FurniMaticGiftInventoryItem(int id, IUserInfo owner, IFurniMaticGiftFurniture furniture, DateTime recycledAt)
+	: FloorInventoryItem(id, owner), IFurniMaticGiftInventoryItem
 {
-	public override IFurniMaticGiftFurniture Furniture { get; }
+	public override IFurniMaticGiftFurniture Furniture { get; } = furniture;
 
-	public DateTime RecycledAt { get; }
-
-	public FurniMaticGiftInventoryItem(int id, IUserInfo owner, IFurniMaticGiftFurniture furniture, DateTime recycledAt)
-		: base(id, owner)
-	{
-		this.Furniture = furniture;
-
-		this.RecycledAt = recycledAt;
-	}
+	public DateTime RecycledAt { get; } = recycledAt;
 
 	public JsonDocument GetExtraData() => JsonSerializer.SerializeToDocument(this.RecycledAt);
 }

@@ -2,12 +2,7 @@
 
 namespace Skylight.Server.Net.Handlers;
 
-internal sealed class PacketHeaderHandler : AbstractPacketHeaderHandler
+internal sealed class PacketHeaderHandler(AbstractGamePacketManager packetManager) : AbstractPacketHeaderHandler
 {
-	private protected override AbstractGamePacketManager PacketManager { get; }
-
-	public PacketHeaderHandler(AbstractGamePacketManager packetManager)
-	{
-		this.PacketManager = packetManager;
-	}
+	private protected override AbstractGamePacketManager PacketManager { get; } = packetManager;
 }

@@ -20,25 +20,16 @@ using Skylight.Server.Net;
 namespace Skylight.Server.Game.Communication.Handshake;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed partial class SSOTicketPacketHandler<T> : ClientPacketHandler<T>
+internal sealed partial class SSOTicketPacketHandler<T>(IUserAuthentication userAuthentication, IClientManager clientManager, Lazy<ILoadableServiceManager> loadableServiceManager, IOptions<NetworkSettings> networkSettings)
+	: ClientPacketHandler<T>
 	where T : ISSOTicketIncomingPacket
 {
-	private readonly IUserAuthentication userAuthentication;
-	private readonly IClientManager clientManager;
+	private readonly IUserAuthentication userAuthentication = userAuthentication;
+	private readonly IClientManager clientManager = clientManager;
 
-	private readonly Lazy<ILoadableServiceManager> loadableServiceManager;
+	private readonly Lazy<ILoadableServiceManager> loadableServiceManager = loadableServiceManager;
 
-	private readonly NetworkSettings networkSettings;
-
-	public SSOTicketPacketHandler(IUserAuthentication userAuthentication, IClientManager clientManager, Lazy<ILoadableServiceManager> loadableServiceManager, IOptions<NetworkSettings> networkSettings)
-	{
-		this.userAuthentication = userAuthentication;
-		this.clientManager = clientManager;
-
-		this.loadableServiceManager = loadableServiceManager;
-
-		this.networkSettings = networkSettings.Value;
-	}
+	private readonly NetworkSettings networkSettings = networkSettings.Value;
 
 	internal override void Handle(IClient client, in T packet)
 	{

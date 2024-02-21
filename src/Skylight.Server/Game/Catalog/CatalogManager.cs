@@ -9,25 +9,15 @@ using Skylight.Server.DependencyInjection;
 
 namespace Skylight.Server.Game.Catalog;
 
-internal sealed partial class CatalogManager : LoadableServiceBase<ICatalogSnapshot>, ICatalogManager
+internal sealed partial class CatalogManager(IDbContextFactory<SkylightContext> dbContextFactory, IBadgeManager badgeManager, IFurnitureManager furnitureManager, ICatalogTransactionFactory catalogTransactionFactory)
+	: LoadableServiceBase<ICatalogSnapshot>(new Snapshot(catalogTransactionFactory, Cache.CreateBuilder().ToImmutable(badgeManager.Current, furnitureManager.Current))), ICatalogManager
 {
-	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
+	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
-	private readonly IBadgeManager badgeManager;
+	private readonly IBadgeManager badgeManager = badgeManager;
 
-	private readonly IFurnitureManager furnitureManager;
-	private readonly ICatalogTransactionFactory catalogTransactionFactory;
-
-	public CatalogManager(IDbContextFactory<SkylightContext> dbContextFactory, IBadgeManager badgeManager, IFurnitureManager furnitureManager, ICatalogTransactionFactory catalogTransactionFactory)
-		: base(new Snapshot(catalogTransactionFactory, Cache.CreateBuilder().ToImmutable(badgeManager.Current, furnitureManager.Current)))
-	{
-		this.dbContextFactory = dbContextFactory;
-
-		this.badgeManager = badgeManager;
-
-		this.furnitureManager = furnitureManager;
-		this.catalogTransactionFactory = catalogTransactionFactory;
-	}
+	private readonly IFurnitureManager furnitureManager = furnitureManager;
+	private readonly ICatalogTransactionFactory catalogTransactionFactory = catalogTransactionFactory;
 
 	public override async Task<ICatalogSnapshot> LoadAsyncCore(ILoadableServiceContext context, CancellationToken cancellationToken)
 	{

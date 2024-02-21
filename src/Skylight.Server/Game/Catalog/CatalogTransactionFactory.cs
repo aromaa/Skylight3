@@ -9,18 +9,12 @@ using Skylight.Infrastructure;
 
 namespace Skylight.Server.Game.Catalog;
 
-internal sealed class CatalogTransactionFactory : ICatalogTransactionFactory
+internal sealed class CatalogTransactionFactory(IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureInventoryItemStrategy furnitureInventoryItemStrategy)
+	: ICatalogTransactionFactory
 {
-	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
+	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
-	private readonly IFurnitureInventoryItemStrategy furnitureInventoryItemStrategy;
-
-	public CatalogTransactionFactory(IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureInventoryItemStrategy furnitureInventoryItemStrategy)
-	{
-		this.dbContextFactory = dbContextFactory;
-
-		this.furnitureInventoryItemStrategy = furnitureInventoryItemStrategy;
-	}
+	private readonly IFurnitureInventoryItemStrategy furnitureInventoryItemStrategy = furnitureInventoryItemStrategy;
 
 	public async Task<ICatalogTransaction> CreateTransactionAsync(IFurnitureSnapshot furniture, IUser user, string extraData, CancellationToken cancellationToken)
 	{

@@ -4,13 +4,7 @@ using Skylight.API.Game.Users;
 
 namespace Skylight.Server.Game.Inventory.Items.Floor;
 
-internal sealed class SoundSetInventoryItem : FloorInventoryItem, ISoundSetInventoryItem
+internal sealed class SoundSetInventoryItem(int id, IUserInfo owner, ISoundSetFurniture furniture) : FloorInventoryItem(id, owner), ISoundSetInventoryItem
 {
-	public override ISoundSetFurniture Furniture { get; }
-
-	public SoundSetInventoryItem(int id, IUserInfo owner, ISoundSetFurniture furniture)
-		: base(id, owner)
-	{
-		this.Furniture = furniture;
-	}
+	public override ISoundSetFurniture Furniture { get; } = furniture;
 }

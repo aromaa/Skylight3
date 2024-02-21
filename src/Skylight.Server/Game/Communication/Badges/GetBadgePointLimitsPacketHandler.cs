@@ -10,15 +10,10 @@ using Skylight.Protocol.Packets.Outgoing.Inventory.Badges;
 namespace Skylight.Server.Game.Communication.Badges;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed partial class GetBadgePointLimitsPacketHandler<T> : UserPacketHandler<T>
+internal sealed partial class GetBadgePointLimitsPacketHandler<T>(IAchievementManager achievementManager) : UserPacketHandler<T>
 	where T : IGetBadgePointLimitsIncomingPacket
 {
-	private readonly IAchievementManager achievementManager;
-
-	public GetBadgePointLimitsPacketHandler(IAchievementManager achievementManager)
-	{
-		this.achievementManager = achievementManager;
-	}
+	private readonly IAchievementManager achievementManager = achievementManager;
 
 	internal override void Handle(IUser user, in T packet)
 	{

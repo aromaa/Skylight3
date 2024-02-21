@@ -12,28 +12,17 @@ using Skylight.Server.Net.Handlers;
 
 namespace Skylight.Server.Net;
 
-internal sealed class NetworkManager
+internal sealed class NetworkManager(IServiceProvider serviceProvider, ILogger<NetworkManager> logger, IOptions<NetworkSettings> settings, PacketManagerCache packetManagerCache)
 {
 	internal static readonly MetadataKey<Client> GameClientMetadataKey = MetadataKey<Client>.Create("GameClient");
 
-	private readonly IServiceProvider serviceProvider;
+	private readonly IServiceProvider serviceProvider = serviceProvider;
 
-	private readonly ILogger<NetworkManager> logger;
+	private readonly ILogger<NetworkManager> logger = logger;
 
-	internal NetworkSettings Settings { get; }
+	internal NetworkSettings Settings { get; } = settings.Value;
 
-	private readonly PacketManagerCache packetManagerCache;
-
-	public NetworkManager(IServiceProvider serviceProvider, ILogger<NetworkManager> logger, IOptions<NetworkSettings> settings, PacketManagerCache packetManagerCache)
-	{
-		this.serviceProvider = serviceProvider;
-
-		this.logger = logger;
-
-		this.Settings = settings.Value;
-
-		this.packetManagerCache = packetManagerCache;
-	}
+	private readonly PacketManagerCache packetManagerCache = packetManagerCache;
 
 	public void Start()
 	{

@@ -11,15 +11,10 @@ using Skylight.Server.Extensions;
 namespace Skylight.Server.Game.Communication.Catalog;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class GetCatalogPagePacketHandler<T> : UserPacketHandler<T>
+internal sealed class GetCatalogPagePacketHandler<T>(ICatalogManager catalogManager) : UserPacketHandler<T>
 	where T : IGetCatalogPageIncomingPacket
 {
-	private readonly ICatalogManager catalogManager;
-
-	public GetCatalogPagePacketHandler(ICatalogManager catalogManager)
-	{
-		this.catalogManager = catalogManager;
-	}
+	private readonly ICatalogManager catalogManager = catalogManager;
 
 	internal override void Handle(IUser user, in T packet)
 	{

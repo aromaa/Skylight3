@@ -2,14 +2,9 @@
 
 namespace Skylight.Server.Net.Handlers;
 
-internal sealed class HotSwapPacketHandler : AbstractPacketHeaderHandler
+internal sealed class HotSwapPacketHandler(Func<AbstractGamePacketManager> packetManagerGetter) : AbstractPacketHeaderHandler
 {
-	private readonly Func<AbstractGamePacketManager> packetManagerGetter;
-
-	public HotSwapPacketHandler(Func<AbstractGamePacketManager> packetManagerGetter)
-	{
-		this.packetManagerGetter = packetManagerGetter;
-	}
+	private readonly Func<AbstractGamePacketManager> packetManagerGetter = packetManagerGetter;
 
 	private protected override AbstractGamePacketManager PacketManager => this.packetManagerGetter();
 }
