@@ -2,6 +2,4 @@
 
 namespace Skylight.API.Game.Furniture;
 
-public interface IFurnitureManager : IFurnitureSnapshot, ILoadableService<IFurnitureSnapshot>
-{
-}
+public interface IFurnitureManager : IFurnitureSnapshot, ILoadableService<IFurnitureSnapshot>;

@@ -11,13 +11,13 @@ internal sealed class FurniMaticGiftInventoryItem : FloorInventoryItem, IFurniMa
 
 	public DateTime RecycledAt { get; }
 
-	public FurniMaticGiftInventoryItem(int id, IUserInfo owner, IFurniMaticGiftFurniture furniture, DateTime recucledAt)
+	public FurniMaticGiftInventoryItem(int id, IUserInfo owner, IFurniMaticGiftFurniture furniture, DateTime recycledAt)
 		: base(id, owner)
 	{
 		this.Furniture = furniture;
 
-		this.RecycledAt = recucledAt;
+		this.RecycledAt = recycledAt;
 	}
 
-	public JsonDocument AsExtraData() => JsonSerializer.SerializeToDocument(this.RecycledAt);
+	public JsonDocument GetExtraData() => JsonSerializer.SerializeToDocument(this.RecycledAt);
 }

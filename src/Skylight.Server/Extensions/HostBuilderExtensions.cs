@@ -26,13 +26,11 @@ using Skylight.Server.Game.Catalog.Recycler.FurniMatic;
 using Skylight.Server.Game.Clients;
 using Skylight.Server.Game.Furniture;
 using Skylight.Server.Game.Inventory.Items;
-using Skylight.Server.Game.Inventory.Items.Floor.Factory;
-using Skylight.Server.Game.Inventory.Items.Wall.Factory;
 using Skylight.Server.Game.Navigator;
 using Skylight.Server.Game.Rooms;
-using Skylight.Server.Game.Rooms.Items.Floor.Factory;
+using Skylight.Server.Game.Rooms.Items.Floor;
 using Skylight.Server.Game.Rooms.Items.Interactions;
-using Skylight.Server.Game.Rooms.Items.Wall.Factory;
+using Skylight.Server.Game.Rooms.Items.Wall;
 using Skylight.Server.Game.Users;
 using Skylight.Server.Game.Users.Authentication;
 using Skylight.Server.Host;
@@ -84,25 +82,13 @@ public static class HostBuilderExtensions
 		builder.Services.AddLoadableSingleton<IFurniMaticManager, FurniMaticManager>();
 
 		builder.Services.AddSingleton<IFurnitureInventoryItemStrategy, FurnitureInventoryItemStrategy>();
-		builder.Services.AddSingleton<IFurnitureInventoryItemFactory, StickyNoteInventoryItemFactory>();
-		builder.Services.AddSingleton<IFurnitureInventoryItemFactory, FurniMaticGiftInventoryItemFactory>();
-		builder.Services.AddSingleton<IFurnitureInventoryItemFactory, SoundSetInventoryItemFactory>();
 
 		builder.Services.AddSingleton<IRoomManager, RoomManager>();
 		builder.Services.AddSingleton<IRoomItemInteractionManager, RoomItemInteractionManager>();
 		builder.Services.AddLoadableSingleton<INavigatorManager, NavigatorManager>();
 
 		builder.Services.AddSingleton<IFloorRoomItemStrategy, FloorRoomItemStrategy>();
-		builder.Services.AddSingleton<IFloorRoomItemFactory, BasicFloorRoomItemFactory>();
-		builder.Services.AddSingleton<IFloorRoomItemFactory, FurniMaticGiftRoomItemFactory>();
-		builder.Services.AddSingleton<IFloorRoomItemFactory, StickyNotePoleRoomItemFactory>();
-		builder.Services.AddSingleton<IFloorRoomItemFactory, SoundMachineRoomItemFactory>();
-		builder.Services.AddSingleton<IFloorRoomItemFactory, RollerRoomItemFactory>();
-		builder.Services.AddSingleton<IFloorRoomItemFactory, MultiStateFloorRoomItemFactory>();
-
 		builder.Services.AddSingleton<IWallRoomItemStrategy, WallRoomItemStrategy>();
-		builder.Services.AddSingleton<IWallRoomItemFactory, BasicWallRoomItemFactory>();
-		builder.Services.AddSingleton<IWallRoomItemFactory, StickyNoteRoomItemFactory>();
 
 		builder.Services.AddSingleton(typeof(Lazy<>), typeof(LazyService<>));
 

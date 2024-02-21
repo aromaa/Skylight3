@@ -39,5 +39,5 @@ internal sealed class PostItRoomItem : WallRoomItem, IStickyNoteRoomItem
 		this.handler.OnRemove(this);
 	}
 
-	public JsonDocument AsExtraData() => JsonSerializer.SerializeToDocument(new { Color = this.Color.ToArgb(), this.Text });
+	public JsonDocument GetExtraData() => JsonSerializer.SerializeToDocument(new { Color = this.Color.ToArgb(), this.Text });
 }

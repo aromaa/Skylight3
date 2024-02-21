@@ -1,5 +1,3 @@
 ﻿namespace Skylight.API.Game.Furniture.Floor;
 
-public interface IStickyNotePoleFurniture : IFloorFurniture
-{
-}
+public interface IStickyNotePoleFurniture : IFloorFurniture;

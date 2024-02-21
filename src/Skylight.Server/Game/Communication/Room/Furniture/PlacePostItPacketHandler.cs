@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Net.Communication.Attributes;
 using Skylight.API.Game.Inventory.Items;
 using Skylight.API.Game.Inventory.Items.Wall;
-using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Interactions;
 using Skylight.API.Game.Rooms.Items.Wall;
 using Skylight.API.Game.Users;
@@ -130,9 +129,7 @@ internal sealed partial class PlacePostItPacketHandler<T> : UserPacketHandler<T>
 						return false;
 					}
 
-					IWallRoomItem item = this.wallRoomItemStrategy.CreateWallItem(room, inventoryItem, location, position, inventoryItem.Furniture.DefaultColor);
-
-					room.ItemManager.AddItem(item);
+					room.ItemManager.AddItem(this.wallRoomItemStrategy.CreateWallItem(inventoryItem, room, location, position));
 
 					return true;
 				}).TryGetOrSuppressThrowing(out bool placeAwait, out ValueTaskExtensions.Awaiter<bool> placeAwaiter) ? placeAwait : await placeAwaiter;

@@ -4,7 +4,7 @@ using Skylight.API.Game.Furniture.Wall;
 
 namespace Skylight.API.Game.Rooms.Items.Wall;
 
-public interface IStickyNoteRoomItem : IWallRoomItem, IFurnitureItem<IStickyNoteFurniture>, IFurnitureData<(Color Color, string Text)>
+public interface IStickyNoteRoomItem : IWallRoomItem, IFurnitureItem<IStickyNoteFurniture>, IFurnitureItemData
 {
 	public new IStickyNoteFurniture Furniture { get; }
 

@@ -3,13 +3,9 @@ using Skylight.API.Game.Furniture.Wall;
 
 namespace Skylight.API.Game.Inventory.Items.Wall;
 
-public interface IStickyNoteInventoryItem : IWallInventoryItem, IFurnitureItem<IStickyNoteFurniture>, IFurnitureData<int>
+public interface IStickyNoteInventoryItem : IWallInventoryItem<IStickyNoteFurniture>, IFurnitureItemData
 {
-	public new IStickyNoteFurniture Furniture { get; }
-
 	public int Count { get; }
 
 	public Task<IStickyNoteInventoryItem?> TryConsumeAsync(int roomId, CancellationToken cancellationToken = default);
-
-	IWallFurniture IFurnitureItem<IWallFurniture>.Furniture => this.Furniture;
 }

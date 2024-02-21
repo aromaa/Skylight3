@@ -1,5 +1,3 @@
 ﻿namespace Skylight.API.Game.Furniture;
 
-public interface IInteractableFurniture : IFurniture
-{
-}
+public interface IInteractableFurniture : IFurniture;

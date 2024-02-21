@@ -23,5 +23,5 @@ internal sealed class FurniMaticGiftRoomItem : FloorRoomItem, IFurniMaticGiftRoo
 
 	public override double Height => this.Furniture.DefaultHeight;
 
-	public JsonDocument AsExtraData() => JsonSerializer.SerializeToDocument(this.RecycledAt);
+	public JsonDocument GetExtraData() => JsonSerializer.SerializeToDocument(this.RecycledAt);
 }

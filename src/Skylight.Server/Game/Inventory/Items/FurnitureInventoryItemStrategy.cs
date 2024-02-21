@@ -1,72 +1,86 @@
-﻿using System.Text.Json;
+﻿using System.Collections.Concurrent;
+using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Furniture.Wall;
 using Skylight.API.Game.Inventory.Items;
 using Skylight.API.Game.Users;
-using Skylight.Server.Game.Inventory.Items.Floor;
-using Skylight.Server.Game.Inventory.Items.Wall;
+using Skylight.Server.Game.Inventory.Items.Floor.Builders;
+using Skylight.Server.Game.Inventory.Items.Wall.Builders;
 
 namespace Skylight.Server.Game.Inventory.Items;
 
 internal sealed class FurnitureInventoryItemStrategy : IFurnitureInventoryItemStrategy
 {
-	private readonly IFurnitureInventoryItemFactory[] factories;
+	private readonly IServiceProvider serviceProvider;
 
-	public FurnitureInventoryItemStrategy(IEnumerable<IFurnitureInventoryItemFactory> factories)
+	private readonly Dictionary<Type, ObjectFactory> builders = [];
+	private readonly ConcurrentDictionary<Type, ObjectFactory> typeCache = [];
+
+	public FurnitureInventoryItemStrategy(IServiceProvider serviceProvider)
 	{
-		this.factories = factories.ToArray();
+		this.serviceProvider = serviceProvider;
+
+		this.RegisterBuilder<IFloorFurniture, DefaultFloorInventoryItemBuilderImpl>();
+		this.RegisterBuilder<IWallFurniture, DefaultWallInventoryItemBuilderImpl>();
+		this.RegisterBuilder<IStickyNoteFurniture, StickyNoteInventoryItemBuilderImpl>();
+		this.RegisterBuilder<IFurniMaticGiftFurniture, FurniMaticGiftInventoryItemBuilderImpl>();
+		this.RegisterBuilder<ISoundSetFurniture, SoundSetInventoryItemBuilderImpl>();
 	}
 
-	public TInventoryItem CreateFurnitureItem<TFurniture, TInventoryItem, TData>(int itemId, IUserInfo owner, TFurniture furniture, TData extraData)
+	private void RegisterBuilder<TFurniture, TBuilder>()
 		where TFurniture : IFurniture
-		where TInventoryItem : IFurnitureInventoryItem, IFurnitureItem<TFurniture>, IFurnitureData<TData>
+		where TBuilder : FurnitureInventoryItemBuilder
 	{
-		foreach (IFurnitureInventoryItemFactory factory in this.factories)
+		this.builders.Add(typeof(TFurniture), ActivatorUtilities.CreateFactory(typeof(TBuilder), []));
+	}
+
+	private ObjectFactory Get(Type type)
+	{
+		foreach (Type targetType in type.GetInterfaces().Reverse())
 		{
-			if (factory.Supports(furniture))
+			if (this.builders.TryGetValue(targetType, out ObjectFactory? objectFactory))
 			{
-				return factory.Create<TFurniture, TInventoryItem, TData>(itemId, owner, furniture, extraData);
+				return objectFactory;
 			}
 		}
 
-		if (furniture is IFloorFurniture floorFurniture)
-		{
-			return (TInventoryItem)(object)new DefaultFloorInventoryItem(itemId, owner, floorFurniture);
-		}
-		else if (furniture is IWallFurniture wallFurniture)
-		{
-			return (TInventoryItem)(object)new DefaultWallInventoryItem(itemId, owner, wallFurniture);
-		}
-		else
-		{
-			throw new NotSupportedException();
-		}
+		throw new NotSupportedException();
 	}
 
-	public TInventoryItem CreateFurnitureItem<TFurniture, TInventoryItem>(int itemId, IUserInfo owner, TFurniture furniture, JsonDocument? extraData)
+	public TInventoryItem CreateFurnitureItem<TFurniture, TInventoryItem>(int itemId, IUserInfo owner, TFurniture furniture, JsonDocument? extraData = null)
 		where TFurniture : IFurniture
 		where TInventoryItem : IFurnitureInventoryItem, IFurnitureItem<TFurniture>
 	{
-		foreach (IFurnitureInventoryItemFactory factory in this.factories)
+		ObjectFactory builderFactory = this.typeCache.GetOrAdd(furniture.GetType(), static (type, instance) => instance.Get(type), this);
+
+		FurnitureInventoryItemBuilder itemBuilder = (FurnitureInventoryItemBuilder)builderFactory.Invoke(this.serviceProvider, []);
+		if (extraData is not null)
 		{
-			if (factory.Supports(furniture))
-			{
-				return factory.Create<TFurniture, TInventoryItem>(itemId, owner, furniture, extraData);
-			}
+			itemBuilder.ExtraData(extraData);
 		}
 
-		if (furniture is IFloorFurniture floorFurniture)
-		{
-			return (TInventoryItem)(object)new DefaultFloorInventoryItem(itemId, owner, floorFurniture);
-		}
-		else if (furniture is IWallFurniture wallFurniture)
-		{
-			return (TInventoryItem)(object)new DefaultWallInventoryItem(itemId, owner, wallFurniture);
-		}
-		else
-		{
-			throw new NotSupportedException();
-		}
+		return (TInventoryItem)itemBuilder
+			.ItemId(itemId)
+			.Owner(owner)
+			.Furniture(furniture)
+			.Build();
+	}
+
+	public TInventoryItem CreateFurnitureItem<TFurniture, TInventoryItem, TBuilder>(int itemId, IUserInfo owner, TFurniture furniture, Func<TBuilder, IFurnitureItemBuilder<TFurniture, TInventoryItem>> builder)
+		where TFurniture : IFurniture
+		where TInventoryItem : IFurnitureInventoryItem, IFurnitureItem<TFurniture>
+	{
+		ObjectFactory builderFactory = this.typeCache.GetOrAdd(furniture.GetType(), static (type, instance) => instance.Get(type), this);
+
+		FurnitureInventoryItemBuilder itemBuilder = (FurnitureInventoryItemBuilder)builderFactory.Invoke(this.serviceProvider, []);
+		builder((TBuilder)(object)itemBuilder);
+
+		return (TInventoryItem)itemBuilder
+			.ItemId(itemId)
+			.Owner(owner)
+			.Furniture(furniture)
+			.Build();
 	}
 }

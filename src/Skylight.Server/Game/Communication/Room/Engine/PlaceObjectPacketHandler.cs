@@ -5,7 +5,6 @@ using Net.Communication.Attributes;
 using Skylight.API.Game.Inventory.Items;
 using Skylight.API.Game.Inventory.Items.Floor;
 using Skylight.API.Game.Inventory.Items.Wall;
-using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Wall;
 using Skylight.API.Game.Rooms.Units;
@@ -133,9 +132,7 @@ internal sealed partial class PlaceObjectPacketHandler<T> : UserPacketHandler<T>
 					return false;
 				}
 
-				IFloorRoomItem item = this.floorRoomItemStrategy.CreateFloorItem(room, floorItem, position, direction);
-
-				room.ItemManager.AddItem(item);
+				room.ItemManager.AddItem(this.floorRoomItemStrategy.CreateFloorItem(floorItem, room, position, direction));
 
 				return true;
 			}).TryGetOrSuppressThrowing(out bool placeAwait, out ValueTaskExtensions.Awaiter<bool> placeAwaiter) ? placeAwait : await placeAwaiter;
@@ -237,9 +234,7 @@ internal sealed partial class PlaceObjectPacketHandler<T> : UserPacketHandler<T>
 						return false;
 					}
 
-					IWallRoomItem item = this.wallRoomItemStrategy.CreateWallItem(room, wallItem, location, position);
-
-					room.ItemManager.AddItem(item);
+					room.ItemManager.AddItem(this.wallRoomItemStrategy.CreateWallItem(wallItem, room, location, position));
 
 					return true;
 				}).TryGetOrSuppressThrowing(out bool placeAwait, out ValueTaskExtensions.Awaiter<bool> placeAwaiter) ? placeAwait : await placeAwaiter;

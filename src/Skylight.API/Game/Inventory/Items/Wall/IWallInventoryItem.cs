@@ -8,4 +8,13 @@ public interface IWallInventoryItem : IFurnitureInventoryItem, IFurnitureItem<IW
 	public new IWallFurniture Furniture { get; }
 
 	IFurniture IFurnitureItem<IFurniture>.Furniture => this.Furniture;
+	IWallFurniture IFurnitureItem<IWallFurniture>.Furniture => this.Furniture;
+}
+
+public interface IWallInventoryItem<out T> : IWallInventoryItem, IFurnitureInventoryItem<T>
+	where T : IWallFurniture
+{
+	public new T Furniture { get; }
+
+	IFurniture IFurnitureItem<IFurniture>.Furniture => this.Furniture;
 }

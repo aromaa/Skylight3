@@ -95,5 +95,5 @@ internal sealed class StickyNoteInventoryItem : WallInventoryItem, IStickyNoteIn
 		}
 	}
 
-	public JsonDocument AsExtraData() => JsonSerializer.SerializeToDocument(this.Count);
+	public JsonDocument GetExtraData() => JsonSerializer.SerializeToDocument(this.Count);
 }

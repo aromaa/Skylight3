@@ -99,7 +99,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 
 			Point3D position = new(floorItem.X, floorItem.Y, floorItem.Z);
 
-			this.AddItemInternal(this.floorRoomItemStrategy.CreateFloorItem(this.room, floorItem.Id, owner, furniture, position, floorItem.Direction, floorItem.ExtraData));
+			this.AddItemInternal(this.floorRoomItemStrategy.CreateFloorItem(floorItem.Id, this.room, owner, furniture, position, floorItem.Direction, floorItem.ExtraData));
 		}
 
 		if (updateUsers is { Count: > 0 })
@@ -137,7 +137,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 			Point2D location = new(wallItem.LocationX, wallItem.LocationY);
 			Point2D position = new(wallItem.PositionX, wallItem.PositionY);
 
-			this.AddItemInternal(this.wallRoomItemStrategy.CreateWallItem(this.room, wallItem.Id, owner, furniture, location, position, wallItem.ExtraData));
+			this.AddItemInternal(this.wallRoomItemStrategy.CreateWallItem(wallItem.Id, this.room, owner, furniture, location, position, wallItem.ExtraData));
 		}
 
 		if (updateUsers is { Count: > 0 })
@@ -390,9 +390,9 @@ internal sealed class RoomItemManager : IRoomItemManager
 				item.PositionX = wallRoomItem.Position.X;
 				item.PositionY = wallRoomItem.Position.Y;
 
-				if (wallRoomItem is IStickyNoteRoomItem uh)
+				if (wallRoomItem is IFurnitureItemData furnitureData)
 				{
-					item.ExtraData = uh.AsExtraData();
+					item.ExtraData = furnitureData.GetExtraData();
 				}
 			}
 

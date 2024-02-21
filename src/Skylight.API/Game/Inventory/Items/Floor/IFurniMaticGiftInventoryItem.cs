@@ -3,7 +3,7 @@ using Skylight.API.Game.Furniture.Floor;
 
 namespace Skylight.API.Game.Inventory.Items.Floor;
 
-public interface IFurniMaticGiftInventoryItem : IFloorInventoryItem, IFurnitureItem<IFurniMaticGiftFurniture>, IFurnitureData<DateTime>
+public interface IFurniMaticGiftInventoryItem : IFloorInventoryItem, IFurnitureItem<IFurniMaticGiftFurniture>, IFurnitureItemData
 {
 	public new IFurniMaticGiftFurniture Furniture { get; }
 
