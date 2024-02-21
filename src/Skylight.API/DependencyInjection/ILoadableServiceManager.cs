@@ -2,10 +2,10 @@
 
 public interface ILoadableServiceManager
 {
-	public Task LoadAsync(CancellationToken cancellationToken = default, bool useTransaction = true);
-	public Task LoadAsync(Type serviceType, CancellationToken cancellationToken = default, bool useTransaction = true);
-	public Task LoadAsync(Type[] serviceTypes, CancellationToken cancellationToken = default, bool useTransaction = true);
-	public Task LoadAsync<T>(CancellationToken cancellationToken = default, bool useTransaction = true);
+	public Task LoadAsync(bool useTransaction = true, CancellationToken cancellationToken = default);
+	public Task LoadAsync(Type serviceType, bool useTransaction = true, CancellationToken cancellationToken = default);
+	public Task LoadAsync(Type[] serviceTypes, bool useTransaction = true, CancellationToken cancellationToken = default);
+	public Task LoadAsync<T>(bool useTransaction = true, CancellationToken cancellationToken = default);
 
 	public Task WaitForInitialization(CancellationToken cancellationToken = default);
 }

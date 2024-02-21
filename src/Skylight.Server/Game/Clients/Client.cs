@@ -36,7 +36,7 @@ internal sealed class Client : IClient
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void SendAsync<T>(in T packet)
 		where T : IGameOutgoingPacket
-		=> this.Socket.SendAsync(packet);
+		=> this.Socket.SendAsync(packet).Preserve();
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public bool ScheduleTask<T>(in T task)

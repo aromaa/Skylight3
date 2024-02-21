@@ -14,12 +14,9 @@ internal sealed partial class CatalogManager(IDbContextFactory<SkylightContext> 
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
-	private readonly IBadgeManager badgeManager = badgeManager;
-
-	private readonly IFurnitureManager furnitureManager = furnitureManager;
 	private readonly ICatalogTransactionFactory catalogTransactionFactory = catalogTransactionFactory;
 
-	public override async Task<ICatalogSnapshot> LoadAsyncCore(ILoadableServiceContext context, CancellationToken cancellationToken)
+	public override async Task<ICatalogSnapshot> LoadAsyncCore(ILoadableServiceContext context, CancellationToken cancellationToken = default)
 	{
 		Task<IBadgeSnapshot> badgeSnapshot = context.RequestDependencyAsync<IBadgeSnapshot>(cancellationToken);
 		Task<IFurnitureSnapshot> furnitureSnapshot = context.RequestDependencyAsync<IFurnitureSnapshot>(cancellationToken);

@@ -17,8 +17,7 @@ internal sealed class RoomTile : IRoomTile
 
 	private readonly Dictionary<int, IRoomUnit> roomUnits;
 
-	private Point3D position;
-	public Point3D Position => this.position;
+	public Point3D Position { get; private set; }
 
 	internal RoomLayoutTile LayoutTile { get; }
 
@@ -30,7 +29,7 @@ internal sealed class RoomTile : IRoomTile
 
 		this.roomUnits = [];
 
-		this.position = new Point3D(location, layoutTile.Height);
+		this.Position = new Point3D(location, layoutTile.Height);
 
 		this.LayoutTile = layoutTile;
 	}
@@ -52,21 +51,21 @@ internal sealed class RoomTile : IRoomTile
 			return topItem.Position.Z + topItem.Height;
 		}
 
-		return this.position.Z;
+		return this.Position.Z;
 	}
 
 	public void AddItem(IFloorRoomItem item)
 	{
 		this.heightMap.Add(item.Position.Z, item.Position.Z + item.Height, item);
 
-		this.position = new Point3D(this.position.XY, this.heightMap.Max is { } highestItem ? highestItem.Position.Z + highestItem.Height : this.LayoutTile.Height);
+		this.Position = new Point3D(this.Position.XY, this.heightMap.Max is { } highestItem ? highestItem.Position.Z + highestItem.Height : this.LayoutTile.Height);
 	}
 
 	public void RemoveItem(IFloorRoomItem item)
 	{
 		this.heightMap.Remove(item.Position.Z, item.Position.Z + item.Height, item);
 
-		this.position = new Point3D(this.position.XY, this.heightMap.Max is { } highestItem ? highestItem.Position.Z + highestItem.Height : this.LayoutTile.Height);
+		this.Position = new Point3D(this.Position.XY, this.heightMap.Max is { } highestItem ? highestItem.Position.Z + highestItem.Height : this.LayoutTile.Height);
 	}
 
 	public void WalkOff(IRoomUnit unit)

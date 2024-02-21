@@ -11,7 +11,7 @@ internal sealed partial class BadgeManager(IDbContextFactory<SkylightContext> db
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
-	public override async Task<IBadgeSnapshot> LoadAsyncCore(ILoadableServiceContext context, CancellationToken cancellationToken)
+	public override async Task<IBadgeSnapshot> LoadAsyncCore(ILoadableServiceContext context, CancellationToken cancellationToken = default)
 	{
 		Cache.Builder builder = Cache.CreateBuilder();
 

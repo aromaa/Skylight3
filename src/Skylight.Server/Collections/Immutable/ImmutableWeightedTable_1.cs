@@ -5,7 +5,7 @@ namespace Skylight.Server.Collections.Immutable;
 internal sealed class ImmutableWeightedTable<TKey>
 	where TKey : notnull
 {
-	internal static readonly ImmutableWeightedTable<TKey> Empty = new([]);
+	public static readonly ImmutableWeightedTable<TKey> Empty = new([]);
 
 	private readonly ImmutableArray<Entry> entries;
 
@@ -95,7 +95,7 @@ internal sealed class ImmutableWeightedTable<TKey>
 				less.Probability = this.entries[less.Key] * this.entries.Count;
 				less.Alias = more.Key;
 
-				double newProbability = this.entries[more.Key] = (this.entries[more.Key] + this.entries[less.Key]) - average;
+				double newProbability = this.entries[more.Key] = this.entries[more.Key] + this.entries[less.Key] - average;
 
 				if (newProbability >= average)
 				{

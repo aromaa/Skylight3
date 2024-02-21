@@ -33,7 +33,7 @@ internal sealed class LoadableServiceManager : ILoadableServiceManager
 		}
 	}
 
-	private async Task CreateNewContext(Action<LoadableServiceContext> action, CancellationToken cancellationToken = default, bool useTransaction = true)
+	private async Task CreateNewContext(Action<LoadableServiceContext> action, bool useTransaction = true, CancellationToken cancellationToken = default)
 	{
 		TaskCompletionSource loadTask = new(TaskCreationOptions.RunContinuationsAsynchronously);
 		if (Interlocked.Exchange(ref this.pendingLoad, loadTask.Task) is { } pendingLoad)
@@ -66,7 +66,7 @@ internal sealed class LoadableServiceManager : ILoadableServiceManager
 		}
 	}
 
-	public Task LoadAsync(CancellationToken cancellationToken = default, bool useTransaction = true)
+	public Task LoadAsync(bool useTransaction = true, CancellationToken cancellationToken = default)
 	{
 		return this.CreateNewContext(context =>
 		{
@@ -74,27 +74,27 @@ internal sealed class LoadableServiceManager : ILoadableServiceManager
 			{
 				_ = context.LoadAsync(service, cancellationToken);
 			}
-		}, cancellationToken, useTransaction);
+		}, useTransaction, cancellationToken);
 	}
 
-	public Task LoadAsync(Type serviceType, CancellationToken cancellationToken = default, bool useTransaction = true)
+	public Task LoadAsync(Type serviceType, bool useTransaction = true, CancellationToken cancellationToken = default)
 	{
 		if (!this.initialLoad.Task.IsCompleted && this.pendingLoad is null)
 		{
-			return this.LoadAsync(cancellationToken, useTransaction);
+			return this.LoadAsync(useTransaction, cancellationToken);
 		}
 
 		return this.CreateNewContext(context =>
 		{
 			_ = context.LoadAsync(this.GetService(serviceType), cancellationToken);
-		}, cancellationToken, useTransaction);
+		}, useTransaction, cancellationToken);
 	}
 
-	public Task LoadAsync(Type[] serviceTypes, CancellationToken cancellationToken = default, bool useTransaction = true)
+	public Task LoadAsync(Type[] serviceTypes, bool useTransaction = true, CancellationToken cancellationToken = default)
 	{
 		if (!this.initialLoad.Task.IsCompleted && this.pendingLoad is null)
 		{
-			return this.LoadAsync(cancellationToken, useTransaction);
+			return this.LoadAsync(useTransaction, cancellationToken);
 		}
 
 		return this.CreateNewContext(context =>
@@ -103,10 +103,10 @@ internal sealed class LoadableServiceManager : ILoadableServiceManager
 			{
 				_ = context.LoadAsync(this.GetService(type), cancellationToken);
 			}
-		}, cancellationToken, useTransaction);
+		}, useTransaction, cancellationToken);
 	}
 
-	public Task LoadAsync<T>(CancellationToken cancellationToken = default, bool useTransaction = true) => this.LoadAsync(typeof(T), cancellationToken, useTransaction);
+	public Task LoadAsync<T>(bool useTransaction = true, CancellationToken cancellationToken = default) => this.LoadAsync(typeof(T), useTransaction, cancellationToken);
 
 	public Task WaitForInitialization(CancellationToken cancellationToken = default) => this.initialLoad.Task.WaitAsync(cancellationToken);
 

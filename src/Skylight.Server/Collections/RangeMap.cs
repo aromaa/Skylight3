@@ -225,7 +225,7 @@ internal sealed class RangeMap<TKey, TValue>
 
 	internal sealed class SliceComparer : IComparer<Slice>
 	{
-		internal static readonly SliceComparer Instance = new();
+		public static readonly SliceComparer Instance = new();
 
 		public int Compare(Slice x, Slice y)
 		{

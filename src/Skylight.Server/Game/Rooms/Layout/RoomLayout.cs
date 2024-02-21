@@ -62,7 +62,7 @@ internal sealed class RoomLayout : IRoomLayout
 				}
 				else if (char.IsAsciiLetter(tile))
 				{
-					tileHeight = (tile - 'a') + 10;
+					tileHeight = tile - 'a' + 10;
 				}
 				else if (tile == '\r')
 				{

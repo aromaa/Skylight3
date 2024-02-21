@@ -5,6 +5,15 @@ namespace Skylight.Server.Extensions;
 internal static class ValueTaskExtensions
 {
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static void Wait(this ValueTask task)
+	{
+		if (!task.IsCompletedSuccessfully)
+		{
+			task.AsTask().GetAwaiter().GetResult();
+		}
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal static bool TryGetOrSuppressThrowing<T>(this ValueTask<T> task, out T? value, out Awaiter<T> awaiter)
 	{
 		if (task.IsCompletedSuccessfully)

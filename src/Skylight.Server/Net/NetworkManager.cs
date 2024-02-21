@@ -14,7 +14,7 @@ namespace Skylight.Server.Net;
 
 internal sealed class NetworkManager(IServiceProvider serviceProvider, ILogger<NetworkManager> logger, IOptions<NetworkSettings> settings, PacketManagerCache packetManagerCache)
 {
-	internal static readonly MetadataKey<Client> GameClientMetadataKey = MetadataKey<Client>.Create("GameClient");
+	public static readonly MetadataKey<Client> GameClientMetadataKey = MetadataKey<Client>.Create("GameClient");
 
 	private readonly IServiceProvider serviceProvider = serviceProvider;
 

@@ -4,21 +4,13 @@ using Skylight.API.Numerics;
 
 namespace Skylight.API.Game.Rooms.Map;
 
-public struct EffectiveTilesEnumerator
+[method: MethodImpl(MethodImplOptions.AggressiveInlining)]
+public struct EffectiveTilesEnumerator(ImmutableArray<Point2D> array, int rotation)
 {
-	private readonly ImmutableArray<Point2D> array;
-	private readonly bool swap;
+	private readonly ImmutableArray<Point2D> array = array;
+	private readonly bool swap = (rotation % 8) is 2 or 6;
 
-	private int index;
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public EffectiveTilesEnumerator(ImmutableArray<Point2D> array, int rotation)
-	{
-		this.array = array;
-		this.swap = (rotation % 8) is 2 or 6;
-
-		this.index = -1;
-	}
+	private int index = -1;
 
 	public readonly Point2D Current
 	{

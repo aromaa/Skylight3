@@ -12,6 +12,7 @@ using Skylight.API.Game.Users;
 using Skylight.Domain.Badges;
 using Skylight.Domain.Items;
 using Skylight.Infrastructure;
+using Skylight.Server.Extensions;
 using Skylight.Server.Game.Inventory.Items.Badges;
 
 namespace Skylight.Server.Game.Catalog;
@@ -106,7 +107,7 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 		await this.transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 	}
 
-	public void Dispose() => this.DisposeAsync().GetAwaiter().GetResult();
+	public void Dispose() => this.DisposeAsync().Wait();
 
 	public async ValueTask DisposeAsync()
 	{

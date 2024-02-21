@@ -46,7 +46,7 @@ internal sealed partial class ChangeMottoPacketHandler<T>(IDbContextFactory<Skyl
 
 			await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
-			_ = ((Rooms.Room)roomUnit.Room).SendAsync(new UserChangeOutgoingPacket(client.User.Profile.Id, client.User.Profile.Figure, client.User.Profile.Gender, client.User.Profile.Motto, 666));
+			roomUnit.Room.SendAsync(new UserChangeOutgoingPacket(client.User.Profile.Id, client.User.Profile.Figure, client.User.Profile.Gender, client.User.Profile.Motto, 666));
 		});
 	}
 }

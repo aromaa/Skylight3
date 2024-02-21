@@ -12,6 +12,7 @@ namespace Skylight.Server.Game.Rooms.Units;
 internal sealed class RoomUnit : IUserRoomUnit
 {
 	private readonly RoomUnitManager roomUnitManager;
+
 	public IRoom Room { get; }
 
 	public IUser User { get; }
@@ -20,19 +21,13 @@ internal sealed class RoomUnit : IUserRoomUnit
 
 	public bool InRoom { get; internal set; } = true;
 
-	private Point3D position;
-	public Point3D Position => this.position;
+	public Point3D Position { get; private set; }
+	public Point2D Rotation { get; private set; }
 
-	private Point2D rotation;
-	public Point2D Rotation => this.rotation;
+	public Point3D NextStepPosition { get; private set; }
+	public Point2D TargetLocation { get; private set; }
 
-	private Point3D nextStepPosition;
-	public Point3D NextStepPosition => this.nextStepPosition;
-
-	private Point2D targetLocation;
-	public Point2D TargetLocation => this.targetLocation;
-
-	public bool Moving => this.position.XY != this.nextStepPosition.XY;
+	public bool Moving => this.Position.XY != this.NextStepPosition.XY;
 	public bool Pathfinding => this.path.Count > 0;
 
 	private Stack<Point2D> path;
@@ -56,29 +51,29 @@ internal sealed class RoomUnit : IUserRoomUnit
 	{
 		if (this.Moving)
 		{
-			this.position = this.nextStepPosition;
+			this.Position = this.NextStepPosition;
 		}
 
 		if (this.Pathfinding)
 		{
 			Point2D to = this.path.Pop();
 
-			IRoomTile lastTile = this.Room.Map.GetTile(this.position.XY);
+			IRoomTile lastTile = this.Room.Map.GetTile(this.Position.XY);
 			IRoomTile nextTile = this.Room.Map.GetTile(to);
 
-			this.nextStepPosition = new Point3D(to, nextTile.GetStepHeight(this.position.Z));
+			this.NextStepPosition = new Point3D(to, nextTile.GetStepHeight(this.Position.Z));
 
 			lastTile.WalkOff(this);
 			nextTile.WalkOn(this);
 
-			int calculatedRotation = CalculateDirection(this.position.XY, this.nextStepPosition.XY);
-			this.rotation = new Point2D(calculatedRotation, calculatedRotation);
+			int calculatedRotation = CalculateDirection(this.Position.XY, this.NextStepPosition.XY);
+			this.Rotation = new Point2D(calculatedRotation, calculatedRotation);
 		}
 	}
 
 	internal void SetPosition(Point3D position)
 	{
-		IRoomTile nextTile = this.Room.Map.GetTile(this.Moving ? this.nextStepPosition.XY : this.position.XY);
+		IRoomTile nextTile = this.Room.Map.GetTile(this.Moving ? this.NextStepPosition.XY : this.Position.XY);
 		nextTile.WalkOff(this);
 
 		this.SetPositionInternal(position);
@@ -86,19 +81,19 @@ internal sealed class RoomUnit : IUserRoomUnit
 
 	private void SetPositionInternal(Point3D position)
 	{
-		this.position = position;
-		this.nextStepPosition = position;
-		this.targetLocation = position.XY;
+		this.Position = position;
+		this.NextStepPosition = position;
+		this.TargetLocation = position.XY;
 
-		IRoomTile nextTile = this.Room.Map.GetTile(this.position.XY);
+		IRoomTile nextTile = this.Room.Map.GetTile(this.Position.XY);
 		nextTile.WalkOn(this);
 	}
 
 	public void PathfindTo(Point2D target)
 	{
-		this.targetLocation = target;
+		this.TargetLocation = target;
 
-		Point2D start = this.Moving ? this.nextStepPosition.XY : this.position.XY;
+		Point2D start = this.Moving ? this.NextStepPosition.XY : this.Position.XY;
 
 		this.path = this.Room.Map.PathfindTo(start, target, this);
 
@@ -150,9 +145,9 @@ internal sealed class RoomUnit : IUserRoomUnit
 
 		int newRotation = CalculateDirection(this.Position.XY, target);
 
-		if (this.rotation.X != newRotation)
+		if (this.Rotation.X != newRotation)
 		{
-			this.rotation = new Point2D(newRotation, newRotation);
+			this.Rotation = new Point2D(newRotation, newRotation);
 
 			this.Room.SendAsync(new UserUpdateOutgoingPacket(
 			[

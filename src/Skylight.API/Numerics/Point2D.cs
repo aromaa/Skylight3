@@ -2,17 +2,11 @@
 
 namespace Skylight.API.Numerics;
 
-public readonly struct Point2D : IEquatable<Point2D>
+[method: MethodImpl(MethodImplOptions.AggressiveInlining)]
+public readonly struct Point2D(int x, int y) : IEquatable<Point2D>
 {
-	public int X { get; }
-	public int Y { get; }
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Point2D(int x, int y)
-	{
-		this.X = x;
-		this.Y = y;
-	}
+	public int X { get; } = x;
+	public int Y { get; } = y;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Point2D Swap() => new(this.Y, this.X);

@@ -7,9 +7,9 @@ namespace Skylight.Server.Net.Handlers;
 
 internal sealed class FlashSocketPolicyRequestHandler : IncomingBytesHandler
 {
-	internal static readonly FlashSocketPolicyRequestHandler Instance = new();
+	public static readonly FlashSocketPolicyRequestHandler Instance = new();
 
-	private static readonly ReadOnlyMemory<byte> PolicyFileResponse = "<cross-domain-policy><allow-access-from domain=\"*\" to-ports=\"*\"/></cross-domain-policy>\0"u8.ToArray();
+	private static readonly ReadOnlyMemory<byte> policyFileResponse = "<cross-domain-policy><allow-access-from domain=\"*\" to-ports=\"*\"/></cross-domain-policy>\0"u8.ToArray();
 
 	protected override void Decode(IPipelineHandlerContext context, ref PacketReader reader)
 	{
@@ -19,7 +19,7 @@ internal sealed class FlashSocketPolicyRequestHandler : IncomingBytesHandler
 
 			static async Task SendSocketPolicy(ISocket socket)
 			{
-				await socket.SendBytesAsync(FlashSocketPolicyRequestHandler.PolicyFileResponse).ConfigureAwait(false);
+				await socket.SendBytesAsync(FlashSocketPolicyRequestHandler.policyFileResponse).ConfigureAwait(false);
 
 				socket.Disconnect("Socket policy request");
 			}

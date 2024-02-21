@@ -2,7 +2,7 @@
 
 internal readonly struct ImmutableArray2D<T>
 {
-	internal static readonly ImmutableArray2D<T> Empty = new(new T[0, 0]);
+	public static readonly ImmutableArray2D<T> Empty = new(new T[0, 0]);
 
 	private readonly T[,]? array;
 

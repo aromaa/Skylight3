@@ -20,6 +20,6 @@ internal sealed class ShoutPacketHandler<T> : UserPacketHandler<T>
 
 		string message = Encoding.UTF8.GetString(packet.Text);
 
-		((Rooms.Room)roomUnit.Room).SendAsync(new ShoutOutgoingPacket(roomUnit.Id, message, 0, packet.StyleId, -1, Array.Empty<(string, string, bool)>()));
+		roomUnit.Room.SendAsync(new ShoutOutgoingPacket(roomUnit.Id, message, 0, packet.StyleId, -1, Array.Empty<(string, string, bool)>()));
 	}
 }

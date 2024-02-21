@@ -2,10 +2,11 @@
 
 namespace Skylight.API.Numerics;
 
-public readonly struct Point3D : IEquatable<Point3D>
+[method: MethodImpl(MethodImplOptions.AggressiveInlining)]
+public readonly struct Point3D(Point2D xy, double z) : IEquatable<Point3D>
 {
-	public Point2D XY { get; }
-	public double Z { get; }
+	public Point2D XY { get; } = xy;
+	public double Z { get; } = z;
 
 	public int X => this.XY.X;
 	public int Y => this.XY.Y;
@@ -14,13 +15,6 @@ public readonly struct Point3D : IEquatable<Point3D>
 	public Point3D(int x, int y, double z)
 		: this(new Point2D(x, y), z)
 	{
-	}
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Point3D(Point2D xy, double z)
-	{
-		this.XY = xy;
-		this.Z = z;
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -27,7 +27,7 @@ internal sealed class SkylightServer(IHostEnvironment hostEnvironment, PacketMan
 			this.networkManager.Start();
 		}
 
-		await this.loadableServiceManager.Value.LoadAsync(cancellationToken, useTransaction: !earlyBind || !this.networkManager.Settings.EarlyAccept).ConfigureAwait(false);
+		await this.loadableServiceManager.Value.LoadAsync(useTransaction: !earlyBind || !this.networkManager.Settings.EarlyAccept, cancellationToken).ConfigureAwait(false);
 
 		if (!earlyBind)
 		{

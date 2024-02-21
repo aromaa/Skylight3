@@ -147,9 +147,9 @@ internal sealed class Room : IRoom
 		}
 	}
 
-	public ValueTask SendAsync<T>(in T packet)
+	public void SendAsync<T>(in T packet)
 		where T : IGameOutgoingPacket
 	{
-		return new ValueTask(this.roomClients.SendAsync(packet));
+		this.roomClients.SendAsync(packet);
 	}
 }

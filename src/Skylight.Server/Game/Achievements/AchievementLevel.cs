@@ -13,7 +13,8 @@ internal sealed class AchievementLevel : IAchievementLevel
 
 	public int ProgressRequirement { get; }
 
-	private readonly IAchievementLevel? previousLevel;
+	public IAchievementLevel? PreviousLevel { get; }
+
 	private readonly IAchievementLevel? nextLevel;
 
 	internal AchievementLevel(int level, IBadge badge, int progressRequirement, IAchievementLevel? previousLevel, ref Ref<IAchievementLevel?> nextLevel)
@@ -24,7 +25,7 @@ internal sealed class AchievementLevel : IAchievementLevel
 
 		this.ProgressRequirement = progressRequirement;
 
-		this.previousLevel = previousLevel;
+		this.PreviousLevel = previousLevel;
 
 		ref IAchievementLevel? lastLevel = ref nextLevel.Value;
 		if (!Unsafe.IsNullRef(ref lastLevel))
@@ -35,6 +36,5 @@ internal sealed class AchievementLevel : IAchievementLevel
 		nextLevel = new Ref<IAchievementLevel?>(ref this.nextLevel);
 	}
 
-	public IAchievementLevel? PreviousLevel => this.previousLevel;
 	public IAchievementLevel? NextLevel => this.nextLevel;
 }
