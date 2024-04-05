@@ -93,9 +93,9 @@ internal sealed class RoomUnit : IUserRoomUnit
 	{
 		this.TargetLocation = target;
 
-		Point2D start = this.Moving ? this.NextStepPosition.XY : this.Position.XY;
+		Point3D start = this.Moving ? this.NextStepPosition : this.Position;
 
-		this.path = this.Room.Map.PathfindTo(start, target, this);
+		this.path = this.Room.Map.PathfindTo(start, new Point3D(target, double.NaN), this);
 
 		((RoomUnitManager)this.Room.UnitManager).Move(this);
 	}

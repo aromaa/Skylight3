@@ -4,7 +4,6 @@ using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Numerics;
 using Skylight.Server.Collections;
-using Skylight.Server.Game.Rooms.Items;
 using Skylight.Server.Game.Rooms.Layout;
 
 namespace Skylight.Server.Game.Rooms.GameMap;
@@ -12,24 +11,20 @@ namespace Skylight.Server.Game.Rooms.GameMap;
 internal sealed class RoomTile : IRoomTile
 {
 	public IRoomMap Map { get; }
-
-	private readonly RangeMap<double, IFloorRoomItem> heightMap;
-
-	private readonly Dictionary<int, IRoomUnit> roomUnits;
-
 	public Point3D Position { get; private set; }
+
+	private readonly IntervalTree<double, IFloorRoomItem> heightMap;
+	private readonly Dictionary<int, IRoomUnit> roomUnits;
 
 	internal RoomLayoutTile LayoutTile { get; }
 
 	internal RoomTile(IRoomMap map, Point2D location, RoomLayoutTile layoutTile)
 	{
 		this.Map = map;
-
-		this.heightMap = new RangeMap<double, IFloorRoomItem>(RoomItemHeightComparer.Instance);
-
-		this.roomUnits = [];
-
 		this.Position = new Point3D(location, layoutTile.Height);
+
+		this.heightMap = new IntervalTree<double, IFloorRoomItem>();
+		this.roomUnits = [];
 
 		this.LayoutTile = layoutTile;
 	}
@@ -40,15 +35,14 @@ internal sealed class RoomTile : IRoomTile
 	public IEnumerable<IFloorRoomItem> FloorItems => this.heightMap.Values;
 	public IEnumerable<IRoomUnit> Units => this.roomUnits.Values;
 
-	public IEnumerable<IFloorRoomItem> GetFloorItemsBetween(double minZ, double maxZ) => this.heightMap.GetViewBetween(minZ, maxZ);
+	public IEnumerable<IFloorRoomItem> GetFloorItemsBetween(double minZ, double maxZ) => this.heightMap.GetItemsBetween(minZ, maxZ);
 
 	public double GetStepHeight(double z) => this.GetStepHeight(z, 2, 2);
 	internal double GetStepHeight(double z, double range, double emptySpace)
 	{
-		SortedSet<IFloorRoomItem>? values = this.heightMap.FindNearestValues(z, range, emptySpace);
-		if (values?.Max is { } topItem)
+		if (this.heightMap.TryFindGab(z + range, emptySpace, out double value))
 		{
-			return topItem.Position.Z + topItem.Height;
+			return value;
 		}
 
 		return this.Position.Z;
@@ -58,14 +52,14 @@ internal sealed class RoomTile : IRoomTile
 	{
 		this.heightMap.Add(item.Position.Z, item.Position.Z + item.Height, item);
 
-		this.Position = new Point3D(this.Position.XY, this.heightMap.Max is { } highestItem ? highestItem.Position.Z + highestItem.Height : this.LayoutTile.Height);
+		this.Position = new Point3D(this.Position.XY, this.heightMap.Max);
 	}
 
 	public void RemoveItem(IFloorRoomItem item)
 	{
 		this.heightMap.Remove(item.Position.Z, item.Position.Z + item.Height, item);
 
-		this.Position = new Point3D(this.Position.XY, this.heightMap.Max is { } highestItem ? highestItem.Position.Z + highestItem.Height : this.LayoutTile.Height);
+		this.Position = new Point3D(this.Position.XY, this.heightMap.Count > 0 ? this.heightMap.Max : this.LayoutTile.Height);
 	}
 
 	public void WalkOff(IRoomUnit unit)

@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Globalization;
+using System.Runtime.CompilerServices;
 
 namespace Skylight.API.Numerics;
 
@@ -22,6 +23,8 @@ public readonly struct Point3D(Point2D xy, double z) : IEquatable<Point3D>
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public override int GetHashCode() => HashCode.Combine(this.XY, this.Z);
+
+	public override string ToString() => $"({this.X}, {this.Z.ToString(CultureInfo.InvariantCulture)}, {this.Y})";
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public bool Equals(Point3D other) => other.XY.Equals(this.XY) && other.Z == this.Z;
