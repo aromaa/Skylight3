@@ -34,12 +34,14 @@ internal static class ValueTaskExtensions
 
 	internal readonly struct Awaiter<T> : ICriticalNotifyCompletion
 	{
+		private readonly Task<T> task;
 		private readonly ConfiguredTaskAwaitable.ConfiguredTaskAwaiter awaitable;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal Awaiter(Task task)
+		internal Awaiter(Task<T> task)
 		{
-			this.awaitable = task.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing).GetAwaiter();
+			this.task = task;
+			this.awaitable = ((Task)task).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing).GetAwaiter();
 		}
 
 		public bool IsCompleted
@@ -53,7 +55,7 @@ internal static class ValueTaskExtensions
 		{
 			this.awaitable.GetResult();
 
-			return default;
+			return this.task.IsCompletedSuccessfully ? this.task.Result : default;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
