@@ -212,7 +212,9 @@ internal sealed class RoomTileMap : IRoomMap
 				}
 				else
 				{
+#pragma warning disable IDE0055
 					this.arraysList = [..this.arrays];
+#pragma warning restore IDE0055
 					this.arraysList.Add(array);
 				}
 			}
