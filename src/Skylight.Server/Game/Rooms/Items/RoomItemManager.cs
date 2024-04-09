@@ -26,40 +26,38 @@ internal sealed class RoomItemManager : IRoomItemManager
 
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
 
-	private readonly IFurnitureManager furnitureManager;
+	private readonly IUserManager userManager;
 
+	private readonly IFurnitureManager furnitureManager;
 	private readonly IFloorRoomItemStrategy floorRoomItemStrategy;
 	private readonly IWallRoomItemStrategy wallRoomItemStrategy;
-	private readonly IRoomItemInteractionManager itemInteractionManager;
 
-	private readonly IUserManager userManager;
+	private readonly IRoomItemInteractionManager itemInteractionManager;
+	private readonly Dictionary<Type, IRoomItemInteractionHandler> interactionHandlers;
 
 	private readonly Dictionary<int, IFloorRoomItem> floorItems;
 	private readonly Dictionary<int, IWallRoomItem> wallItems;
 
-	private readonly Dictionary<Type, IRoomItemInteractionHandler> interactionHandlers;
-
 	private readonly HashSet<IFloorRoomItem> floorItemsDatabaseQueue;
 	private readonly HashSet<IWallRoomItem> wallItemsDatabaseQueue;
 
-	internal RoomItemManager(Room room, IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, IFloorRoomItemStrategy floorRoomItemStrategy, IWallRoomItemStrategy wallRoomItemStrategy, IRoomItemInteractionManager itemInteractionManager, IUserManager userManager)
+	internal RoomItemManager(Room room, IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager, IFurnitureManager furnitureManager, IFloorRoomItemStrategy floorRoomItemStrategy, IWallRoomItemStrategy wallRoomItemStrategy, IRoomItemInteractionManager interactionManager)
 	{
 		this.room = room;
 
 		this.dbContextFactory = dbContextFactory;
 
-		this.furnitureManager = furnitureManager;
+		this.userManager = userManager;
 
+		this.furnitureManager = furnitureManager;
 		this.floorRoomItemStrategy = floorRoomItemStrategy;
 		this.wallRoomItemStrategy = wallRoomItemStrategy;
-		this.itemInteractionManager = itemInteractionManager;
 
-		this.userManager = userManager;
+		this.itemInteractionManager = interactionManager;
+		this.interactionHandlers = this.itemInteractionManager.CreateHandlers(this.room);
 
 		this.floorItems = [];
 		this.wallItems = [];
-
-		this.interactionHandlers = this.itemInteractionManager.CreateHandlers(this.room);
 
 		this.floorItemsDatabaseQueue = [];
 		this.wallItemsDatabaseQueue = [];
@@ -370,8 +368,12 @@ internal sealed class RoomItemManager : IRoomItemManager
 				item.X = floorRoomItem.Position.X;
 				item.Y = floorRoomItem.Position.Y;
 				item.Z = floorRoomItem.Position.Z;
-
 				item.Direction = floorRoomItem.Direction;
+
+				if (floorRoomItem is IFurnitureItemData furnitureData)
+				{
+					item.ExtraData = furnitureData.GetExtraData();
+				}
 			}
 
 			foreach (IWallRoomItem wallRoomItem in this.wallItemsDatabaseQueue)

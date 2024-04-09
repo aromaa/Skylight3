@@ -3,6 +3,8 @@ using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Furniture.Wall;
 using Skylight.Domain.Furniture;
 using Skylight.Server.Game.Furniture.Floor;
+using Skylight.Server.Game.Furniture.Floor.Wired.Effects;
+using Skylight.Server.Game.Furniture.Floor.Wired.Triggers;
 using Skylight.Server.Game.Furniture.Wall;
 
 namespace Skylight.Server.Game.Furniture;
@@ -59,6 +61,8 @@ internal partial class FurnitureManager
 						"sound_set" => CreateSoundSet(entity),
 						"roller" => new RollerFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
 						"multi_state" => new MultiStateFloorFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0], int.Parse(entity.InteractionData)),
+						"wired_on_say" => new UserSayTriggerFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
+						"wired_show_message" => new ShowMessageEffectFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
 
 						_ => new BasicFloorFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0])
 					};

@@ -38,7 +38,7 @@ internal sealed class Room : IRoom
 
 	private readonly Thread thread;
 
-	public Room(RoomData roomData, IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, IFloorRoomItemStrategy floorRoomItemStrategy, IWallRoomItemStrategy wallRoomItemStrategy, IRoomItemInteractionManager itemInteractionManager, IUserManager userManager)
+	public Room(RoomData roomData, IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, IFloorRoomItemStrategy floorRoomItemStrategy, IWallRoomItemStrategy wallRoomItemStrategy, IUserManager userManager, IRoomItemInteractionManager itemInteractionManager)
 	{
 		this.Info = roomData;
 
@@ -50,7 +50,7 @@ internal sealed class Room : IRoom
 
 		this.Map = new RoomTileMap(this, roomData.Layout);
 		this.UnitManager = new RoomUnitManager(this);
-		this.ItemManager = new RoomItemManager(this, dbContextFactory, furnitureManager, floorRoomItemStrategy, wallRoomItemStrategy, itemInteractionManager, userManager);
+		this.ItemManager = new RoomItemManager(this, dbContextFactory, userManager, furnitureManager, floorRoomItemStrategy, wallRoomItemStrategy, itemInteractionManager);
 
 		this.roomClients = new SocketCollection();
 

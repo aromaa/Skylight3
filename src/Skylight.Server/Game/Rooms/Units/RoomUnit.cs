@@ -1,9 +1,11 @@
 ﻿using Skylight.API.Game.Rooms;
+using Skylight.API.Game.Rooms.Items.Interactions.Wired.Triggers;
 using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
 using Skylight.Protocol.Packets.Data.Room.Engine;
+using Skylight.Protocol.Packets.Outgoing.Room.Chat;
 using Skylight.Protocol.Packets.Outgoing.Room.Engine;
 using Skylight.Server.Game.Users;
 
@@ -154,5 +156,37 @@ internal sealed class RoomUnit : IUserRoomUnit
 				new RoomUnitUpdateData(this.Id, this.Position.X, this.Position.Y, this.Position.Z, this.Rotation.X, this.Rotation.Y, string.Empty)
 			]));
 		}
+	}
+
+	public void Chat(string message, int styleId = 0, int trackingId = -1)
+	{
+		if (this.TriggerOnSayWired(message, styleId, trackingId))
+		{
+			return;
+		}
+
+		this.Room.SendAsync(new ChatOutgoingPacket(this.Id, message, 0, styleId, trackingId, Array.Empty<(string, string, bool)>()));
+	}
+
+	public void Shout(string message, int styleId = 0, int trackingId = -1)
+	{
+		if (this.TriggerOnSayWired(message, styleId, trackingId))
+		{
+			return;
+		}
+
+		this.Room.SendAsync(new ShoutOutgoingPacket(this.Id, message, 0, styleId, trackingId, Array.Empty<(string, string, bool)>()));
+	}
+
+	private bool TriggerOnSayWired(string message, int styleId = 0, int trackingId = -1)
+	{
+		if (!this.Room.ItemManager.TryGetInteractionHandler(out IUserSayTriggerInteractionHandler? interactionHandler) || !interactionHandler.OnSay(this, message))
+		{
+			return false;
+		}
+
+		this.User.SendAsync(new WhisperOutgoingPacket(this.Id, message, 0, styleId, trackingId, Array.Empty<(string, string, bool)>()));
+
+		return true;
 	}
 }

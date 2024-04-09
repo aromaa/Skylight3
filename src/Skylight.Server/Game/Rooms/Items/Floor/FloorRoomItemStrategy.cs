@@ -3,12 +3,16 @@ using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Furniture.Floor;
+using Skylight.API.Game.Furniture.Floor.Wired.Effects;
+using Skylight.API.Game.Furniture.Floor.Wired.Triggers;
 using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Floor.Builders;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
 using Skylight.Server.Game.Rooms.Items.Floor.Builders;
+using Skylight.Server.Game.Rooms.Items.Floor.Wired.Effects.Builders;
+using Skylight.Server.Game.Rooms.Items.Floor.Wired.Triggers.Builders;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor;
 
@@ -29,6 +33,8 @@ internal sealed class FloorRoomItemStrategy : IFloorRoomItemStrategy
 		this.RegisterBuilder<ISoundMachineFurniture, SoundMachineRoomItemBuilderImpl>();
 		this.RegisterBuilder<IRollerFurniture, RollerRoomItemBuilderImpl>();
 		this.RegisterBuilder<IMultiStateFloorFurniture, MultiStateFloorRoomItemBuilderImpl>();
+		this.RegisterBuilder<IUserSayTriggerFurniture, UserSayTriggerRoomItemBuilderImpl>();
+		this.RegisterBuilder<IShowMessageEffectFurniture, ShowMessageEffectRoomItemBuilderImpl>();
 	}
 
 	private void RegisterBuilder<TFurniture, TBuilder>()

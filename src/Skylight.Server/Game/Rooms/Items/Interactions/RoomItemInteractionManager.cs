@@ -1,25 +1,31 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Furniture.Floor;
+using Skylight.API.Game.Furniture.Floor.Wired.Effects;
+using Skylight.API.Game.Furniture.Floor.Wired.Triggers;
 using Skylight.API.Game.Furniture.Wall;
 using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Interactions;
+using Skylight.API.Game.Rooms.Items.Interactions.Wired.Effects;
+using Skylight.API.Game.Rooms.Items.Interactions.Wired.Triggers;
+using Skylight.Server.Game.Rooms.Items.Interactions.Wired.Effects;
+using Skylight.Server.Game.Rooms.Items.Interactions.Wired.Triggers;
 
 namespace Skylight.Server.Game.Rooms.Items.Interactions;
 
 internal sealed class RoomItemInteractionManager : IRoomItemInteractionManager
 {
-	public RoomItemInteractionManager()
-	{
-	}
-
 	public Dictionary<Type, IRoomItemInteractionHandler> CreateHandlers(IRoom room)
 	{
+		WiredEffectInteractionHandler wiredInteractionHandler = new(room);
+
 		Dictionary<Type, IRoomItemInteractionHandler> handlers = new()
 		{
 			[typeof(IStickyNoteInteractionHandler)] = new StickyNoteInteractionHandler(),
 			[typeof(ISoundMachineInteractionManager)] = new SoundMachineInteractionHandler(),
-			[typeof(IRollerInteractionHandler)] = new RollerInteractionHandler(room)
+			[typeof(IRollerInteractionHandler)] = new RollerInteractionHandler(room),
+			[typeof(IWiredEffectInteractionHandler)] = wiredInteractionHandler,
+			[typeof(IUserSayTriggerInteractionHandler)] = new UserSayTriggerInteractionHandler(wiredInteractionHandler)
 		};
 
 		return handlers;
@@ -43,6 +49,18 @@ internal sealed class RoomItemInteractionManager : IRoomItemInteractionManager
 		else if (furniture is IRollerFurniture)
 		{
 			handler = typeof(IRollerInteractionHandler);
+
+			return true;
+		}
+		else if (furniture is IUserSayTriggerFurniture)
+		{
+			handler = typeof(IUserSayTriggerInteractionHandler);
+
+			return true;
+		}
+		else if (furniture is IWiredEffectFurniture)
+		{
+			handler = typeof(IWiredEffectInteractionHandler);
 
 			return true;
 		}
