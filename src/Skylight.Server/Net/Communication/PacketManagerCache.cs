@@ -6,6 +6,7 @@ using System.Runtime.Loader;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Net.Communication.Attributes;
+using Net.Communication.Manager;
 using Skylight.Protocol.Attributes;
 using Skylight.Protocol.Packets.Manager;
 using Skylight.Server.Attributes;
@@ -15,13 +16,15 @@ using Skylight.Server.Net.Communication;
 
 namespace Skylight.Server.Net.Communication;
 
-internal sealed class PacketManagerCache
+internal sealed partial class PacketManagerCache
 {
 	private readonly IServiceProvider serviceProvider;
 
 	private readonly ILogger<PacketManagerCache> logger;
 
 	private readonly Dictionary<string, ProtocolData> protocols;
+
+	private PacketManagerData<uint> packetManagerData;
 
 	public PacketManagerCache(IServiceProvider serviceProvider, ILogger<PacketManagerCache> logger)
 	{
@@ -32,6 +35,8 @@ internal sealed class PacketManagerCache
 		this.logger = logger;
 
 		MetadataUpdateHandler.PacketManagerCache = this;
+
+		this.packetManagerData = PacketManagerCache.GetPacketManagerData();
 	}
 
 	[Conditional("DEBUG")]
@@ -59,7 +64,7 @@ internal sealed class PacketManagerCache
 
 						AssemblyLoadContext assemblyLoadContext = new("Unloadable Packet Manager", isCollectible: true);
 
-						protocolData.Update(this.serviceProvider, assemblyLoadContext.LoadFromStream(fileStream));
+						protocolData.Update(this.serviceProvider, assemblyLoadContext.LoadFromStream(fileStream), this.packetManagerData);
 
 						RegisterCallback();
 					}, null);
@@ -113,7 +118,7 @@ internal sealed class PacketManagerCache
 		GameProtocolAttribute? attribute = assembly.GetCustomAttribute<GameProtocolAttribute>();
 		if (attribute is not null)
 		{
-			protocolData = new ProtocolData(this.serviceProvider, attribute.Revision, assembly);
+			protocolData = new ProtocolData(this.serviceProvider, this.packetManagerData, attribute.Revision, assembly);
 
 			this.protocols.Add(attribute.Revision, protocolData);
 
@@ -135,9 +140,11 @@ internal sealed class PacketManagerCache
 	{
 		this.logger.LogInformation("Updating protocols");
 
+		this.packetManagerData = PacketManagerCache.GetPacketManagerData();
+
 		foreach (ProtocolData protocol in this.protocols.Values)
 		{
-			protocol.Update(this.serviceProvider);
+			protocol.Update(this.serviceProvider, this.packetManagerData);
 		}
 	}
 
@@ -155,6 +162,9 @@ internal sealed class PacketManagerCache
 		return false;
 	}
 
+	[PacketManagerGenerator(typeof(AbstractGamePacketManager))]
+	private static partial PacketManagerData<uint> GetPacketManagerData();
+
 	private sealed class ProtocolData
 	{
 		internal string Revision { get; }
@@ -166,26 +176,26 @@ internal sealed class PacketManagerCache
 
 		internal PhysicalFileProvider? PhysicalFileProvider { get; set; }
 
-		internal ProtocolData(IServiceProvider serviceProvider, string revision, Assembly assembly)
+		internal ProtocolData(IServiceProvider serviceProvider, PacketManagerData<uint> packetManagerData, string revision, Assembly assembly)
 		{
 			this.Revision = revision;
 
-			this.Update(serviceProvider, assembly);
+			this.Update(serviceProvider, assembly, packetManagerData);
 
 			this.PacketManagerGetter = () => this.packetManager.Value;
 		}
 
 		[MemberNotNull(nameof(ProtocolData.packetManager))]
-		internal void Update(IServiceProvider serviceProvider)
+		internal void Update(IServiceProvider serviceProvider, PacketManagerData<uint> packetManagerData)
 		{
-			this.Update(serviceProvider, this.assembly);
+			this.Update(serviceProvider, this.assembly, packetManagerData);
 		}
 
 		[MemberNotNull(nameof(ProtocolData.packetManager), nameof(ProtocolData.assembly))]
-		internal void Update(IServiceProvider serviceProvider, Assembly assembly)
+		internal void Update(IServiceProvider serviceProvider, Assembly assembly, PacketManagerData<uint> packetManagerData)
 		{
 			this.assembly = assembly;
-			this.packetManager = new Lazy<AbstractGamePacketManager>(() => assembly.GetCustomAttribute<GameProtocolManagerAttribute>()!.CreatePacketManager(serviceProvider));
+			this.packetManager = new Lazy<AbstractGamePacketManager>(() => assembly.GetCustomAttribute<GameProtocolManagerAttribute>()!.CreatePacketManager(serviceProvider, packetManagerData));
 		}
 	}
 
