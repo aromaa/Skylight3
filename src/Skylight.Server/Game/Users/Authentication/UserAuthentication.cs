@@ -35,16 +35,14 @@ internal sealed class UserAuthentication(IConnectionMultiplexer redis, IDbContex
 
 	public async Task<IUser?> AuthenticateAsync(IClient client, string ssoTicket, CancellationToken cancellationToken)
 	{
-		RedisValue[]? result = (RedisValue[]?)await this.redis.ScriptEvaluateAsync("""
-		local result = redis.call('HMGET', KEYS[1], unpack(ARGV))
-		redis.call('DEL', KEYS[1])
-		return result
-		""",
-		[
-			UserAuthentication.redisSsoTicketKeyPrefix.Append(ssoTicket)
-		], UserAuthentication.redisSsoTicketValues).ConfigureAwait(false);
+		RedisKey ssoKey = UserAuthentication.redisSsoTicketKeyPrefix.Append(ssoTicket);
 
-		if (result is not [RedisValue ssoUserId, RedisValue ssoIp] || ssoUserId.IsNull)
+		IBatch batch = this.redis.CreateBatch();
+		Task<RedisValue[]> hashGetResult = batch.HashGetAsync(ssoKey, UserAuthentication.redisSsoTicketValues);
+		_ = batch.KeyDeleteAsync(ssoKey, CommandFlags.FireAndForget);
+		batch.Execute();
+
+		if (await hashGetResult.ConfigureAwait(false) is not [RedisValue ssoUserId, RedisValue ssoIp] || ssoUserId.IsNull)
 		{
 			return null;
 		}
