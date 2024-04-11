@@ -1,14 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk" InitialTargets="CollectProtocolUpToDateCheckBuilt">
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net8.0</TargetFramework>
 		<UserSecretsId>cc2c8427-3173-434a-9cb5-3a511fb8b81f</UserSecretsId>
 		<ServerGarbageCollection>true</ServerGarbageCollection>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(BuildingInsideVisualStudio)' == 'true'">
-		<DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -25,24 +21,35 @@
 		<ProtocolReference Include="WIN63-202111081545-75921380" />
 	</ItemGroup>
 
-	<Target Name="BuildProtocols" AfterTargets="BeforeCompile" Condition="'@(ProtocolReference)' != ''">
+	<Target Name="CollectProtocolUpToDateCheckBuilt" Condition="'@(ProtocolReference)' != ''">
 		<ItemGroup>
-			<ProtocolProjectReference Include="..\submodules\Skylight.Protocol\src\Skylight.Protocol.X\Skylight.Protocol.%(ProtocolReference.Identity)\Skylight.Protocol.%(ProtocolReference.Identity).csproj" />
+			<UpToDateCheckBuilt Include="..\submodules\Skylight.Protocol\src\Skylight.Protocol.X\Skylight.Protocol.%(ProtocolReference.Identity)\$(OutDir)Skylight.Protocol.%(ProtocolReference.Identity).dll"
+			                    Original="..\submodules\Skylight.Protocol\src\Skylight.Protocol.X\Skylight.Protocol.%(ProtocolReference.Identity)\packets.json" />
+		</ItemGroup>
+	</Target>
+
+	<Target Name="DefineProtocols" AfterTargets="BeforeCompile" Inputs="@(ProtocolReference)" Outputs="%(Identity)" Condition="'@(ProtocolReference)' != ''">
+		<ReadLinesFromFile File="$(IntermediateOutputPath)Skylight.Protocol.%(ProtocolReference.Identity).cache">
+			<Output TaskParameter="Lines" ItemName="CachedHash" />
+		</ReadLinesFromFile>
+
+		<ItemGroup>
+			<OutOfDateProtocolReference Condition="'$([System.IO.File]::GetLastWriteTime(..\submodules\Skylight.Protocol\src\Skylight.Protocol.X\Skylight.Protocol.%(ProtocolReference.Identity)\packets.json).Ticks)' != '@(CachedHash)'" Include="%(ProtocolReference.Identity)">
+				<Hash>$([System.IO.File]::GetLastWriteTime('..\submodules\Skylight.Protocol\src\Skylight.Protocol.X\Skylight.Protocol.%(ProtocolReference.Identity)\packets.json').Ticks)</Hash>
+			</OutOfDateProtocolReference>
+		</ItemGroup>
+	</Target>
+
+	<Target Name="BuildProtocols" AfterTargets="DefineProtocols" Condition="'@(OutOfDateProtocolReference)' != ''">
+		<ItemGroup>
+			<BuildProtocolProjectReference Include="..\submodules\Skylight.Protocol\src\Skylight.Protocol.X\Skylight.Protocol.%(OutOfDateProtocolReference.Identity)\Skylight.Protocol.%(OutOfDateProtocolReference.Identity).csproj" />
 		</ItemGroup>
 
-		<MSBuild Projects="@(ProtocolProjectReference)" BuildInParallel="true" Targets="Restore;Build" Properties="Configuration=$(Configuration);Platform=$(Platform);HotSwap=True">
+		<MSBuild Projects="@(BuildProtocolProjectReference)" BuildInParallel="true" Targets="Restore;Rebuild" Properties="Configuration=$(Configuration);Platform=$(Platform);HotSwap=True">
 			<Output TaskParameter="TargetOutputs" ItemName="ProtocolAssemblies" />
 		</MSBuild>
 
-		<ItemGroup>
-			<AssemblyAttributes Include="Skylight.Server.Attributes.InternalProtocolLibraryPathAttribute">
-				<_Parameter1>%(ProtocolAssemblies.Identity)</_Parameter1>
-			</AssemblyAttributes>
-		</ItemGroup>
-
-		<WriteCodeFragment AssemblyAttributes="@(AssemblyAttributes)" Language="C#" OutputDirectory="$(IntermediateOutputPath)" OutputFile="InternalProtocolLibraryPathAttribute.cs">
-			<Output TaskParameter="OutputFile" ItemName="Compile" />
-		</WriteCodeFragment>
+		<WriteLinesToFile File="$(IntermediateOutputPath)Skylight.Protocol.%(OutOfDateProtocolReference.Identity).cache" Lines="%(OutOfDateProtocolReference.Hash)" Overwrite="true" />
 	</Target>
 
 </Project>
