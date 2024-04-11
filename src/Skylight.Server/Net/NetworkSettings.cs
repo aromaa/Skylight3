@@ -4,6 +4,8 @@ internal sealed class NetworkSettings
 {
 	public List<ListenerSettings> Listeners { get; set; } = [];
 
+	public List<string> AdditionalProtocols { get; set; } = [];
+
 	public bool EarlyBind { get; set; } = false;
 	public bool EarlyAccept { get; set; } = false;
 

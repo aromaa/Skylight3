@@ -5,11 +5,11 @@ using System.Reflection.Metadata;
 using System.Runtime.Loader;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Net.Communication.Attributes;
 using Net.Communication.Manager;
 using Skylight.Protocol.Attributes;
 using Skylight.Protocol.Packets.Manager;
-using Skylight.Server.Attributes;
 using Skylight.Server.Net.Communication;
 
 [assembly: MetadataUpdateHandler(typeof(PacketManagerCache.MetadataUpdateHandler))]
@@ -22,11 +22,13 @@ internal sealed partial class PacketManagerCache
 
 	private readonly ILogger<PacketManagerCache> logger;
 
+	private readonly NetworkSettings networkSettings;
+
 	private readonly Dictionary<string, ProtocolData> protocols;
 
 	private PacketManagerData<uint> packetManagerData;
 
-	public PacketManagerCache(IServiceProvider serviceProvider, ILogger<PacketManagerCache> logger)
+	public PacketManagerCache(IServiceProvider serviceProvider, ILogger<PacketManagerCache> logger, IOptions<NetworkSettings> networkOptions)
 	{
 		this.serviceProvider = serviceProvider;
 
@@ -34,23 +36,25 @@ internal sealed partial class PacketManagerCache
 
 		this.logger = logger;
 
-		MetadataUpdateHandler.PacketManagerCache = this;
+		this.networkSettings = networkOptions.Value;
 
 		this.packetManagerData = PacketManagerCache.GetPacketManagerData();
+
+		MetadataUpdateHandler.PacketManagerCache = this;
 	}
 
 	[Conditional("DEBUG")]
 	internal void ScanAppDomain()
 	{
-		foreach (InternalProtocolLibraryPathAttribute attribute in Assembly.GetEntryAssembly()!.GetCustomAttributes<InternalProtocolLibraryPathAttribute>())
+		foreach (string protocolPath in this.networkSettings.AdditionalProtocols)
 		{
-			using FileStream fileStream = File.OpenRead(attribute.Path);
+			using FileStream fileStream = File.OpenRead(protocolPath);
 
 			AssemblyLoadContext assemblyLoadContext = new("Unloadable Packet Manager", isCollectible: true);
 
 			if (this.TryLoadProtocolAssembly(assemblyLoadContext.LoadFromStream(fileStream), out ProtocolData? protocolData))
 			{
-				protocolData.PhysicalFileProvider = new PhysicalFileProvider(Path.GetDirectoryName(attribute.Path)!);
+				protocolData.PhysicalFileProvider = new PhysicalFileProvider(Path.GetDirectoryName(protocolPath)!);
 
 				RegisterCallback();
 
@@ -60,7 +64,7 @@ internal sealed partial class PacketManagerCache
 					{
 						this.logger.LogInformation($"HotSwapping protocol data for {protocolData.Revision}");
 
-						using FileStream fileStream = File.OpenRead(attribute.Path);
+						using FileStream fileStream = File.OpenRead(protocolPath);
 
 						AssemblyLoadContext assemblyLoadContext = new("Unloadable Packet Manager", isCollectible: true);
 

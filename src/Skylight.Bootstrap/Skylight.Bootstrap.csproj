@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" InitialTargets="CollectProtocolUpToDateCheckBuilt">
+﻿<Project Sdk="Microsoft.NET.Sdk" InitialTargets="CollectProtocolUpToDateCheckBuilt;SetupDebugEnvironment">
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
@@ -23,9 +23,20 @@
 
 	<Target Name="CollectProtocolUpToDateCheckBuilt" Condition="'@(ProtocolReference)' != ''">
 		<ItemGroup>
-			<UpToDateCheckBuilt Include="..\submodules\Skylight.Protocol\src\Skylight.Protocol.X\Skylight.Protocol.%(ProtocolReference.Identity)\$(OutDir)Skylight.Protocol.%(ProtocolReference.Identity).dll"
-			                    Original="..\submodules\Skylight.Protocol\src\Skylight.Protocol.X\Skylight.Protocol.%(ProtocolReference.Identity)\packets.json" />
+			<UpToDateCheckBuilt Include="..\submodules\Skylight.Protocol\src\Skylight.Protocol.X\Skylight.Protocol.%(ProtocolReference.Identity)\$(OutDir)Skylight.Protocol.%(ProtocolReference.Identity).dll" Original="..\submodules\Skylight.Protocol\src\Skylight.Protocol.X\Skylight.Protocol.%(ProtocolReference.Identity)\packets.json" />
 		</ItemGroup>
+	</Target>
+
+	<Target Name="SetupDebugEnvironment" Condition="'@(ProtocolReference)' != ''">
+		<ItemGroup>
+			<AssemblyAttributes Include="Skylight.Bootstrap.Attributes.InternalProtocolLibraryPathAttribute">
+				<_Parameter1>$([MSBuild]::NormalizePath('..\submodules\Skylight.Protocol\src\Skylight.Protocol.X\Skylight.Protocol.%(ProtocolReference.Identity)\$(OutDir)Skylight.Protocol.%(ProtocolReference.Identity).dll'))</_Parameter1>
+			</AssemblyAttributes>
+		</ItemGroup>
+
+		<WriteCodeFragment AssemblyAttributes="@(AssemblyAttributes)" Language="C#" OutputDirectory="$(IntermediateOutputPath)" OutputFile="InternalProtocolLibraryPathAttribute.cs">
+			<Output TaskParameter="OutputFile" ItemName="Compile" />
+		</WriteCodeFragment>
 	</Target>
 
 	<Target Name="DefineProtocols" AfterTargets="BeforeCompile" Inputs="@(ProtocolReference)" Outputs="%(Identity)" Condition="'@(ProtocolReference)' != ''">
