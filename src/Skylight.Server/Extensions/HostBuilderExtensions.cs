@@ -17,6 +17,9 @@ using Skylight.API.Game.Rooms.Items.Interactions;
 using Skylight.API.Game.Rooms.Items.Wall;
 using Skylight.API.Game.Users;
 using Skylight.API.Game.Users.Authentication;
+using Skylight.API.Net.Connection;
+using Skylight.API.Net.EndPoint;
+using Skylight.API.Net.Listener;
 using Skylight.Infrastructure;
 using Skylight.Server.DependencyInjection;
 using Skylight.Server.Game.Achievements;
@@ -36,6 +39,11 @@ using Skylight.Server.Game.Users.Authentication;
 using Skylight.Server.Host;
 using Skylight.Server.Net;
 using Skylight.Server.Net.Communication;
+using Skylight.Server.Net.EndPoint;
+using Skylight.Server.Net.Listener;
+using Skylight.Server.Net.Listener.Connection;
+using Skylight.Server.Net.Listener.Ip;
+using Skylight.Server.Net.Listener.XmlSocket;
 using StackExchange.Redis;
 using IServer = Skylight.API.Server.IServer;
 
@@ -63,6 +71,16 @@ public static class HostBuilderExtensions
 		builder.Services.AddDbContextFactory<SkylightContext>(options => options.UseNpgsql(database["ConnectionString"]));
 
 		builder.Services.AddSingleton<IServer, SkylightServer>();
+
+		builder.Services.AddSingleton<INetworkEndPointStrategy, NetworkEndPointStrategy>();
+		builder.Services.AddSingleton<INetworkEndPointParser, IpNetworkEndPointParser>();
+		builder.Services.AddSingleton<INetworkEndPointParser, UriNetworkEndPointParser>();
+
+		builder.Services.AddSingleton<INetworkListenerStrategy, NetworkListenerStrategy>();
+		builder.Services.AddSingleton<INetworkListenerFactory, XmlSocketNetworkListenerFactory>();
+		builder.Services.AddSingleton<INetworkListenerFactory, TcpNetworkListenerFactory>();
+
+		builder.Services.AddSingleton<INetworkConnectionHandler, NetworkConnectionHandler>();
 
 		builder.Services.AddSingleton<ILoadableServiceManager, LoadableServiceManager>();
 

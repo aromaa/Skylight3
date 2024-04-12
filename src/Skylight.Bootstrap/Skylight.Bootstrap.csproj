@@ -12,6 +12,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\plugins\Skylight.Plugin.WebSockets\Skylight.Plugin.WebSockets.csproj" />
 		<ProjectReference Include="..\Skylight.Server\Skylight.Server.csproj" />
 	</ItemGroup>
 

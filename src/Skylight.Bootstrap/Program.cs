@@ -1,12 +1,18 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Skylight.API.Net.Listener;
 using Skylight.Bootstrap.Attributes;
+using Skylight.Plugin.WebSockets;
 using Skylight.Server.Extensions;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 builder.ConfigureSkylightServer();
+
+//TODO: Add proper plugin system
+builder.Services.AddSingleton<INetworkListenerFactory, WebSocketNetworkListenerFactory>();
 
 AddDebugProtocols(builder);
 
