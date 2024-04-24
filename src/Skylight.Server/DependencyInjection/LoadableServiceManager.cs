@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using Skylight.API.DependencyInjection;
-using Skylight.Server.Extensions;
 
 namespace Skylight.Server.DependencyInjection;
 

@@ -1,5 +1,4 @@
 ﻿using Skylight.API.Game.Rooms;
-using Skylight.Server.Extensions;
 
 namespace Skylight.Server.Game.Rooms.Scheduler.Tasks;
 

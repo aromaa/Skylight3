@@ -4,6 +4,7 @@
 		<TargetFramework>net9.0</TargetFramework>
 		<EFOptimizeContext>true</EFOptimizeContext>
 		<DbContextName>Skylight.Infrastructure.SkylightContext</DbContextName>
+		<NoWarn>$(NoWarn),IDE0005</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
