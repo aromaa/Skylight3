@@ -20,7 +20,7 @@ internal sealed class SkylightContextDesignTimeContextFactory : IDesignTimeDbCon
 		IConfigurationRoot configuration = configurationBuilder.Build();
 
 		DbContextOptionsBuilder<SkylightContext> optionsBuilder = new();
-		optionsBuilder.UseNpgsql(configuration["Database:ConnectionString"]);
+		optionsBuilder.UseNpgsql(configuration["Database:ConnectionString"]).UseSnakeCaseNamingConvention();
 
 		return new SkylightContext(optionsBuilder.Options);
 	}

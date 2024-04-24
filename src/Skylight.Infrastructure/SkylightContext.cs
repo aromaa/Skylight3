@@ -69,11 +69,6 @@ public sealed class SkylightContext(DbContextOptions<SkylightContext> options) :
 
 	public DbSet<UserSettingsEntity> UserSettings { get; init; } = null!;
 
-	protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-	{
-		optionsBuilder.UseSnakeCaseNamingConvention();
-	}
-
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		modelBuilder.ApplyConfiguration(new AchievementEntityTypeConfiguration());
