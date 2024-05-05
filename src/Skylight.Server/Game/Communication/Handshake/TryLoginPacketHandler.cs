@@ -12,9 +12,9 @@ using Skylight.Server.Net;
 namespace Skylight.Server.Game.Communication.Handshake;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed partial class SSOTicketPacketHandler<T>(IUserAuthentication userAuthentication, IClientManager clientManager, Lazy<ILoadableServiceManager> loadableServiceManager, IOptions<NetworkSettings> networkSettings)
+internal sealed class TryLoginPacketHandler<T>(IUserAuthentication userAuthentication, IClientManager clientManager, Lazy<ILoadableServiceManager> loadableServiceManager, IOptions<NetworkSettings> networkSettings)
 	: ClientPacketHandler<T>
-	where T : ISSOTicketIncomingPacket
+	where T : ITryLoginIncomingPacket
 {
 	private readonly IUserAuthentication userAuthentication = userAuthentication;
 	private readonly IClientManager clientManager = clientManager;
@@ -30,7 +30,8 @@ internal sealed partial class SSOTicketPacketHandler<T>(IUserAuthentication user
 			return;
 		}
 
-		string ssoTicket = Encoding.UTF8.GetString(packet.SSOTicket);
+		string username = Encoding.UTF8.GetString(packet.Username);
+		string password = Encoding.UTF8.GetString(packet.Password);
 
 		client.ScheduleTask(async client =>
 		{
@@ -44,7 +45,7 @@ internal sealed partial class SSOTicketPacketHandler<T>(IUserAuthentication user
 				await this.loadableServiceManager.Value.WaitForInitialization().ConfigureAwait(false);
 			}
 
-			IUser? user = await this.userAuthentication.AuthenticateAsync(client, ssoTicket).ConfigureAwait(false);
+			IUser? user = await this.userAuthentication.LoginAsync(client, username, password).ConfigureAwait(false);
 			if (user is null)
 			{
 				return;

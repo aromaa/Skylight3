@@ -4,7 +4,15 @@ using System.Runtime.InteropServices;
 using Net.Sockets;
 using Skylight.API.Game.Clients;
 using Skylight.API.Game.Users;
+using Skylight.Protocol.Packets.Data.CallForHelp;
+using Skylight.Protocol.Packets.Data.Perk;
 using Skylight.Protocol.Packets.Outgoing;
+using Skylight.Protocol.Packets.Outgoing.Availability;
+using Skylight.Protocol.Packets.Outgoing.CallForHelp;
+using Skylight.Protocol.Packets.Outgoing.Handshake;
+using Skylight.Protocol.Packets.Outgoing.Navigator;
+using Skylight.Protocol.Packets.Outgoing.Notifications;
+using Skylight.Protocol.Packets.Outgoing.Perk;
 
 namespace Skylight.Server.Game.Clients;
 
@@ -31,6 +39,46 @@ internal sealed class Client : IClient
 		}
 
 		this.User = user;
+
+		//SSO stuff
+		this.SendAsync(new AuthenticationOKOutgoingPacket());
+		//Avatar effects
+		//Unseen items
+		//Figure set ids
+		this.SendAsync(new NoobnessLevelOutgoingPacket(0));
+		this.SendAsync(new NavigatorSettingsOutgoingPacket(user.Settings.HomeRoomId, user.Settings.HomeRoomId));
+		this.SendAsync(new UserRightsOutgoingPacket(7, 7, true));
+		//Favourites
+		this.SendAsync(new AvailabilityStatusOutgoingPacket(true, false, true));
+		this.SendAsync(new InfoFeedEnableOutgoingPacket(true));
+		//Activity points
+		//Achievement score
+		this.SendAsync(new IsFirstLoginOfDayOutgoingPacket(true));
+		//Mystery box keys
+		//Builder club sub
+		this.SendAsync(new CfhTopicsInitOutgoingPacket(Array.Empty<CallForHelpCategoryData>()));
+
+		this.SendAsync(new PerkAllowancesOutgoingPacket
+		{
+			Perks =
+			[
+				new PerkAllowanceData("USE_GUIDE_TOOL", string.Empty, true),
+				new PerkAllowanceData("GIVE_GUIDE_TOURS", string.Empty, true),
+				new PerkAllowanceData("JUDGE_CHAT_REVIEWS", string.Empty, true),
+				new PerkAllowanceData("VOTE_IN_COMPETITIONS", string.Empty, true),
+				new PerkAllowanceData("SAFE_CHAT", string.Empty, true),
+				new PerkAllowanceData("FULL_CHAT", string.Empty, true),
+				new PerkAllowanceData("CALL_ON_HELPERS", string.Empty, true),
+				new PerkAllowanceData("CITIZEN", string.Empty, true),
+				new PerkAllowanceData("TRADE", string.Empty, true),
+				new PerkAllowanceData("BUILDER_AT_WORK", string.Empty, true),
+				new PerkAllowanceData("CAMERA", string.Empty, true),
+				new PerkAllowanceData("NAVIGATOR_ROOM_THUMBNAIL_CAMERA", string.Empty, true),
+				new PerkAllowanceData("MOUSE_ZOOM", string.Empty, true),
+				new PerkAllowanceData("NAVIGATOR_PHASE_ONE_2014", string.Empty, true),
+				new PerkAllowanceData("NAVIGATOR_PHASE_TWO_2014", string.Empty, true)
+			]
+		});
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
