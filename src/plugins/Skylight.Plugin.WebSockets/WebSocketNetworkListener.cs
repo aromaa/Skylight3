@@ -67,7 +67,7 @@ internal sealed class WebSocketNetworkListener(INetworkConnectionHandler connect
 			using WebSocket webSocket = webSocketContext.WebSocket;
 			using WebSocketWrapper socket = new(webSocket, listenerContext.Request.LocalEndPoint, listenerContext.Request.RemoteEndPoint);
 
-			this.connectionHandler.Accept(socket, this.configuration!.Revision!);
+			this.connectionHandler.Accept(socket, this.configuration!.Revision!, this.configuration.CryptoPrime, this.configuration.CryptoGenerator, this.configuration.CryptoKey, this.configuration.CryptoPremix);
 
 			byte[] buffer = new byte[1024 * 6];
 
@@ -173,7 +173,7 @@ internal sealed class WebSocketNetworkListener(INetworkConnectionHandler connect
 
 		public bool Closed => this.webSocket.CloseStatus is not null;
 
-		public ValueTask SendBytesAsync(ReadOnlyMemory<byte> data) => this.webSocket.SendAsync(data, WebSocketMessageType.Binary, false, default);
+		public ValueTask SendBytesAsync(ReadOnlyMemory<byte> data) => this.webSocket.SendAsync(data, WebSocketMessageType.Binary, true, default);
 
 		public void Disconnect(Exception exception) => this.webSocket.CloseAsync(WebSocketCloseStatus.InternalServerError, "Fault", default);
 		public void Disconnect(string? reason = default) => this.webSocket.CloseAsync(WebSocketCloseStatus.Empty, reason, default);

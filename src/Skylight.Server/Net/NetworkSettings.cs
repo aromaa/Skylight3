@@ -17,5 +17,7 @@ internal sealed class NetworkSettings
 
 		public string? CryptoPrime { get; set; }
 		public string? CryptoGenerator { get; set; }
+		public string? CryptoKey { get; set; }
+		public string? CryptoPremix { get; set; }
 	}
 }

@@ -34,17 +34,20 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 	private int incomingPaddingDecoder;
 	private int outgoingPaddingEncoder;
 
-	internal BigInteger Prime { get; }
-	internal BigInteger Generator { get; }
+	internal BigInteger CryptoPrime { get; }
+	internal BigInteger CryptoGenerator { get; }
+	internal string CryptoKey { get; }
+	internal string CryptoPremix { get; }
 
-	internal Base64PacketHeaderHandler(ILogger<Base64PacketHeaderHandler> logger, AbstractGamePacketManager packetManager, BigInteger prime, BigInteger generator)
+	internal Base64PacketHeaderHandler(ILogger<Base64PacketHeaderHandler> logger, AbstractGamePacketManager packetManager, BigInteger cryptoPrime, BigInteger cryptoGenerator, string cryptoKey, string cryptoPremix)
 	{
 		this.logger = logger;
-
 		this.packetManager = packetManager;
 
-		this.Prime = prime;
-		this.Generator = generator;
+		this.CryptoPrime = cryptoPrime;
+		this.CryptoGenerator = cryptoGenerator;
+		this.CryptoKey = cryptoKey;
+		this.CryptoPremix = cryptoPremix;
 	}
 
 	protected override void Decode(IPipelineHandlerContext context, ref PacketReader reader)
@@ -61,8 +64,17 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 				PacketReader headerSliced = reader.Slice(6);
 				PacketReader headerReader = this.incomingHeaderDecoder.Read(ref headerSliced);
 
-				headerReader.Skip(1); //Random, nice one
+				if (this.incomingHeaderDecoder != this.incomingMessageDecoder)
+				{
+					headerReader.Skip(1); //Random, nice one
+				}
+
 				headerReader.TryReadBase64UInt32(3, out this.currentPacketLength);
+
+				if (this.incomingHeaderDecoder == this.incomingMessageDecoder)
+				{
+					this.currentPacketLength *= 2;
+				}
 
 				this.incomingHeaderDecoder.AdvanceReader(headerReader.UnreadSequence.End);
 			}
@@ -94,7 +106,11 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 		if (messageDecoder is not null)
 		{
 			reader = messageDecoder.Read(ref reader);
-			reader.Skip(this.IterateTokenRandom(ref this.incomingPaddingDecoder));
+
+			if (this.incomingHeaderDecoder != this.incomingMessageDecoder)
+			{
+				reader.Skip(this.IterateTokenRandom(ref this.incomingPaddingDecoder));
+			}
 		}
 
 		uint header = reader.ReadBase64UInt32(2);
@@ -186,16 +202,24 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 		}
 	}
 
-	internal void EnableEncryption(BigInteger sharedKey)
+	internal void EnableEncryption(BigInteger sharedKey, bool incomingOnly)
 	{
 		byte[] rc4Table = sharedKey.ToByteArray(isUnsigned: true, isBigEndian: true);
 
-		this.incomingHeaderDecoder = new RC4(rc4Table);
-		this.incomingMessageDecoder = new RC4(rc4Table);
+		this.incomingHeaderDecoder = new RC4Base64(rc4Table, this.CryptoKey, this.CryptoPremix);
+		this.incomingMessageDecoder = new RC4Base64(rc4Table, this.CryptoKey, this.CryptoPremix);
 
-		this.outgoingEncoderPipe = new Pipe();
-		this.outgoingHeaderEncoder = new RC4(rc4Table);
-		this.outgoingMessageEncoder = new RC4(rc4Table);
+		if (!incomingOnly)
+		{
+			this.outgoingEncoderPipe = new Pipe();
+			this.outgoingHeaderEncoder = new RC4Base64(rc4Table, this.CryptoKey, this.CryptoPremix);
+			this.outgoingMessageEncoder = new RC4Base64(rc4Table, this.CryptoKey, this.CryptoPremix);
+		}
+	}
+
+	internal void SetSecretKey(int secretKey)
+	{
+		this.incomingHeaderDecoder = this.incomingMessageDecoder = new RC4Hex(secretKey, this.CryptoKey);
 	}
 
 	internal void SetToken(BigInteger integer)

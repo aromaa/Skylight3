@@ -38,7 +38,9 @@ internal sealed class NetworkManager(ILogger<NetworkManager> logger, IOptions<Ne
 				{
 					Revision = listenerSettings.Revision,
 					CryptoPrime = listenerSettings.CryptoPrime,
-					CryptoGenerator = listenerSettings.CryptoGenerator
+					CryptoGenerator = listenerSettings.CryptoGenerator,
+					CryptoKey = listenerSettings.CryptoKey,
+					CryptoPremix = listenerSettings.CryptoPremix
 				});
 			}
 		}

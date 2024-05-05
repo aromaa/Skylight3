@@ -5,6 +5,7 @@ using Net.Metadata;
 using Net.Sockets;
 using Skylight.API.Net.Connection;
 using Skylight.Protocol.Packets.Manager;
+using Skylight.Protocol.Packets.Outgoing.Handshake;
 using Skylight.Server.Game.Clients;
 using Skylight.Server.Net.Communication;
 using Skylight.Server.Net.Handlers;
@@ -20,7 +21,7 @@ internal sealed class NetworkConnectionHandler(IServiceProvider serviceProvider,
 
 	private readonly PacketManagerCache packetManagerCache = packetManagerCache;
 
-	public void Accept(ISocket socket, string revision, string? cryptoPrime = null, string? cryptoGenerator = null)
+	public void Accept(ISocket socket, string revision, string? cryptoPrime = null, string? cryptoGenerator = null, string? cryptoKey = null, string? cryptoPremix = null)
 	{
 		if (!this.packetManagerCache.TryCreatePacketManager(revision, out Func<AbstractGamePacketManager>? packetManagerGetter))
 		{
@@ -41,7 +42,21 @@ internal sealed class NetworkConnectionHandler(IServiceProvider serviceProvider,
 		}
 		else
 		{
-			socket.Pipeline.AddHandlerFirst(new Base64PacketHeaderHandler(this.serviceProvider.GetRequiredService<ILogger<Base64PacketHeaderHandler>>(), packetManager, BigInteger.Parse(cryptoPrime!), BigInteger.Parse(cryptoGenerator!)));
+			socket.Pipeline.AddHandlerFirst(new Base64PacketHeaderHandler(this.serviceProvider.GetRequiredService<ILogger<Base64PacketHeaderHandler>>(), packetManager, BigInteger.Parse(cryptoPrime ?? "0"), BigInteger.Parse(cryptoGenerator ?? "0"), cryptoKey!, cryptoPremix!));
+
+			Task.Run(async () =>
+			{
+				await Task.Yield();
+
+				try
+				{
+					_ = socket.Pipeline.Socket.SendAsync(new ServerHelloOutgoingPacket());
+				}
+				catch
+				{
+					//TODO: Fix
+				}
+			});
 		}
 	}
 }

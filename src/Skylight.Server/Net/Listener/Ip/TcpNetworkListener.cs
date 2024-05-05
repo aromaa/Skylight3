@@ -33,7 +33,7 @@ internal sealed class TcpNetworkListener(IServiceProvider serviceProvider, ILogg
 
 		IListener.CreateTcpListener(this.endPoint, socket =>
 		{
-			this.connectionHandler.Accept(socket, configuration.Revision!, configuration.CryptoPrime, configuration.CryptoGenerator);
+			this.connectionHandler.Accept(socket, configuration.Revision!, configuration.CryptoPrime, configuration.CryptoGenerator, configuration.CryptoKey, configuration.CryptoPremix);
 		}, this.serviceProvider);
 	}
 

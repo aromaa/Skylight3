@@ -31,12 +31,12 @@ internal sealed class CompleteDiffieHandshakePacketHandler<T> : ClientPacketHand
 				while (privateKeyBytes.SequenceEqual(new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
 
 				BigInteger privateKey = new(privateKeyBytes, isUnsigned: true);
-				BigInteger serverPublicKey = BigInteger.ModPow(handler.Generator, privateKey, handler.Prime);
+				BigInteger serverPublicKey = BigInteger.ModPow(handler.CryptoGenerator, privateKey, handler.CryptoPrime);
 
 				BigInteger clientPublicKey = BigInteger.Parse(Encoding.UTF8.GetString(packet.PublicKey));
-				BigInteger sharedKey = BigInteger.ModPow(clientPublicKey, privateKey, handler.Prime);
+				BigInteger sharedKey = BigInteger.ModPow(clientPublicKey, privateKey, handler.CryptoPrime);
 
-				handler.EnableEncryption(sharedKey);
+				handler.EnableEncryption(sharedKey, incomingOnly: false);
 
 				client.SendAsync(new CompleteDiffieHandshakeOutgoingPacket(serverPublicKey.ToString(), false));
 
