@@ -35,6 +35,7 @@ internal abstract class FloorRoomItem : IFloorRoomItem
 		this.Direction = direction;
 	}
 
+	public int StripId => this.Id;
 	public EffectiveTilesEnumerator EffectiveTiles => new(this.Furniture.EffectiveTiles, this.Direction);
 
 	public virtual void OnPlace()

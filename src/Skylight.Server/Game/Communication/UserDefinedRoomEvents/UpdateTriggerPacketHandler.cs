@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Net.Communication.Attributes;
+using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Floor.Wired.Triggers;
 using Skylight.API.Game.Users;
@@ -33,7 +34,7 @@ internal sealed class UpdateTriggerPacketHandler<T> : UserPacketHandler<T>
 				return;
 			}
 
-			List<IFloorRoomItem> selectedItems = [];
+			HashSet<IRoomItem> selectedItems = [];
 			foreach (int selectedItemId in selectedItemIds)
 			{
 				if (!room.ItemManager.TryGetFloorItem(selectedItemId, out IFloorRoomItem? selectedItem))
@@ -44,9 +45,17 @@ internal sealed class UpdateTriggerPacketHandler<T> : UserPacketHandler<T>
 				selectedItems.Add(selectedItem);
 			}
 
-			if (trigger is IUserSayTriggerRoomItem userSay)
+			if (trigger is IUnitSayTriggerRoomItem userSay)
 			{
 				userSay.Message = stringParameter;
+			}
+			else if (trigger is IUnitEnterRoomTriggerRoomItem enterRoom)
+			{
+				enterRoom.TriggerUsername = string.IsNullOrWhiteSpace(stringParameter) ? null : stringParameter;
+			}
+			else if (trigger is IUnitUseItemTriggerRoomItem useItem)
+			{
+				useItem.SelectedItems = selectedItems;
 			}
 
 			user.SendAsync(new WiredSaveSuccessOutgoingPacket());

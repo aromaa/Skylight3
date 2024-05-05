@@ -8,25 +8,24 @@ using Skylight.API.Game.Rooms.Items.Interactions.Wired.Triggers;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor.Wired.Triggers.Builders;
 
-internal sealed class UserSayTriggerRoomItemBuilderImpl
-	: FloorRoomItemBuilder
+internal sealed class UnitEnterRoomTriggerRoomItemBuilderImpl : FloorRoomItemBuilder
 {
-	private IUserSayTriggerFurniture? FurnitureValue { get; set; }
+	private IUnitEnterRoomTriggerFurniture? FurnitureValue { get; set; }
 
-	private string? MessageValue { get; set; }
+	private string? TriggerUsernameValue { get; set; }
 
 	public override FloorRoomItemBuilder Furniture(IFloorFurniture furniture)
 	{
-		this.FurnitureValue = (IUserSayTriggerFurniture)furniture;
+		this.FurnitureValue = (IUnitEnterRoomTriggerFurniture)furniture;
 
 		return this;
 	}
 
 	public override FloorRoomItemBuilder ExtraData(JsonDocument extraData)
 	{
-		if (extraData.RootElement.TryGetProperty("Message", out JsonElement messageValue))
+		if (extraData.RootElement.TryGetProperty("TriggerUsername", out JsonElement triggerUsernameValue))
 		{
-			this.MessageValue = messageValue.GetString();
+			this.TriggerUsernameValue = triggerUsernameValue.GetString();
 		}
 
 		return this;
@@ -36,14 +35,14 @@ internal sealed class UserSayTriggerRoomItemBuilderImpl
 	{
 		this.CheckValid();
 
-		if (!this.RoomValue.ItemManager.TryGetInteractionHandler(out IUserSayTriggerInteractionHandler? handler))
+		if (!this.RoomValue.ItemManager.TryGetInteractionHandler(out IUnitEnterRoomTriggerInteractionHandler? handler))
 		{
-			throw new Exception($"{typeof(IUserSayTriggerInteractionHandler)} not found");
+			throw new Exception($"{typeof(IUnitEnterRoomTriggerInteractionHandler)} not found");
 		}
 
-		return new UserSayTriggerRoomItem(this.RoomValue, this.ItemIdValue, this.OwnerValue, this.FurnitureValue, this.PositionValue, this.DirectionValue, handler)
+		return new UnitEnterRoomTriggerRoomItem(this.RoomValue, this.ItemIdValue, this.OwnerValue, this.FurnitureValue, this.PositionValue, this.DirectionValue, handler)
 		{
-			Message = this.MessageValue ?? string.Empty
+			TriggerUsername = this.TriggerUsernameValue
 		};
 	}
 

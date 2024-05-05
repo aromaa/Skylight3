@@ -87,8 +87,10 @@ public sealed class SkylightContext(DbContextOptions<SkylightContext> options) :
 		modelBuilder.ApplyConfiguration(new FloorFurnitureEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new WallFurnitureEntityTypeConfiguration());
 
+		modelBuilder.ApplyConfiguration(new FloorItemDataEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new FloorItemEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new PublicRoomItemEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new WallItemDataEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new WallItemEntityTypeConfiguration());
 
 		modelBuilder.ApplyConfiguration(new RoomFlatCatEntityTypeConfiguration());

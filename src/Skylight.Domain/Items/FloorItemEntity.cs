@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Skylight.Domain.Furniture;
+﻿using Skylight.Domain.Furniture;
 using Skylight.Domain.Rooms;
 using Skylight.Domain.Users;
 
@@ -24,5 +23,5 @@ public class FloorItemEntity
 
 	public int Direction { get; set; }
 
-	public JsonDocument? ExtraData { get; set; }
+	public FloorItemDataEntity? Data { get; set; }
 }

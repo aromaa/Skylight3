@@ -7,25 +7,25 @@ using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Rooms.Items.Interactions.Wired.Triggers;
 
-internal sealed class UserSayTriggerInteractionHandler(IWiredEffectInteractionHandler wiredHandler) : IUserSayTriggerInteractionHandler
+internal sealed class UnitSayTriggerInteractionHandler(IWiredEffectInteractionHandler wiredHandler) : IUnitSayTriggerInteractionHandler
 {
 	private readonly IWiredEffectInteractionHandler wiredHandler = wiredHandler;
 
-	private readonly HashSet<IUserSayTriggerRoomItem> triggers = [];
+	private readonly HashSet<IUnitSayTriggerRoomItem> triggers = [];
 
 	public bool CanPlaceItem(IFurniture furniture, Point2D location) => true;
 
-	public void OnPlace(IUserSayTriggerRoomItem trigger)
+	public void OnPlace(IUnitSayTriggerRoomItem trigger)
 	{
 		this.triggers.Add(trigger);
 	}
 
-	public void OnUpdate(IUserSayTriggerRoomItem trigger)
+	public void OnUpdate(IUnitSayTriggerRoomItem trigger)
 	{
 		//Todo
 	}
 
-	public void OnRemove(IUserSayTriggerRoomItem trigger)
+	public void OnRemove(IUnitSayTriggerRoomItem trigger)
 	{
 		this.triggers.Remove(trigger);
 	}
@@ -33,7 +33,7 @@ internal sealed class UserSayTriggerInteractionHandler(IWiredEffectInteractionHa
 	public bool OnSay(IUserRoomUnit user, string message)
 	{
 		bool result = false;
-		foreach (IUserSayTriggerRoomItem trigger in this.triggers)
+		foreach (IUnitSayTriggerRoomItem trigger in this.triggers)
 		{
 			if (message.Contains(trigger.Message))
 			{

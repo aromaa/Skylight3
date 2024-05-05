@@ -6,6 +6,7 @@ using Skylight.API.Game.Rooms.Items.Interactions.Wired.Effects;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
+using Skylight.Protocol.Packets.Data.UserDefinedRoomEvents;
 using Skylight.Protocol.Packets.Outgoing.Room.Chat;
 using Skylight.Protocol.Packets.Outgoing.UserDefinedRoomEvents;
 
@@ -39,7 +40,7 @@ internal sealed class ShowMessageEffectRoomItem(IRoom room, int id, IUserInfo ow
 
 	public override void Interact(IUserRoomUnit unit, int state)
 	{
-		unit.User.SendAsync(new WiredFurniActionOutgoingPacket(this.Id, this.Message));
+		unit.User.SendAsync(new WiredFurniActionOutgoingPacket(this.Id, this.Furniture.Id, ActionType.ShowMessage, 0, [], 0, [], this.Message));
 	}
 
 	public override void Trigger(IUserRoomUnit? cause = null)

@@ -63,6 +63,7 @@ internal sealed class UserAuthentication(IConnectionMultiplexer redis, IDbContex
 			await foreach (FloorItemEntity item in dbContext.FloorItems
 						 .AsNoTracking()
 						 .Where(i => i.UserId == profile.Id && i.RoomId == null)
+						 .Include(i => i.Data)
 						 .AsAsyncEnumerable()
 						 .WithCancellation(cancellationToken)
 						 .ConfigureAwait(false))
@@ -72,12 +73,13 @@ internal sealed class UserAuthentication(IConnectionMultiplexer redis, IDbContex
 					continue;
 				}
 
-				user.Inventory.TryAddFloorItem(this.furnitureInventoryItemFactory.CreateFurnitureItem(item.Id, profile, furniture, item.ExtraData));
+				user.Inventory.TryAddFloorItem(this.furnitureInventoryItemFactory.CreateFurnitureItem(item.Id, profile, furniture, item.Data?.ExtraData));
 			}
 
 			await foreach (WallItemEntity item in dbContext.WallItems
 						 .AsNoTracking()
 						 .Where(i => i.UserId == profile.Id && i.RoomId == null)
+						 .Include(i => i.Data)
 						 .AsAsyncEnumerable()
 						 .WithCancellation(cancellationToken)
 						 .ConfigureAwait(false))
@@ -87,7 +89,7 @@ internal sealed class UserAuthentication(IConnectionMultiplexer redis, IDbContex
 					continue;
 				}
 
-				user.Inventory.TryAddWallItem(this.furnitureInventoryItemFactory.CreateFurnitureItem(item.Id, profile, furniture, item.ExtraData));
+				user.Inventory.TryAddWallItem(this.furnitureInventoryItemFactory.CreateFurnitureItem(item.Id, profile, furniture, item.Data?.ExtraData));
 			}
 
 			IBadgeSnapshot badges = await this.badgeManager.GetAsync().ConfigureAwait(false);

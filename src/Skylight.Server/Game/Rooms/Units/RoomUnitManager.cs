@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using Skylight.API.Game.Rooms.Items.Interactions.Wired.Triggers;
 using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
@@ -102,6 +103,11 @@ internal sealed class RoomUnitManager : IRoomUnitManager
 					IsModerator = true
 				}
 			]));
+
+			if (this.room.ItemManager.TryGetInteractionHandler(out IUnitEnterRoomTriggerInteractionHandler? handler))
+			{
+				handler.OnEnterRoom(userUnit);
+			}
 		}
 	}
 

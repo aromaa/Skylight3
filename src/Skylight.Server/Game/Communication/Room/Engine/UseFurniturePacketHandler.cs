@@ -1,6 +1,7 @@
 ﻿using Net.Communication.Attributes;
 using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
+using Skylight.API.Game.Rooms.Items.Interactions.Wired.Triggers;
 using Skylight.API.Game.Users;
 using Skylight.Protocol.Packets.Incoming.Room.Engine;
 using Skylight.Protocol.Packets.Manager;
@@ -29,6 +30,11 @@ internal sealed partial class UseFurniturePacketHandler<T> : UserPacketHandler<T
 			}
 
 			interactable.Interact(roomUnit, state);
+
+			if (room.ItemManager.TryGetInteractionHandler(out IUnitUseItemTriggerInteractionHandler? handler))
+			{
+				handler.OnUse(roomUnit, interactable);
+			}
 		});
 	}
 }

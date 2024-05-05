@@ -62,9 +62,9 @@ internal sealed class StickyNoteInventoryItem : WallInventoryItem, IStickyNoteIn
 			await using IDbContextTransaction transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
 			int count = await dbContext.WallItems
-				.Where(i => i.Id == this.Id && i.ExtraData!.RootElement.GetInt32() > 1)
+				.Where(i => i.Id == this.Id && i.Data!.ExtraData!.RootElement.GetInt32() > 1)
 				.ExecuteUpdateAsync(setters =>
-					setters.SetProperty(i => i.ExtraData, i => (JsonDocument)(object)(string)(object)(i.ExtraData!.RootElement.GetInt32() - 1)), cancellationToken)
+					setters.SetProperty(i => i.Data!.ExtraData, i => (JsonDocument)(object)(string)(object)(i.Data!.ExtraData!.RootElement.GetInt32() - 1)), cancellationToken)
 				.ConfigureAwait(false);
 
 			if (count == 0)
@@ -81,7 +81,10 @@ internal sealed class StickyNoteInventoryItem : WallInventoryItem, IStickyNoteIn
 				LocationX = -1,
 				LocationY = -1,
 
-				ExtraData = JsonSerializer.SerializeToDocument(1)
+				Data = new WallItemDataEntity
+				{
+					ExtraData = JsonSerializer.SerializeToDocument(1)
+				}
 			};
 
 			dbContext.WallItems.Add(entity);

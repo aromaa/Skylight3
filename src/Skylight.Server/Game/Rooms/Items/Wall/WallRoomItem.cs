@@ -34,6 +34,8 @@ internal abstract class WallRoomItem : IWallRoomItem
 		this.Direction = direction;
 	}
 
+	public int StripId => -this.Id;
+
 	public virtual void OnPlace()
 	{
 	}

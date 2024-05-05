@@ -6,16 +6,17 @@ using Skylight.API.Game.Rooms.Items.Interactions.Wired.Triggers;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
+using Skylight.Protocol.Packets.Data.UserDefinedRoomEvents;
 using Skylight.Protocol.Packets.Outgoing.UserDefinedRoomEvents;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor.Wired.Triggers;
 
-internal sealed class UserSayTriggerRoomItem(IRoom room, int id, IUserInfo owner, IUserSayTriggerFurniture furniture, Point3D position, int direction, IUserSayTriggerInteractionHandler interactionHandler)
-	: WiredTriggerRoomItem(room, id, owner, position, direction), IUserSayTriggerRoomItem
+internal sealed class UnitSayTriggerRoomItem(IRoom room, int id, IUserInfo owner, IUnitSayTriggerFurniture furniture, Point3D position, int direction, IUnitSayTriggerInteractionHandler interactionHandler)
+	: WiredTriggerRoomItem(room, id, owner, position, direction), IUnitSayTriggerRoomItem
 {
-	public override IUserSayTriggerFurniture Furniture { get; } = furniture;
+	public override IUnitSayTriggerFurniture Furniture { get; } = furniture;
 
-	private readonly IUserSayTriggerInteractionHandler interactionHandler = interactionHandler;
+	private readonly IUnitSayTriggerInteractionHandler interactionHandler = interactionHandler;
 
 	public required string Message { get; set; }
 	public bool OwnerOnly { get; set; }
@@ -32,7 +33,7 @@ internal sealed class UserSayTriggerRoomItem(IRoom room, int id, IUserInfo owner
 
 	public override void Interact(IUserRoomUnit unit, int state)
 	{
-		unit.User.SendAsync(new WiredFurniTriggerOutgoingPacket(this.Id, this.Message));
+		unit.User.SendAsync(new WiredFurniTriggerOutgoingPacket(this.Id, this.Furniture.Id, TriggerType.UnitSay, 0, [], [], this.Message));
 	}
 
 	public JsonDocument GetExtraData()

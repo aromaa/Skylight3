@@ -74,10 +74,16 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 		FloorItemEntity entity = new()
 		{
 			FurnitureId = furniture.Id,
-			UserId = this.user.Profile.Id,
-
-			ExtraData = extraData
+			UserId = this.user.Profile.Id
 		};
+
+		if (extraData is not null)
+		{
+			entity.Data = new FloorItemDataEntity
+			{
+				ExtraData = extraData
+			};
+		}
 
 		this.floorItems ??= [];
 		this.floorItems.Add(entity);
@@ -91,10 +97,16 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 		WallItemEntity entity = new()
 		{
 			FurnitureId = furniture.Id,
-			UserId = this.user.Profile.Id,
-
-			ExtraData = extraData
+			UserId = this.user.Profile.Id
 		};
+
+		if (extraData is not null)
+		{
+			entity.Data = new WallItemDataEntity
+			{
+				ExtraData = extraData
+			};
+		}
 
 		this.wallItems ??= [];
 		this.wallItems.Add(entity);
@@ -129,7 +141,7 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 			{
 				this.furnitures.TryGetFloorFurniture(item.FurnitureId, out IFloorFurniture? furniture);
 
-				items.Add(this.furnitureInventoryItemStrategy.CreateFurnitureItem(item.Id, this.user.Profile, furniture!, item.ExtraData));
+				items.Add(this.furnitureInventoryItemStrategy.CreateFurnitureItem(item.Id, this.user.Profile, furniture!, item.Data?.ExtraData));
 			}
 		}
 
@@ -139,7 +151,7 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 			{
 				this.furnitures.TryGetWallFurniture(item.FurnitureId, out IWallFurniture? furniture);
 
-				items.Add(this.furnitureInventoryItemStrategy.CreateFurnitureItem(item.Id, this.user.Profile, furniture!, item.ExtraData));
+				items.Add(this.furnitureInventoryItemStrategy.CreateFurnitureItem(item.Id, this.user.Profile, furniture!, item.Data?.ExtraData));
 			}
 		}
 

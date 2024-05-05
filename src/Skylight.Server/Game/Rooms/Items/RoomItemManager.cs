@@ -76,6 +76,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 		await foreach (FloorItemEntity floorItem in dbContext.FloorItems
 						   .AsNoTracking()
 						   .Where(i => i.RoomId == this.room.Info.Id)
+						   .Include(i => i.Data)
 						   .AsAsyncEnumerable()
 						   .WithCancellation(cancellationToken)
 						   .ConfigureAwait(false))
@@ -97,7 +98,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 
 			Point3D position = new(floorItem.X, floorItem.Y, floorItem.Z);
 
-			this.AddItemInternal(this.floorRoomItemStrategy.CreateFloorItem(floorItem.Id, this.room, owner, furniture, position, floorItem.Direction, floorItem.ExtraData));
+			this.AddItemInternal(this.floorRoomItemStrategy.CreateFloorItem(floorItem.Id, this.room, owner, furniture, position, floorItem.Direction, floorItem.Data?.ExtraData));
 		}
 
 		if (updateUsers is { Count: > 0 })
@@ -135,7 +136,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 			Point2D location = new(wallItem.LocationX, wallItem.LocationY);
 			Point2D position = new(wallItem.PositionX, wallItem.PositionY);
 
-			this.AddItemInternal(this.wallRoomItemStrategy.CreateWallItem(wallItem.Id, this.room, owner, furniture, location, position, wallItem.ExtraData));
+			this.AddItemInternal(this.wallRoomItemStrategy.CreateWallItem(wallItem.Id, this.room, owner, furniture, location, position, wallItem.Data?.ExtraData));
 		}
 
 		if (updateUsers is { Count: > 0 })
@@ -372,7 +373,10 @@ internal sealed class RoomItemManager : IRoomItemManager
 
 				if (floorRoomItem is IFurnitureItemData furnitureData)
 				{
-					item.ExtraData = furnitureData.GetExtraData();
+					item.Data = new FloorItemDataEntity
+					{
+						ExtraData = furnitureData.GetExtraData()
+					};
 				}
 			}
 
@@ -394,7 +398,10 @@ internal sealed class RoomItemManager : IRoomItemManager
 
 				if (wallRoomItem is IFurnitureItemData furnitureData)
 				{
-					item.ExtraData = furnitureData.GetExtraData();
+					item.Data = new WallItemDataEntity
+					{
+						ExtraData = furnitureData.GetExtraData()
+					};
 				}
 			}
 
@@ -403,6 +410,31 @@ internal sealed class RoomItemManager : IRoomItemManager
 			this.floorItemsDatabaseQueue.Clear();
 			this.wallItemsDatabaseQueue.Clear();
 		}
+	}
+
+	public bool TryGetItem(int stripId, [NotNullWhen(true)] out IRoomItem? item)
+	{
+		if (stripId >= 0)
+		{
+			if (this.floorItems.TryGetValue(stripId, out IFloorRoomItem? floorItem))
+			{
+				item = floorItem;
+
+				return true;
+			}
+		}
+		else
+		{
+			if (this.wallItems.TryGetValue(stripId, out IWallRoomItem? wallItem))
+			{
+				item = wallItem;
+
+				return true;
+			}
+		}
+
+		item = null;
+		return false;
 	}
 
 	public bool TryGetFloorItem(int id, [NotNullWhen(true)] out IFloorRoomItem? item) => this.floorItems.TryGetValue(id, out item);

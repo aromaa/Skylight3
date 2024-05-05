@@ -180,7 +180,7 @@ internal sealed class RoomUnit : IUserRoomUnit
 
 	private bool TriggerOnSayWired(string message, int styleId = 0, int trackingId = -1)
 	{
-		if (!this.Room.ItemManager.TryGetInteractionHandler(out IUserSayTriggerInteractionHandler? interactionHandler) || !interactionHandler.OnSay(this, message))
+		if (!this.Room.ItemManager.TryGetInteractionHandler(out IUnitSayTriggerInteractionHandler? interactionHandler) || !interactionHandler.OnSay(this, message))
 		{
 			return false;
 		}

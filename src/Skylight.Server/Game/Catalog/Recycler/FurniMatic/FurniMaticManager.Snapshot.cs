@@ -73,7 +73,10 @@ internal partial class FurniMaticManager
 			{
 				UserId = user.Profile.Id,
 				FurnitureId = giftFurniture.Id,
-				ExtraData = JsonSerializer.SerializeToDocument(this.timeProvider.GetUtcNow().UtcDateTime)
+				Data = new FloorItemDataEntity
+				{
+					ExtraData = JsonSerializer.SerializeToDocument(this.timeProvider.GetUtcNow().UtcDateTime)
+				}
 			};
 
 			try
@@ -126,7 +129,7 @@ internal partial class FurniMaticManager
 				return null;
 			}
 
-			user.Inventory.AddUnseenFloorItem(this.furnitureInventoryItemStrategy.CreateFurnitureItem(giftItemEntity.Id, user.Profile, giftFurniture, giftItemEntity.ExtraData));
+			user.Inventory.AddUnseenFloorItem(this.furnitureInventoryItemStrategy.CreateFurnitureItem(giftItemEntity.Id, user.Profile, giftFurniture, giftItemEntity.Data?.ExtraData));
 
 			return prize;
 		}
