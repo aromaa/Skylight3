@@ -1,5 +1,5 @@
-﻿using Skylight.API.Game.Furniture.Floor.Wired.Effects;
-using Skylight.API.Game.Furniture;
+﻿using Skylight.API.Game.Furniture;
+using Skylight.API.Game.Furniture.Floor.Wired.Effects;
 
 namespace Skylight.API.Game.Rooms.Items.Floor.Wired.Effects;
 
