@@ -12,13 +12,13 @@ using Skylight.Protocol.Packets.Outgoing.UserDefinedRoomEvents;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor.Wired.Triggers;
 
-internal sealed class UnitUseItemTriggerRoomItem(IRoom room, int id, IUserInfo owner, IUnitUseItemTriggerFurniture furniture, Point3D position, int direction, IUnitUseItemTriggerInteractionHandler interactionHandler,
+internal sealed class UnitWalkOffTriggerRoomItem(IRoom room, int id, IUserInfo owner, IUnitWalkOffTriggerFurniture furniture, Point3D position, int direction, IUnitWalkOffTriggerInteractionHandler interactionHandler,
 	HashSet<IRoomItem>? selectedItems, JsonDocument? extraData)
-	: WiredTriggerRoomItem(room, id, owner, position, direction), IUnitUseItemTriggerRoomItem
+	: WiredTriggerRoomItem(room, id, owner, position, direction), IUnitWalkOffTriggerRoomItem
 {
-	public override IUnitUseItemTriggerFurniture Furniture { get; } = furniture;
+	public override IUnitWalkOffTriggerFurniture Furniture { get; } = furniture;
 
-	private readonly IUnitUseItemTriggerInteractionHandler interactionHandler = interactionHandler;
+	private readonly IUnitWalkOffTriggerInteractionHandler interactionHandler = interactionHandler;
 
 	private LazyRoomItemSetHolder selectedItems = selectedItems is null
 		? new LazyRoomItemSetHolder(WiredUtils.GetSelectedItems(extraData))

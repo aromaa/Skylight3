@@ -65,6 +65,10 @@ internal partial class FurnitureManager
 						"wired_show_message" => new ShowMessageEffectFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
 						"wired_unit_enter_room" => new UnitEnterRoomTriggerFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
 						"wired_unit_use_item" => new UnitUseItemTriggerFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
+						"wired_cycle_item_state" => new CycleItemStateEffectFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
+						"wired_teleport_unit" => new TeleportUnitEffectFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
+						"wired_unit_walk_on" => new UnitWalkOnTriggerFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
+						"wired_unit_walk_off" => new UnitWalkOffTriggerFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
 
 						_ => new BasicFloorFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0])
 					};

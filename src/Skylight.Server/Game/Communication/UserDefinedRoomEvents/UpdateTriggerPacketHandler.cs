@@ -57,6 +57,14 @@ internal sealed class UpdateTriggerPacketHandler<T> : UserPacketHandler<T>
 			{
 				useItem.SelectedItems = selectedItems;
 			}
+			else if (trigger is IUnitWalkOffTriggerRoomItem walkOff)
+			{
+				walkOff.SelectedItems = selectedItems;
+			}
+			else if (trigger is IUnitWalkOnTriggerRoomItem walkOn)
+			{
+				walkOn.SelectedItems = selectedItems;
+			}
 
 			user.SendAsync(new WiredSaveSuccessOutgoingPacket());
 		});

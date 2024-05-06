@@ -44,8 +44,10 @@ public sealed class SkylightContext(DbContextOptions<SkylightContext> options) :
 	public DbSet<FloorFurnitureEntity> FloorFurniture { get; init; } = null!;
 	public DbSet<WallFurnitureEntity> WallFurniture { get; init; } = null!;
 
+	public DbSet<FloorItemDataEntity> FloorItemsData { get; init; } = null!;
 	public DbSet<FloorItemEntity> FloorItems { get; init; } = null!;
 	public DbSet<PublicRoomItemEntity> PublicRoomItems { get; init; } = null!;
+	public DbSet<WallItemDataEntity> WallItemsData { get; init; } = null!;
 	public DbSet<WallItemEntity> WallItems { get; init; } = null!;
 
 	public DbSet<RoomFlatCatEntity> FlatCats { get; init; } = null!;

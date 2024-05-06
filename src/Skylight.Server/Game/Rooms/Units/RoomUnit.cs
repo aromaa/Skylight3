@@ -23,7 +23,22 @@ internal sealed class RoomUnit : IUserRoomUnit
 
 	public bool InRoom { get; internal set; } = true;
 
-	public Point3D Position { get; private set; }
+	private Point3D position;
+
+	public Point3D Position
+	{
+		get => this.position;
+		set
+		{
+			this.SetPosition(value);
+
+			this.Room.SendAsync(new UserUpdateOutgoingPacket(
+			[
+				new RoomUnitUpdateData(this.Id, this.Position.X, this.Position.Y, this.Position.Z, this.Rotation.X, this.Rotation.Y, string.Empty)
+			]));
+		}
+	}
+
 	public Point2D Rotation { get; private set; }
 
 	public Point3D NextStepPosition { get; private set; }
@@ -53,7 +68,7 @@ internal sealed class RoomUnit : IUserRoomUnit
 	{
 		if (this.Moving)
 		{
-			this.Position = this.NextStepPosition;
+			this.position = this.NextStepPosition;
 		}
 
 		if (this.Pathfinding)
@@ -83,7 +98,7 @@ internal sealed class RoomUnit : IUserRoomUnit
 
 	private void SetPositionInternal(Point3D position)
 	{
-		this.Position = position;
+		this.position = position;
 		this.NextStepPosition = position;
 		this.TargetLocation = position.XY;
 

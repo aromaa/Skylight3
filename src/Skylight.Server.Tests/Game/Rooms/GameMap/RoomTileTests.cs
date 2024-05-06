@@ -38,7 +38,7 @@ public class RoomTileTests
 
 			Mock<IRoomMap> roomMapMock = new();
 
-			RoomTile rangeMap = new(roomMapMock.Object, location, new RoomLayoutTile(0));
+			RoomTile rangeMap = new(null!, roomMapMock.Object, location, new RoomLayoutTile(0));
 
 			foreach ((double z, double height) in slices)
 			{

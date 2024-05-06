@@ -10,7 +10,7 @@ public interface IRoomUnit
 
 	public bool InRoom { get; }
 
-	public Point3D Position { get; }
+	public Point3D Position { get; set; }
 	public Point2D Rotation { get; }
 
 	public Point3D NextStepPosition { get; }

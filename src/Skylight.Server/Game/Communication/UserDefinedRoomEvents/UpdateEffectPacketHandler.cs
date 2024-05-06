@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Net.Communication.Attributes;
+using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Floor.Wired.Effects;
 using Skylight.API.Game.Users;
@@ -35,10 +36,10 @@ internal sealed class UpdateEffectPacketHandler<T> : UserPacketHandler<T>
 				return;
 			}
 
-			List<IFloorRoomItem> selectedItems = [];
+			HashSet<IRoomItem> selectedItems = [];
 			foreach (int selectedItemId in selectedItemIds)
 			{
-				if (!room.ItemManager.TryGetFloorItem(selectedItemId, out IFloorRoomItem? selectedItem))
+				if (!room.ItemManager.TryGetItem(selectedItemId, out IRoomItem? selectedItem))
 				{
 					continue;
 				}
@@ -49,6 +50,15 @@ internal sealed class UpdateEffectPacketHandler<T> : UserPacketHandler<T>
 			if (effect is IShowMessageEffectRoomItem showMessage)
 			{
 				showMessage.Message = stringParameter;
+			}
+
+			if (effect is ICycleItemStateRoomItem cycle)
+			{
+				cycle.SelectedItems = selectedItems;
+			}
+			else if (effect is ITeleportUnitEffectRoomItem teleport)
+			{
+				teleport.SelectedItems = selectedItems;
 			}
 
 			effect.EffectDelay = actionDelay;

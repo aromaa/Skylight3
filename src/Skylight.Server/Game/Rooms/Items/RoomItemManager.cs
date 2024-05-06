@@ -355,6 +355,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 		{
 			using SkylightContext dbContext = this.dbContextFactory.CreateDbContext();
 
+			List<FloorItemDataEntity> itemData = [];
 			foreach (IFloorRoomItem floorRoomItem in this.floorItemsDatabaseQueue)
 			{
 				FloorItemEntity item = new()
@@ -373,13 +374,15 @@ internal sealed class RoomItemManager : IRoomItemManager
 
 				if (floorRoomItem is IFurnitureItemData furnitureData)
 				{
-					item.Data = new FloorItemDataEntity
+					itemData.Add(new FloorItemDataEntity
 					{
+						FloorItemId = floorRoomItem.Id,
 						ExtraData = furnitureData.GetExtraData()
-					};
+					});
 				}
 			}
 
+			List<WallItemDataEntity> wallData = [];
 			foreach (IWallRoomItem wallRoomItem in this.wallItemsDatabaseQueue)
 			{
 				WallItemEntity item = new()
@@ -398,14 +401,18 @@ internal sealed class RoomItemManager : IRoomItemManager
 
 				if (wallRoomItem is IFurnitureItemData furnitureData)
 				{
-					item.Data = new WallItemDataEntity
+					wallData.Add(new WallItemDataEntity
 					{
+						WallItemId = wallRoomItem.Id,
 						ExtraData = furnitureData.GetExtraData()
-					};
+					});
 				}
 			}
 
 			dbContext.SaveChanges();
+
+			dbContext.WallItemsData.UpsertRange(wallData).Run();
+			dbContext.FloorItemsData.UpsertRange(itemData).Run();
 
 			this.floorItemsDatabaseQueue.Clear();
 			this.wallItemsDatabaseQueue.Clear();

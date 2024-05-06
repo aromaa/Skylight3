@@ -27,7 +27,9 @@ internal sealed class RoomItemInteractionManager : IRoomItemInteractionManager
 			[typeof(IWiredEffectInteractionHandler)] = wiredInteractionHandler,
 			[typeof(IUnitSayTriggerInteractionHandler)] = new UnitSayTriggerInteractionHandler(wiredInteractionHandler),
 			[typeof(IUnitEnterRoomTriggerInteractionHandler)] = new UnitEnterRoomTriggerInteractionHandler(wiredInteractionHandler),
-			[typeof(IUnitUseItemTriggerInteractionHandler)] = new UnitUseItemTriggerInteractionHandler(wiredInteractionHandler)
+			[typeof(IUnitUseItemTriggerInteractionHandler)] = new UnitUseItemTriggerInteractionHandler(wiredInteractionHandler),
+			[typeof(IUnitWalkOffTriggerInteractionHandler)] = new UnitWalkOffTriggerInteractionHandler(wiredInteractionHandler),
+			[typeof(IUnitWalkOnTriggerInteractionHandler)] = new UnitWalkOnTriggerInteractionHandler(wiredInteractionHandler)
 		};
 
 		return handlers;
@@ -69,6 +71,18 @@ internal sealed class RoomItemInteractionManager : IRoomItemInteractionManager
 		else if (furniture is IUnitUseItemTriggerFurniture)
 		{
 			handler = typeof(IUnitUseItemTriggerInteractionHandler);
+
+			return true;
+		}
+		else if (furniture is IUnitWalkOnTriggerFurniture)
+		{
+			handler = typeof(IUnitWalkOnTriggerInteractionHandler);
+
+			return true;
+		}
+		else if (furniture is IUnitWalkOffTriggerFurniture)
+		{
+			handler = typeof(IUnitWalkOffTriggerFurniture);
 
 			return true;
 		}

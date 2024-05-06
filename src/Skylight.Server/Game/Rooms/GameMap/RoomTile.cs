@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Skylight.API.Game.Rooms.Items.Floor;
+using Skylight.API.Game.Rooms.Items.Interactions.Wired.Triggers;
 using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Numerics;
@@ -10,6 +11,8 @@ namespace Skylight.Server.Game.Rooms.GameMap;
 
 internal sealed class RoomTile : IRoomTile
 {
+	private readonly Room room;
+
 	public IRoomMap Map { get; }
 	public Point3D Position { get; private set; }
 
@@ -18,8 +21,10 @@ internal sealed class RoomTile : IRoomTile
 
 	internal RoomLayoutTile LayoutTile { get; }
 
-	internal RoomTile(IRoomMap map, Point2D location, RoomLayoutTile layoutTile)
+	internal RoomTile(Room room, IRoomMap map, Point2D location, RoomLayoutTile layoutTile)
 	{
+		this.room = room;
+
 		this.Map = map;
 		this.Position = new Point3D(location, layoutTile.Height);
 
@@ -67,6 +72,12 @@ internal sealed class RoomTile : IRoomTile
 		bool result = this.roomUnits.Remove(unit.Id);
 
 		Debug.Assert(result);
+
+		IFloorRoomItem? item = this.FloorItems.FirstOrDefault(i => i.Position.Z + i.Height == unit.Position.Z);
+		if (item is not null && this.room.ItemManager.TryGetInteractionHandler(out IUnitWalkOffTriggerInteractionHandler? handler))
+		{
+			handler.OnWalkOff((IUserRoomUnit)unit, item);
+		}
 	}
 
 	public void WalkOn(IRoomUnit unit)
@@ -74,5 +85,11 @@ internal sealed class RoomTile : IRoomTile
 		bool result = this.roomUnits.TryAdd(unit.Id, unit);
 
 		Debug.Assert(result);
+
+		IFloorRoomItem? item = this.FloorItems.FirstOrDefault(i => i.Position.Z + i.Height == unit.Position.Z);
+		if (item is not null && this.room.ItemManager.TryGetInteractionHandler(out IUnitWalkOnTriggerInteractionHandler? handler))
+		{
+			handler.OnWalkOn((IUserRoomUnit)unit, item);
+		}
 	}
 }

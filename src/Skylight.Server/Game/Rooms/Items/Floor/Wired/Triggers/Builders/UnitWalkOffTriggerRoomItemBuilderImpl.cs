@@ -8,15 +8,15 @@ using Skylight.API.Game.Rooms.Items.Interactions.Wired.Triggers;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor.Wired.Triggers.Builders;
 
-internal sealed class UnitUseItemTriggerRoomItemBuilderImpl : FloorRoomItemBuilder
+internal sealed class UnitWalkOffTriggerRoomItemBuilderImpl : FloorRoomItemBuilder
 {
-	private IUnitUseItemTriggerFurniture? FurnitureValue { get; set; }
+	private IUnitWalkOffTriggerFurniture? FurnitureValue { get; set; }
 
 	private JsonDocument? ExtraDataValue { get; set; }
 
 	public override FloorRoomItemBuilder Furniture(IFloorFurniture furniture)
 	{
-		this.FurnitureValue = (IUnitUseItemTriggerFurniture)furniture;
+		this.FurnitureValue = (IUnitWalkOffTriggerFurniture)furniture;
 
 		return this;
 	}
@@ -32,12 +32,12 @@ internal sealed class UnitUseItemTriggerRoomItemBuilderImpl : FloorRoomItemBuild
 	{
 		this.CheckValid();
 
-		if (!this.RoomValue.ItemManager.TryGetInteractionHandler(out IUnitUseItemTriggerInteractionHandler? handler))
+		if (!this.RoomValue.ItemManager.TryGetInteractionHandler(out IUnitWalkOffTriggerInteractionHandler? handler))
 		{
-			throw new Exception($"{typeof(IUnitUseItemTriggerInteractionHandler)} not found");
+			throw new Exception($"{typeof(IUnitWalkOffTriggerInteractionHandler)} not found");
 		}
 
-		return new UnitUseItemTriggerRoomItem(this.RoomValue, this.ItemIdValue, this.OwnerValue, this.FurnitureValue, this.PositionValue, this.DirectionValue, handler, null, this.ExtraDataValue);
+		return new UnitWalkOffTriggerRoomItem(this.RoomValue, this.ItemIdValue, this.OwnerValue, this.FurnitureValue, this.PositionValue, this.DirectionValue, handler, null, this.ExtraDataValue);
 	}
 
 	[MemberNotNull(nameof(this.FurnitureValue))]

@@ -37,6 +37,10 @@ internal sealed class FloorRoomItemStrategy : IFloorRoomItemStrategy
 		this.RegisterBuilder<IShowMessageEffectFurniture, ShowMessageEffectRoomItemBuilderImpl>();
 		this.RegisterBuilder<IUnitEnterRoomTriggerFurniture, UnitEnterRoomTriggerRoomItemBuilderImpl>();
 		this.RegisterBuilder<IUnitUseItemTriggerFurniture, UnitUseItemTriggerRoomItemBuilderImpl>();
+		this.RegisterBuilder<ICycleItemStateEffectFurniture, CycleItemStateEffectRoomItemBuilderImpl>();
+		this.RegisterBuilder<ITeleportUnitEffectFurniture, TeleportUnitEffectRoomItemBuilderImpl>();
+		this.RegisterBuilder<IUnitWalkOffTriggerFurniture, UnitWalkOffTriggerRoomItemBuilderImpl>();
+		this.RegisterBuilder<IUnitWalkOnTriggerFurniture, UnitWalkOnTriggerRoomItemBuilderImpl>();
 	}
 
 	private void RegisterBuilder<TFurniture, TBuilder>()

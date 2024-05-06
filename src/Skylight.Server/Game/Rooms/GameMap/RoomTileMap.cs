@@ -35,7 +35,7 @@ internal sealed class RoomTileMap : IRoomMap
 		{
 			for (int y = 0; y < layout.Size.Y; y++)
 			{
-				builder[x, y] = new RoomTile(this, new Point2D(x, y), ((RoomLayout)layout).Tiles[x, y]);
+				builder[x, y] = new RoomTile(room, this, new Point2D(x, y), ((RoomLayout)layout).Tiles[x, y]);
 			}
 		}
 
