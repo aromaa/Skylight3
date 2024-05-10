@@ -2,7 +2,7 @@
 
 namespace Skylight.API.Game.Furniture.Floor;
 
-public interface IVariableHeightFurniture : IFloorFurniture, IMultiStateFurniture
+public interface IVariableHeightFurniture : IMultiStateFloorFurniture
 {
 	public ImmutableArray<double> Heights { get; }
 }

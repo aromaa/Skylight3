@@ -2,7 +2,7 @@
 
 namespace Skylight.API.Game.Furniture.Floor;
 
-public interface ISoundSetFurniture : IFloorFurniture
+public interface ISoundSetFurniture : IPlainFloorFurniture
 {
 	public int SoundSetId { get; }
 

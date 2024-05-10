@@ -1,3 +1,3 @@
 ﻿namespace Skylight.API.Game.Furniture.Wall;
 
-public interface IBasicWallFurniture : IWallFurniture;
+public interface IBasicWallFurniture : IMultiStateWallFurniture;

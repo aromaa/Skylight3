@@ -13,7 +13,7 @@ internal class MultiStateFloorRoomItem<T>(IRoom room, int id, IUserInfo owner, T
 {
 	private readonly T furniture = furniture;
 
-	public int State { get; private set; }
+	public int State { get; set; }
 
 	public override double Height => this.Furniture.DefaultHeight;
 

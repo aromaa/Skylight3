@@ -10,5 +10,4 @@ public interface IInteractableRoomItem : IRoomItem, IFurnitureItem<IInteractable
 	public void Interact(IUserRoomUnit unit, int state);
 
 	IInteractableFurniture IFurnitureItem<IInteractableFurniture>.Furniture => this.Furniture;
-	IFurniture IFurnitureItem<IFurniture>.Furniture => this.Furniture;
 }

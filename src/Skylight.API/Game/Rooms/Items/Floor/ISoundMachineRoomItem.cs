@@ -4,7 +4,7 @@ using Skylight.API.Game.Furniture.Floor;
 
 namespace Skylight.API.Game.Rooms.Items.Floor;
 
-public interface ISoundMachineRoomItem : IFloorRoomItem, IFurnitureItem<ISoundMachineFurniture>
+public interface ISoundMachineRoomItem : IStatefulFloorRoomItem, IFurnitureItem<ISoundMachineFurniture>
 {
 	public new ISoundMachineFurniture Furniture { get; }
 
@@ -15,6 +15,6 @@ public interface ISoundMachineRoomItem : IFloorRoomItem, IFurnitureItem<ISoundMa
 	public void AddSoundSet(int slot, ISoundSetFurniture soundSet);
 	public void RemoveSoundSet(int slot);
 
-	IFloorFurniture IFloorRoomItem.Furniture => this.Furniture;
+	IStatefulFloorFurniture IStatefulFloorRoomItem.Furniture => this.Furniture;
 	ISoundMachineFurniture IFurnitureItem<ISoundMachineFurniture>.Furniture => this.Furniture;
 }

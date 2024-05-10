@@ -161,11 +161,11 @@ internal partial class FurniMaticManager
 			foreach (IFurniture prizeFurniture in prize.Furnitures)
 			{
 				//TODO: Maybe make more general "ICatalogProduct" or just use it as impl detail
-				if (prizeFurniture is IBasicFloorFurniture floorFurniture)
+				if (prizeFurniture is IStaticFloorFurniture floorFurniture)
 				{
 					transaction.AddFloorItem(floorFurniture, null);
 				}
-				else if (prizeFurniture is IBasicWallFurniture wallFurniture)
+				else if (prizeFurniture is IStaticWallFurniture wallFurniture)
 				{
 					transaction.AddWallItem(wallFurniture, null);
 				}

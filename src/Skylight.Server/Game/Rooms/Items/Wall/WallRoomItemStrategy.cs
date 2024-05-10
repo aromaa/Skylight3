@@ -23,7 +23,7 @@ internal sealed class WallRoomItemStrategy : IWallRoomItemStrategy
 	{
 		this.serviceProvider = serviceProvider;
 
-		this.RegisterBuilder<IBasicWallFurniture, BasicWallRoomItemBuilderImpl>();
+		this.RegisterBuilder<IStaticWallFurniture, StaticWallRoomItemBuilderImpl>();
 		this.RegisterBuilder<IStickyNoteFurniture, StickyNoteRoomItemBuilderImpl>();
 	}
 

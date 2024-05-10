@@ -12,6 +12,7 @@ internal sealed class SoundMachineRoomItem(IRoom room, int id, IUserInfo owner, 
 	: FloorRoomItem(room, id, owner, position, direction), ISoundMachineRoomItem
 {
 	public override ISoundMachineFurniture Furniture { get; } = furniture;
+	public int State { get; }
 
 	private readonly ISoundMachineInteractionManager handler = handler;
 

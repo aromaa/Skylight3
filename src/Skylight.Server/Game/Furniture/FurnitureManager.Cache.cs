@@ -70,7 +70,7 @@ internal partial class FurnitureManager
 						"wired_unit_walk_on" => new UnitWalkOnTriggerFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
 						"wired_unit_walk_off" => new UnitWalkOffTriggerFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
 
-						_ => new BasicFloorFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0])
+						_ => new StaticFloorFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0])
 					};
 
 					floorFurnitures.Add(item.Id, item);
@@ -90,7 +90,7 @@ internal partial class FurnitureManager
 						//Todo: Factory
 						"sticky_note" => new StickyNoteFurniture(entity.Id),
 
-						_ => new BasicWallFurniture(entity.Id)
+						_ => new StaticWallFurniture(entity.Id)
 					};
 
 					wallFurnitures.Add(item.Id, item);

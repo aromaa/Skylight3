@@ -27,7 +27,7 @@ internal sealed class FloorRoomItemStrategy : IFloorRoomItemStrategy
 	{
 		this.serviceProvider = serviceProvider;
 
-		this.RegisterBuilder<IBasicFloorFurniture, BasicFloorRoomItemBuilderImpl>();
+		this.RegisterBuilder<IStaticFloorFurniture, StaticFloorRoomItemBuilderImpl>();
 		this.RegisterBuilder<IFurniMaticGiftFurniture, FurniMaticGiftRoomItemBuilderImpl>();
 		this.RegisterBuilder<IStickyNotePoleFurniture, StickyNotePoleRoomItemBuilderImpl>();
 		this.RegisterBuilder<ISoundMachineFurniture, SoundMachineRoomItemBuilderImpl>();

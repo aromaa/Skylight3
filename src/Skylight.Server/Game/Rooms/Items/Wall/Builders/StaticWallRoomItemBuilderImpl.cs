@@ -6,14 +6,14 @@ using Skylight.API.Game.Rooms.Items.Wall.Builders;
 
 namespace Skylight.Server.Game.Rooms.Items.Wall.Builders;
 
-internal sealed class BasicWallRoomItemBuilderImpl
+internal sealed class StaticWallRoomItemBuilderImpl
 	: WallRoomItemBuilder, IFurnitureItemBuilder<IWallFurniture, IWallRoomItem>
 {
-	private IBasicWallFurniture? FurnitureValue { get; set; }
+	private IStaticWallFurniture? FurnitureValue { get; set; }
 
-	public override BasicWallRoomItemBuilderImpl Furniture(IWallFurniture furniture)
+	public override StaticWallRoomItemBuilderImpl Furniture(IWallFurniture furniture)
 	{
-		this.FurnitureValue = (IBasicWallFurniture)furniture;
+		this.FurnitureValue = (IStaticWallFurniture)furniture;
 
 		return this;
 	}
@@ -22,7 +22,7 @@ internal sealed class BasicWallRoomItemBuilderImpl
 	{
 		this.CheckValid();
 
-		return new BasicWallRoomItem(this.RoomValue, this.ItemIdValue, this.OwnerValue, this.FurnitureValue, this.LocationValue, this.PositionValue, 0);
+		return new StaticWallRoomItem(this.RoomValue, this.ItemIdValue, this.OwnerValue, this.FurnitureValue, this.LocationValue, this.PositionValue, 0);
 	}
 
 	[MemberNotNull(nameof(this.FurnitureValue))]

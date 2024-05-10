@@ -2,12 +2,13 @@
 
 namespace Skylight.API.Game.Rooms.Items;
 
-public interface IMultiStateRoomItem : IInteractableRoomItem, IFurnitureItem<IMultiStateFurniture>
+public interface IMultiStateRoomItem : IStatefulRoomItem, IFurnitureItem<IMultiStateFurniture>
 {
 	public new IMultiStateFurniture Furniture { get; }
 
-	public int State { get; }
+	public new int State { get; set; }
 
-	IInteractableFurniture IInteractableRoomItem.Furniture => this.Furniture;
+	int IStatefulRoomItem.State => this.State;
+	IStatefulFurniture IStatefulRoomItem.Furniture => this.Furniture;
 	IMultiStateFurniture IFurnitureItem<IMultiStateFurniture>.Furniture => this.Furniture;
 }

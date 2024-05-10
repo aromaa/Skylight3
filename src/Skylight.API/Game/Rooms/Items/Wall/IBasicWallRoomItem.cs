@@ -3,10 +3,10 @@ using Skylight.API.Game.Furniture.Wall;
 
 namespace Skylight.API.Game.Rooms.Items.Wall;
 
-public interface IBasicWallRoomItem : IWallRoomItem, IFurnitureItem<IBasicWallFurniture>
+public interface IBasicWallRoomItem : IMultiStateWallRoomItem, IFurnitureItem<IBasicWallFurniture>
 {
 	public new IBasicWallFurniture Furniture { get; }
 
-	IWallFurniture IWallRoomItem.Furniture => this.Furniture;
+	IMultiStateWallFurniture IMultiStateWallRoomItem.Furniture => this.Furniture;
 	IBasicWallFurniture IFurnitureItem<IBasicWallFurniture>.Furniture => this.Furniture;
 }

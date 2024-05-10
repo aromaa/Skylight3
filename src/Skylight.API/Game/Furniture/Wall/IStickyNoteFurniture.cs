@@ -3,7 +3,7 @@ using System.Drawing;
 
 namespace Skylight.API.Game.Furniture.Wall;
 
-public interface IStickyNoteFurniture : IWallFurniture
+public interface IStickyNoteFurniture : IComplexWallFurniture
 {
 	public FrozenSet<Color> ValidColors { get; }
 
