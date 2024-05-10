@@ -224,7 +224,7 @@ internal sealed class IntervalTree<TKey, TValue>
 				node = node.Left;
 			}
 
-			while (stack.TryPeek(out node))
+			while (stack.TryPop(out node))
 			{
 				foreach (TValue item in node.Items)
 				{
