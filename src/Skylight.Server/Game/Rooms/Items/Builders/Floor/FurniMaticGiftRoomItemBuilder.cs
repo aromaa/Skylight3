@@ -1,5 +1,4 @@
-﻿using Skylight.API.Game.Furniture;
-using Skylight.API.Game.Furniture.Floor;
+﻿using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Floor.Data;
 using Skylight.Server.Game.Rooms.Items.Floor;
