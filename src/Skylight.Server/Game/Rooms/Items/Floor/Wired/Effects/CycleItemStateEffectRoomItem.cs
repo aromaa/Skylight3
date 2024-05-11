@@ -13,8 +13,8 @@ using Skylight.Protocol.Packets.Outgoing.UserDefinedRoomEvents;
 namespace Skylight.Server.Game.Rooms.Items.Floor.Wired.Effects;
 
 internal sealed class CycleItemStateEffectRoomItem(IRoom room, int id, IUserInfo owner, ICycleItemStateEffectFurniture furniture, Point3D position, int direction, IWiredEffectInteractionHandler interactionHandler,
-	HashSet<IRoomItem>? selectedItems, JsonDocument? extraData)
-	: WiredEffectRoomItem(room, id, owner, position, direction), ICycleItemStateRoomItem
+	HashSet<IRoomItem>? selectedItems, JsonDocument? extraData, int effectDelay)
+	: WiredEffectRoomItem(room, id, owner, position, direction, effectDelay), ICycleItemStateRoomItem
 {
 	public override ICycleItemStateEffectFurniture Furniture { get; } = furniture;
 

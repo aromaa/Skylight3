@@ -22,16 +22,16 @@ internal sealed class FurnitureInventoryItemStrategy : IFurnitureInventoryItemSt
 	{
 		this.serviceProvider = serviceProvider;
 
-		this.RegisterBuilder<IFloorFurniture, DefaultFloorInventoryItemBuilderImpl>();
-		this.RegisterBuilder<IWallFurniture, DefaultWallInventoryItemBuilderImpl>();
-		this.RegisterBuilder<IStickyNoteFurniture, StickyNoteInventoryItemBuilderImpl>();
-		this.RegisterBuilder<IFurniMaticGiftFurniture, FurniMaticGiftInventoryItemBuilderImpl>();
-		this.RegisterBuilder<ISoundSetFurniture, SoundSetInventoryItemBuilderImpl>();
+		this.RegisterBuilder<IFloorFurniture, DefaultFloorInventoryItemBuilder>();
+		this.RegisterBuilder<IWallFurniture, DefaultWallInventoryItemBuilder>();
+		this.RegisterBuilder<IStickyNoteFurniture, StickyNoteInventoryItemBuilder>();
+		this.RegisterBuilder<IFurniMaticGiftFurniture, FurniMaticGiftInventoryItemBuilder>();
+		this.RegisterBuilder<ISoundSetFurniture, SoundSetInventoryItemBuilder>();
 	}
 
 	private void RegisterBuilder<TFurniture, TBuilder>()
 		where TFurniture : IFurniture
-		where TBuilder : FurnitureInventoryItemBuilder
+		where TBuilder : IFurnitureInventoryItemBuilder
 	{
 		this.builders.Add(typeof(TFurniture), ActivatorUtilities.CreateFactory(typeof(TBuilder), []));
 	}
@@ -55,16 +55,16 @@ internal sealed class FurnitureInventoryItemStrategy : IFurnitureInventoryItemSt
 	{
 		ObjectFactory builderFactory = this.typeCache.GetOrAdd(furniture.GetType(), static (type, instance) => instance.Get(type), this);
 
-		FurnitureInventoryItemBuilder itemBuilder = (FurnitureInventoryItemBuilder)builderFactory.Invoke(this.serviceProvider, []);
+		IFurnitureInventoryItemBuilder<TInventoryItem> itemBuilder = (IFurnitureInventoryItemBuilder<TInventoryItem>)builderFactory.Invoke(this.serviceProvider, []);
 		if (extraData is not null)
 		{
 			itemBuilder.ExtraData(extraData);
 		}
 
-		return (TInventoryItem)itemBuilder
-			.ItemId(itemId)
-			.Owner(owner)
+		return itemBuilder
 			.Furniture(furniture)
+			.Owner(owner)
+			.Id(itemId)
 			.Build();
 	}
 
@@ -74,13 +74,13 @@ internal sealed class FurnitureInventoryItemStrategy : IFurnitureInventoryItemSt
 	{
 		ObjectFactory builderFactory = this.typeCache.GetOrAdd(furniture.GetType(), static (type, instance) => instance.Get(type), this);
 
-		FurnitureInventoryItemBuilder itemBuilder = (FurnitureInventoryItemBuilder)builderFactory.Invoke(this.serviceProvider, []);
-		builder((TBuilder)(object)itemBuilder);
+		IFurnitureInventoryItemBuilder<TInventoryItem> itemBuilder = (IFurnitureInventoryItemBuilder<TInventoryItem>)builderFactory.Invoke(this.serviceProvider, []);
+		builder((TBuilder)itemBuilder);
 
-		return (TInventoryItem)itemBuilder
-			.ItemId(itemId)
-			.Owner(owner)
+		return itemBuilder
 			.Furniture(furniture)
+			.Owner(owner)
+			.Id(itemId)
 			.Build();
 	}
 }

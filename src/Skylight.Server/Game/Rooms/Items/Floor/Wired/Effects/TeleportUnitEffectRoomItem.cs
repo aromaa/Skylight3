@@ -14,8 +14,8 @@ using Skylight.Protocol.Packets.Outgoing.UserDefinedRoomEvents;
 namespace Skylight.Server.Game.Rooms.Items.Floor.Wired.Effects;
 
 internal sealed class TeleportUnitEffectRoomItem(IRoom room, int id, IUserInfo owner, ITeleportUnitEffectFurniture furniture, Point3D position, int direction, IWiredEffectInteractionHandler interactionHandler,
-	HashSet<IRoomItem>? selectedItems, JsonDocument? extraData)
-	: WiredEffectRoomItem(room, id, owner, position, direction), ITeleportUnitEffectRoomItem
+	HashSet<IRoomItem>? selectedItems, JsonDocument? extraData, int effectDelay)
+	: WiredEffectRoomItem(room, id, owner, position, direction, effectDelay), ITeleportUnitEffectRoomItem
 {
 	public override ITeleportUnitEffectFurniture Furniture { get; } = furniture;
 

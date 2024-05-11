@@ -12,14 +12,15 @@ using Skylight.Protocol.Packets.Outgoing.UserDefinedRoomEvents;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor.Wired.Effects;
 
-internal sealed class ShowMessageEffectRoomItem(IRoom room, int id, IUserInfo owner, IShowMessageEffectFurniture furniture, Point3D position, int direction, IWiredEffectInteractionHandler interactionHandler)
-	: WiredEffectRoomItem(room, id, owner, position, direction), IShowMessageEffectRoomItem
+internal sealed class ShowMessageEffectRoomItem(IRoom room, int id, IUserInfo owner, IShowMessageEffectFurniture furniture, Point3D position, int direction, IWiredEffectInteractionHandler interactionHandler,
+	string message, int effectDelay)
+	: WiredEffectRoomItem(room, id, owner, position, direction, effectDelay), IShowMessageEffectRoomItem
 {
 	private readonly IWiredEffectInteractionHandler interactionHandler = interactionHandler;
 
 	public override IShowMessageEffectFurniture Furniture { get; } = furniture;
 
-	public required string Message { get; set; }
+	public string Message { get; set; } = message;
 
 	public override void OnPlace()
 	{

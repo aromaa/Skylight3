@@ -7,7 +7,7 @@ using Net.Communication.Attributes;
 using Skylight.API.Game.Inventory.Items.Wall;
 using Skylight.API.Game.Rooms.Items.Interactions;
 using Skylight.API.Game.Rooms.Items.Wall;
-using Skylight.API.Game.Rooms.Items.Wall.Builders;
+using Skylight.API.Game.Rooms.Items.Wall.Data;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
 using Skylight.Infrastructure;
@@ -126,7 +126,7 @@ internal sealed partial class AddSpamWallPostItPacketHandler<T>(IDbContextFactor
 						return false;
 					}
 
-					room.ItemManager.AddItem(this.wallRoomItemStrategy.CreateWallItem(inventoryItem, room, location, position, (StickyNoteRoomItemBuilder builder) => builder.Color(color).Text(text)));
+					room.ItemManager.AddItem(this.wallRoomItemStrategy.CreateWallItem(inventoryItem, room, location, position, (IStickyNoteRoomItemDataBuilder builder) => builder.Color(color).Text(text)));
 
 					return true;
 				}).TryGetOrSuppressThrowing(out bool placeAwait, out ValueTaskExtensions.Awaiter<bool> placeAwaiter) ? placeAwait : await placeAwaiter;

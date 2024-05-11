@@ -6,13 +6,13 @@ using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Furniture.Floor.Wired.Effects;
 using Skylight.API.Game.Furniture.Floor.Wired.Triggers;
 using Skylight.API.Game.Rooms;
+using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
-using Skylight.API.Game.Rooms.Items.Floor.Builders;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
-using Skylight.Server.Game.Rooms.Items.Floor.Builders;
-using Skylight.Server.Game.Rooms.Items.Floor.Wired.Effects.Builders;
-using Skylight.Server.Game.Rooms.Items.Floor.Wired.Triggers.Builders;
+using Skylight.Server.Game.Rooms.Items.Builders.Floor;
+using Skylight.Server.Game.Rooms.Items.Builders.Floor.Wired.Effects;
+using Skylight.Server.Game.Rooms.Items.Builders.Floor.Wired.Triggers;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor;
 
@@ -27,25 +27,25 @@ internal sealed class FloorRoomItemStrategy : IFloorRoomItemStrategy
 	{
 		this.serviceProvider = serviceProvider;
 
-		this.RegisterBuilder<IStaticFloorFurniture, StaticFloorRoomItemBuilderImpl>();
-		this.RegisterBuilder<IFurniMaticGiftFurniture, FurniMaticGiftRoomItemBuilderImpl>();
-		this.RegisterBuilder<IStickyNotePoleFurniture, StickyNotePoleRoomItemBuilderImpl>();
-		this.RegisterBuilder<ISoundMachineFurniture, SoundMachineRoomItemBuilderImpl>();
-		this.RegisterBuilder<IRollerFurniture, RollerRoomItemBuilderImpl>();
-		this.RegisterBuilder<IMultiStateFloorFurniture, MultiStateFloorRoomItemBuilderImpl>();
-		this.RegisterBuilder<IUnitSayTriggerFurniture, UnitSayTriggerRoomItemBuilderImpl>();
-		this.RegisterBuilder<IShowMessageEffectFurniture, ShowMessageEffectRoomItemBuilderImpl>();
-		this.RegisterBuilder<IUnitEnterRoomTriggerFurniture, UnitEnterRoomTriggerRoomItemBuilderImpl>();
-		this.RegisterBuilder<IUnitUseItemTriggerFurniture, UnitUseItemTriggerRoomItemBuilderImpl>();
-		this.RegisterBuilder<ICycleItemStateEffectFurniture, CycleItemStateEffectRoomItemBuilderImpl>();
-		this.RegisterBuilder<ITeleportUnitEffectFurniture, TeleportUnitEffectRoomItemBuilderImpl>();
-		this.RegisterBuilder<IUnitWalkOffTriggerFurniture, UnitWalkOffTriggerRoomItemBuilderImpl>();
-		this.RegisterBuilder<IUnitWalkOnTriggerFurniture, UnitWalkOnTriggerRoomItemBuilderImpl>();
+		this.RegisterBuilder<IStaticFloorFurniture, StaticFloorRoomItemBuilder>();
+		this.RegisterBuilder<IFurniMaticGiftFurniture, FurniMaticGiftRoomItemBuilder>();
+		this.RegisterBuilder<IStickyNotePoleFurniture, StickyNotePoleRoomItemBuilder>();
+		this.RegisterBuilder<ISoundMachineFurniture, SoundMachineRoomItemBuilder>();
+		this.RegisterBuilder<IRollerFurniture, RollerRoomItemBuilder>();
+		this.RegisterBuilder<IMultiStateFloorFurniture, MultiStateFloorRoomItemBuilder>();
+		this.RegisterBuilder<IUnitSayTriggerFurniture, UnitSayTriggerRoomItemBuilder>();
+		this.RegisterBuilder<IShowMessageEffectFurniture, ShowMessageEffectRoomItemBuilder>();
+		this.RegisterBuilder<IUnitEnterRoomTriggerFurniture, UnitEnterRoomTriggerRoomItemBuilder>();
+		this.RegisterBuilder<IUnitUseItemTriggerFurniture, UnitUseItemTriggerRoomItemBuilder>();
+		this.RegisterBuilder<ICycleItemStateEffectFurniture, CycleItemStateEffectRoomItemBuilder>();
+		this.RegisterBuilder<ITeleportUnitEffectFurniture, TeleportUnitEffectRoomItemBuilder>();
+		this.RegisterBuilder<IUnitWalkOffTriggerFurniture, UnitWalkOffTriggerRoomItemBuilder>();
+		this.RegisterBuilder<IUnitWalkOnTriggerFurniture, UnitWalkOnTriggerRoomItemBuilder>();
 	}
 
 	private void RegisterBuilder<TFurniture, TBuilder>()
 		where TFurniture : IFloorFurniture
-		where TBuilder : FloorRoomItemBuilder
+		where TBuilder : IRoomItemBuilder
 	{
 		this.builders.Add(typeof(TFurniture), ActivatorUtilities.CreateFactory(typeof(TBuilder), []));
 	}
@@ -69,38 +69,39 @@ internal sealed class FloorRoomItemStrategy : IFloorRoomItemStrategy
 	{
 		ObjectFactory builderFactory = this.typeCache.GetOrAdd(furniture.GetType(), static (type, instance) => instance.Get(type), this);
 
-		FloorRoomItemBuilder itemBuilder = (FloorRoomItemBuilder)builderFactory.Invoke(this.serviceProvider, []);
+		IFloorRoomItemBuilder<TRoomItem> itemBuilder = (IFloorRoomItemBuilder<TRoomItem>)builderFactory.Invoke(this.serviceProvider, []);
 		if (extraData is not null)
 		{
 			itemBuilder.ExtraData(extraData);
 		}
 
-		return (TRoomItem)itemBuilder
-			.ItemId(itemId)
+		return itemBuilder
+			.Position(position)
+			.Direction(direction)
 			.Room(room)
 			.Owner(owner)
 			.Furniture(furniture)
-			.Position(position)
-			.Direction(direction)
+			.Id(itemId)
 			.Build();
 	}
 
-	public TRoomItem CreateFloorItem<TFurniture, TRoomItem, TBuilder>(int itemId, IRoom room, IUserInfo owner, TFurniture furniture, Point3D position, int direction, Func<TBuilder, IFurnitureItemBuilder<TFurniture, TRoomItem>> builder)
+	public TRoomItem CreateFloorItem<TFurniture, TRoomItem, TBuilder>(int itemId, IRoom room, IUserInfo owner, TFurniture furniture, Point3D position, int direction, Func<TBuilder, IFurnitureItemDataBuilder<TFurniture, TRoomItem, TBuilder>> builder)
 		where TFurniture : IFloorFurniture
 		where TRoomItem : IFloorRoomItem, IFurnitureItem<TFurniture>
+		where TBuilder : IFurnitureItemDataBuilder<TFurniture, TRoomItem, TBuilder>
 	{
 		ObjectFactory builderFactory = this.typeCache.GetOrAdd(furniture.GetType(), static (type, instance) => instance.Get(type), this);
 
-		FloorRoomItemBuilder itemBuilder = (FloorRoomItemBuilder)builderFactory.Invoke(this.serviceProvider, []);
-		builder((TBuilder)(object)itemBuilder);
+		IFloorRoomItemBuilder<TRoomItem> itemBuilder = (IFloorRoomItemBuilder<TRoomItem>)builderFactory.Invoke(this.serviceProvider, []);
+		builder((TBuilder)itemBuilder);
 
-		return (TRoomItem)itemBuilder
-			.ItemId(itemId)
+		return itemBuilder
+			.Position(position)
+			.Direction(direction)
 			.Room(room)
 			.Owner(owner)
 			.Furniture(furniture)
-			.Position(position)
-			.Direction(direction)
+			.Id(itemId)
 			.Build();
 	}
 }

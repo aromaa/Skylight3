@@ -11,14 +11,15 @@ using Skylight.Protocol.Packets.Outgoing.UserDefinedRoomEvents;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor.Wired.Triggers;
 
-internal sealed class UnitSayTriggerRoomItem(IRoom room, int id, IUserInfo owner, IUnitSayTriggerFurniture furniture, Point3D position, int direction, IUnitSayTriggerInteractionHandler interactionHandler)
+internal sealed class UnitSayTriggerRoomItem(IRoom room, int id, IUserInfo owner, IUnitSayTriggerFurniture furniture, Point3D position, int direction, IUnitSayTriggerInteractionHandler interactionHandler,
+	string message)
 	: WiredTriggerRoomItem(room, id, owner, position, direction), IUnitSayTriggerRoomItem
 {
 	public override IUnitSayTriggerFurniture Furniture { get; } = furniture;
 
 	private readonly IUnitSayTriggerInteractionHandler interactionHandler = interactionHandler;
 
-	public required string Message { get; set; }
+	public string Message { get; set; } = message;
 	public bool OwnerOnly { get; set; }
 
 	public override void OnPlace()
