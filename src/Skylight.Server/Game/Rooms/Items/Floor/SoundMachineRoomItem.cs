@@ -9,16 +9,15 @@ using Skylight.API.Numerics;
 namespace Skylight.Server.Game.Rooms.Items.Floor;
 
 internal sealed class SoundMachineRoomItem(IRoom room, int id, IUserInfo owner, ISoundMachineFurniture furniture, Point3D position, int direction, ISoundMachineInteractionManager handler)
-	: FloorRoomItem(room, id, owner, position, direction), ISoundMachineRoomItem
+	: FixedHeightStatefulFloorRoomItem<ISoundMachineFurniture>(room, id, owner, furniture, position, direction), ISoundMachineRoomItem
 {
-	public override ISoundMachineFurniture Furniture { get; } = furniture;
-	public int State { get; }
-
 	private readonly ISoundMachineInteractionManager handler = handler;
 
 	private readonly ISoundSetFurniture?[] soundSetSlots = new ISoundSetFurniture[4];
 
-	public override double Height => this.Furniture.DefaultHeight;
+	public override int State { get; }
+
+	public new ISoundMachineFurniture Furniture => this.furniture;
 
 	public ImmutableArray<(int Slot, ISoundSetFurniture SoundSet)> SoundSets => this.soundSetSlots.Select((s, i) => (i + 1, s)).Where(s => s.s is not null).ToImmutableArray()!;
 

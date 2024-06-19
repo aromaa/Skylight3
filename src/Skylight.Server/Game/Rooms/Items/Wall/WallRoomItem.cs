@@ -6,41 +6,15 @@ using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Rooms.Items.Wall;
 
-internal abstract class WallRoomItem : IWallRoomItem
+internal abstract class WallRoomItem<T>(IRoom room, int id, IUserInfo owner, T furniture, Point2D location, Point2D position, int direction) : RoomItem<T>(room, id, owner, furniture), IWallRoomItem
+	where T : IWallFurniture
 {
-	public IRoom Room { get; }
+	public Point2D Location { get; set; } = location;
+	public Point2D Position { get; set; } = position;
 
-	public int Id { get; }
+	public int Direction { get; set; } = direction;
 
-	public IUserInfo Owner { get; }
+	public override int StripId => -this.Id;
 
-	public abstract IWallFurniture Furniture { get; }
-
-	public Point2D Location { get; set; }
-	public Point2D Position { get; set; }
-
-	public int Direction { get; set; }
-
-	internal WallRoomItem(IRoom room, int id, IUserInfo owner, Point2D location, Point2D position, int direction)
-	{
-		this.Room = room;
-
-		this.Id = id;
-
-		this.Owner = owner;
-
-		this.Location = location;
-		this.Position = position;
-		this.Direction = direction;
-	}
-
-	public int StripId => -this.Id;
-
-	public virtual void OnPlace()
-	{
-	}
-
-	public virtual void OnRemove()
-	{
-	}
+	public new IWallFurniture Furniture => this.furniture;
 }

@@ -14,15 +14,15 @@ namespace Skylight.Server.Game.Rooms.Items.Floor.Wired.Triggers;
 
 internal sealed class UnitUseItemTriggerRoomItem(IRoom room, int id, IUserInfo owner, IUnitUseItemTriggerFurniture furniture, Point3D position, int direction, IUnitUseItemTriggerInteractionHandler interactionHandler,
 	HashSet<IRoomItem>? selectedItems, JsonDocument? extraData)
-	: WiredTriggerRoomItem(room, id, owner, position, direction), IUnitUseItemTriggerRoomItem
+	: WiredTriggerRoomItem<IUnitUseItemTriggerFurniture>(room, id, owner, furniture, position, direction), IUnitUseItemTriggerRoomItem
 {
-	public override IUnitUseItemTriggerFurniture Furniture { get; } = furniture;
-
 	private readonly IUnitUseItemTriggerInteractionHandler interactionHandler = interactionHandler;
 
 	private LazyRoomItemSetHolder selectedItems = selectedItems is null
 		? new LazyRoomItemSetHolder(WiredUtils.GetSelectedItems(extraData))
 		: new LazyRoomItemSetHolder(selectedItems);
+
+	public new IUnitUseItemTriggerFurniture Furniture => this.furniture;
 
 	public IReadOnlySet<IRoomItem> SelectedItems
 	{

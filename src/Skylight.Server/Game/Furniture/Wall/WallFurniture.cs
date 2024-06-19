@@ -2,6 +2,4 @@
 
 namespace Skylight.Server.Game.Furniture.Wall;
 
-internal abstract class WallFurniture(int id) : AbstractFurniture(id), IWallFurniture
-{
-}
+internal abstract class WallFurniture(int id) : AbstractFurniture(id), IWallFurniture;

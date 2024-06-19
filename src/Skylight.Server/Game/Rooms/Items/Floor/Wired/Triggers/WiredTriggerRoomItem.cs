@@ -7,10 +7,11 @@ using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor.Wired.Triggers;
 
-internal abstract class WiredTriggerRoomItem(IRoom room, int id, IUserInfo owner, Point3D position, int direction)
-	: FloorRoomItem(room, id, owner, position, direction), IWiredTriggerRoomItem
+internal abstract class WiredTriggerRoomItem<T>(IRoom room, int id, IUserInfo owner, T furniture, Point3D position, int direction)
+	: FloorRoomItem<T>(room, id, owner, furniture, position, direction), IWiredTriggerRoomItem
+	where T : IWiredTriggerFurniture
 {
-	public abstract override IWiredTriggerFurniture Furniture { get; }
+	public new IWiredTriggerFurniture Furniture => this.furniture;
 
 	public override double Height => this.Furniture.DefaultHeight;
 

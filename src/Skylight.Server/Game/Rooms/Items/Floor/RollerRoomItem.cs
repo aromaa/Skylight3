@@ -8,13 +8,11 @@ using Skylight.API.Numerics;
 namespace Skylight.Server.Game.Rooms.Items.Floor;
 
 internal class RollerRoomItem(IRoom room, int id, IUserInfo owner, IRollerFurniture furniture, Point3D position, int direction, IRollerInteractionHandler interactionHandler)
-	: FloorRoomItem(room, id, owner, position, direction), IRollerRoomItem
+	: PlainFloorRoomItem<IRollerFurniture>(room, id, owner, furniture, position, direction), IRollerRoomItem
 {
-	public override IRollerFurniture Furniture { get; } = furniture;
-
 	private readonly IRollerInteractionHandler interactionHandler = interactionHandler;
 
-	public override double Height => this.Furniture.DefaultHeight;
+	public new IRollerFurniture Furniture => this.furniture;
 
 	public override void OnPlace() => this.interactionHandler.OnPlace(this);
 

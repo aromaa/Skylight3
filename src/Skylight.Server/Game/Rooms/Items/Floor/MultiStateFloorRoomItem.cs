@@ -1,28 +1,25 @@
 ﻿using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Rooms;
+using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
-using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor;
 
-internal class MultiStateFloorRoomItem<T>(IRoom room, int id, IUserInfo owner, T furniture, Point3D position, int direction)
-	: FloorRoomItem(room, id, owner, position, direction), IMultiStateFloorItem
+internal abstract class MultiStateFloorRoomItem<T>(IRoom room, int id, IUserInfo owner, T furniture, Point3D position, int direction, int state)
+	: StatefulFloorRoomItem<T>(room, id, owner, furniture, position, direction), IMultiStateFloorItem
 	where T : IMultiStateFloorFurniture
 {
-	private readonly T furniture = furniture;
+	public new IMultiStateFloorFurniture Furniture => this.furniture;
 
-	public int State { get; set; }
+	public int InternalState { get; set; } = state;
 
-	public override double Height => this.Furniture.DefaultHeight;
+	public override int State => this.InternalState;
 
-	public override IMultiStateFloorFurniture Furniture => this.furniture;
-
-	public void Interact(IUserRoomUnit unit, int state)
+	int IMultiStateRoomItem.State
 	{
-		this.State = (this.State + 1) % this.furniture.StateCount;
-
-		this.Room.ItemManager.UpdateItem(this);
+		get => this.InternalState;
+		set => this.InternalState = value;
 	}
 }

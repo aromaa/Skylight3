@@ -13,11 +13,11 @@ namespace Skylight.Server.Game.Rooms.Items.Floor.Wired.Triggers;
 
 internal sealed class UnitEnterRoomTriggerRoomItem(IRoom room, int id, IUserInfo owner, IUnitEnterRoomTriggerFurniture furniture, Point3D position, int direction, IUnitEnterRoomTriggerInteractionHandler interactionHandler,
 	string triggerUsername)
-	: WiredTriggerRoomItem(room, id, owner, position, direction), IUnitEnterRoomTriggerRoomItem
+	: WiredTriggerRoomItem<IUnitEnterRoomTriggerFurniture>(room, id, owner, furniture, position, direction), IUnitEnterRoomTriggerRoomItem
 {
-	public override IUnitEnterRoomTriggerFurniture Furniture { get; } = furniture;
-
 	private readonly IUnitEnterRoomTriggerInteractionHandler interactionHandler = interactionHandler;
+
+	public new IUnitEnterRoomTriggerFurniture Furniture => this.furniture;
 
 	public string? TriggerUsername { get; set; } = triggerUsername;
 

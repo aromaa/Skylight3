@@ -7,12 +7,13 @@ using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor.Wired.Effects;
 
-internal abstract class WiredEffectRoomItem(IRoom room, int id, IUserInfo owner, Point3D position, int direction, int effectDelay)
-	: FloorRoomItem(room, id, owner, position, direction), IWiredEffectRoomItem
+internal abstract class WiredEffectRoomItem<T>(IRoom room, int id, IUserInfo owner, T furniture, Point3D position, int direction, int effectDelay)
+	: FloorRoomItem<T>(room, id, owner, furniture, position, direction), IWiredEffectRoomItem
+	where T : IWiredEffectFurniture
 {
-	public abstract override IWiredEffectFurniture Furniture { get; }
-
 	public int EffectDelay { get; set; } = effectDelay;
+
+	public new IWiredEffectFurniture Furniture => this.furniture;
 
 	public override double Height => this.Furniture.DefaultHeight;
 

@@ -6,15 +6,8 @@ using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor;
 
-internal sealed class StaticFloorRoomItem : FloorRoomItem, IStaticFloorRoomItem
+internal sealed class StaticFloorRoomItem(IRoom room, int id, IUserInfo owner, IStaticFloorFurniture furniture, Point3D position, int direction)
+	: PlainFloorRoomItem<IStaticFloorFurniture>(room, id, owner, furniture, position, direction), IStaticFloorRoomItem
 {
-	public override IStaticFloorFurniture Furniture { get; }
-
-	internal StaticFloorRoomItem(IRoom room, int id, IUserInfo owner, IStaticFloorFurniture furniture, Point3D position, int direction)
-		: base(room, id, owner, position, direction)
-	{
-		this.Furniture = furniture;
-	}
-
-	public override double Height => this.Furniture.DefaultHeight;
+	public new IStaticFloorFurniture Furniture => this.furniture;
 }

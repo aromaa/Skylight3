@@ -10,14 +10,14 @@ using Skylight.API.Numerics;
 namespace Skylight.Server.Game.Rooms.Items.Wall;
 
 internal sealed class PostItRoomItem(IRoom room, int id, IUserInfo owner, IStickyNoteFurniture furniture, Point2D location, Point2D position, int direction, Color color, string text, IStickyNoteInteractionHandler handler)
-	: WallRoomItem(room, id, owner, location, position, direction), IStickyNoteRoomItem
+	: WallRoomItem<IStickyNoteFurniture>(room, id, owner, furniture, location, position, direction), IStickyNoteRoomItem
 {
-	public override IStickyNoteFurniture Furniture { get; } = furniture;
-
 	public Color Color { get; set; } = color;
 	public string Text { get; set; } = text;
 
 	private readonly IStickyNoteInteractionHandler handler = handler;
+
+	public new IStickyNoteFurniture Furniture => this.furniture;
 
 	public override void OnPlace()
 	{

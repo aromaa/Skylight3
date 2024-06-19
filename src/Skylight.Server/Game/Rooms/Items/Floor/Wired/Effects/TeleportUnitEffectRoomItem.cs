@@ -15,15 +15,15 @@ namespace Skylight.Server.Game.Rooms.Items.Floor.Wired.Effects;
 
 internal sealed class TeleportUnitEffectRoomItem(IRoom room, int id, IUserInfo owner, ITeleportUnitEffectFurniture furniture, Point3D position, int direction, IWiredEffectInteractionHandler interactionHandler,
 	HashSet<IRoomItem>? selectedItems, JsonDocument? extraData, int effectDelay)
-	: WiredEffectRoomItem(room, id, owner, position, direction, effectDelay), ITeleportUnitEffectRoomItem
+	: WiredEffectRoomItem<ITeleportUnitEffectFurniture>(room, id, owner, furniture, position, direction, effectDelay), ITeleportUnitEffectRoomItem
 {
-	public override ITeleportUnitEffectFurniture Furniture { get; } = furniture;
-
 	private readonly IWiredEffectInteractionHandler interactionHandler = interactionHandler;
 
 	private LazyRoomItemSetHolder selectedItems = selectedItems is null
 		? new LazyRoomItemSetHolder(WiredUtils.GetSelectedItems(extraData))
 		: new LazyRoomItemSetHolder(selectedItems);
+
+	public new ITeleportUnitEffectFurniture Furniture => this.furniture;
 
 	public IReadOnlySet<IRoomItem> SelectedItems
 	{

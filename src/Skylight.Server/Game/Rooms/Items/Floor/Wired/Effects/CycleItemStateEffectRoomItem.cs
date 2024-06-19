@@ -14,15 +14,15 @@ namespace Skylight.Server.Game.Rooms.Items.Floor.Wired.Effects;
 
 internal sealed class CycleItemStateEffectRoomItem(IRoom room, int id, IUserInfo owner, ICycleItemStateEffectFurniture furniture, Point3D position, int direction, IWiredEffectInteractionHandler interactionHandler,
 	HashSet<IRoomItem>? selectedItems, JsonDocument? extraData, int effectDelay)
-	: WiredEffectRoomItem(room, id, owner, position, direction, effectDelay), ICycleItemStateRoomItem
+	: WiredEffectRoomItem<ICycleItemStateEffectFurniture>(room, id, owner, furniture, position, direction, effectDelay), ICycleItemStateRoomItem
 {
-	public override ICycleItemStateEffectFurniture Furniture { get; } = furniture;
-
 	private readonly IWiredEffectInteractionHandler interactionHandler = interactionHandler;
 
 	private LazyRoomItemSetHolder selectedItems = selectedItems is null
 		? new LazyRoomItemSetHolder(WiredUtils.GetSelectedItems(extraData))
 		: new LazyRoomItemSetHolder(selectedItems);
+
+	public new ICycleItemStateEffectFurniture Furniture => this.furniture;
 
 	public IReadOnlySet<IRoomItem> SelectedItems
 	{

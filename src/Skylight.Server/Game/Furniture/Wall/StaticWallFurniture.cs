@@ -2,6 +2,4 @@
 
 namespace Skylight.Server.Game.Furniture.Wall;
 
-internal sealed class StaticWallFurniture(int id) : WallFurniture(id), IStaticWallFurniture
-{
-}
+internal sealed class StaticWallFurniture(int id) : WallFurniture(id), IStaticWallFurniture;

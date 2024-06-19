@@ -7,48 +7,23 @@ using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor;
 
-internal abstract class FloorRoomItem : IFloorRoomItem
+internal abstract class FloorRoomItem<T>(IRoom room, int id, IUserInfo owner, T furniture, Point3D position, int direction) : RoomItem<T>(room, id, owner, furniture), IFloorRoomItem
+	where T : IFloorFurniture
 {
-	public IRoom Room { get; }
-
-	public int Id { get; }
-
-	public IUserInfo Owner { get; }
-
-	public abstract IFloorFurniture Furniture { get; }
-
-	public Point3D Position { get; internal set; }
-
-	public int Direction { get; internal set; }
+	public Point3D Position { get; internal set; } = position;
+	public int Direction { get; internal set; } = direction;
 
 	public abstract double Height { get; }
 
-	internal FloorRoomItem(IRoom room, int id, IUserInfo owner, Point3D position, int direction)
-	{
-		this.Room = room;
+	public override int StripId => this.Id;
 
-		this.Id = id;
+	public new IFloorFurniture Furniture => this.furniture;
 
-		this.Owner = owner;
-
-		this.Position = position;
-		this.Direction = direction;
-	}
-
-	public int StripId => this.Id;
-	public EffectiveTilesEnumerator EffectiveTiles => new(this.Furniture.EffectiveTiles, this.Direction);
-
-	public virtual void OnPlace()
-	{
-	}
+	public EffectiveTilesEnumerator EffectiveTiles => new(this.furniture.EffectiveTiles, this.Direction);
 
 	public virtual void OnMove(Point3D position, int direction)
 	{
 		this.Position = position;
 		this.Direction = direction;
-	}
-
-	public virtual void OnRemove()
-	{
 	}
 }

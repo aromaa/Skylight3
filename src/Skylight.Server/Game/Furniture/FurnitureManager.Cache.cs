@@ -60,7 +60,7 @@ internal partial class FurnitureManager
 						"sound_machine" => new SoundMachineFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
 						"sound_set" => CreateSoundSet(entity),
 						"roller" => new RollerFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
-						"multi_state" => new MultiStateFloorFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0], int.Parse(entity.InteractionData)),
+						"basic" => new BasicFloorFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0], int.Parse(entity.InteractionData)),
 						"wired_on_say" => new UnitSayTriggerFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
 						"wired_show_message" => new ShowMessageEffectFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),
 						"wired_unit_enter_room" => new UnitEnterRoomTriggerFurniture(entity.Id, entity.Width, entity.Length, entity.Height[0]),

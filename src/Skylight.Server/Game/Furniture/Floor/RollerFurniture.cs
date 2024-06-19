@@ -2,7 +2,4 @@
 
 namespace Skylight.Server.Game.Furniture.Floor;
 
-internal sealed class RollerFurniture(int id, int width, int length, double height) : FloorFurniture(id, width, length), IRollerFurniture
-{
-	public override double DefaultHeight => height;
-}
+internal sealed class RollerFurniture(int id, int width, int length, double height) : PlainFloorFurniture(id, width, length, height), IRollerFurniture;

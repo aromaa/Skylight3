@@ -24,11 +24,17 @@ dotnet_diagnostic.SA1204.severity = none
 # SA1214: Readonly fields should appear before non-readonly fields
 dotnet_diagnostic.SA1214.severity = none
 
+# SA1304: Non-private readonly fields should begin with upper-case letter
+dotnet_diagnostic.SA1304.severity = none
+
 # SA1307: Field should begin with upper-case letter
 dotnet_diagnostic.SA1307.severity = none
 
 # SA1311: Static readonly fields should begin with upper-case letter
 dotnet_diagnostic.SA1311.severity = none
+
+# SA1401: Fields should be private
+dotnet_diagnostic.SA1401.severity = none
 
 # SA1402: File may only contain a single type
 dotnet_diagnostic.SA1402.severity = none

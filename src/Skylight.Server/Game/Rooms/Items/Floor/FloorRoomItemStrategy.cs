@@ -32,7 +32,7 @@ internal sealed class FloorRoomItemStrategy : IFloorRoomItemStrategy
 		this.RegisterBuilder<IStickyNotePoleFurniture, StickyNotePoleRoomItemBuilder>();
 		this.RegisterBuilder<ISoundMachineFurniture, SoundMachineRoomItemBuilder>();
 		this.RegisterBuilder<IRollerFurniture, RollerRoomItemBuilder>();
-		this.RegisterBuilder<IMultiStateFloorFurniture, MultiStateFloorRoomItemBuilder>();
+		this.RegisterBuilder<IBasicFloorFurniture, BasicFloorRoomItemBuilder>();
 		this.RegisterBuilder<IUnitSayTriggerFurniture, UnitSayTriggerRoomItemBuilder>();
 		this.RegisterBuilder<IShowMessageEffectFurniture, ShowMessageEffectRoomItemBuilder>();
 		this.RegisterBuilder<IUnitEnterRoomTriggerFurniture, UnitEnterRoomTriggerRoomItemBuilder>();
