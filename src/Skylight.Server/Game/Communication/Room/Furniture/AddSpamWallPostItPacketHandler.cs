@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Net.Communication.Attributes;
+using Skylight.API.Game.Furniture.Wall;
 using Skylight.API.Game.Inventory.Items.Wall;
 using Skylight.API.Game.Rooms.Items.Interactions;
 using Skylight.API.Game.Rooms.Items.Wall;
@@ -19,13 +20,13 @@ using Skylight.Server.Extensions;
 namespace Skylight.Server.Game.Communication.Room.Furniture;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed partial class AddSpamWallPostItPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory, IWallRoomItemStrategy wallRoomItemStrategy)
+internal sealed partial class AddSpamWallPostItPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory, IWallRoomItemStrategy<IStickyNoteRoomItem, IStickyNoteFurniture> wallRoomItemStrategy)
 	: UserPacketHandler<T>
 	where T : IAddSpamWallPostItIncomingPacket
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
-	private readonly IWallRoomItemStrategy wallRoomItemStrategy = wallRoomItemStrategy;
+	private readonly IWallRoomItemStrategy<IStickyNoteRoomItem, IStickyNoteFurniture> wallRoomItemStrategy = wallRoomItemStrategy;
 
 	internal override void Handle(IUser user, in T packet)
 	{

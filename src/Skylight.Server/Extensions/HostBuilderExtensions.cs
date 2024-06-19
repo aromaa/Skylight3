@@ -111,6 +111,8 @@ public static class HostBuilderExtensions
 
 		builder.Services.AddSingleton<IFloorRoomItemStrategy, FloorRoomItemStrategy>();
 		builder.Services.AddSingleton<IWallRoomItemStrategy, WallRoomItemStrategy>();
+		builder.Services.AddSingleton(typeof(IFloorRoomItemStrategy<,>), typeof(FloorRoomItemStrategy<,>));
+		builder.Services.AddSingleton(typeof(IWallRoomItemStrategy<,>), typeof(WallRoomItemStrategy<,>));
 
 		builder.Services.AddSingleton(typeof(Lazy<>), typeof(LazyService<>));
 

@@ -46,9 +46,9 @@ internal sealed class WallRoomItemStrategy : IWallRoomItemStrategy
 		throw new NotSupportedException();
 	}
 
-	public TRoomItem CreateWallItem<TFurniture, TRoomItem>(int itemId, IRoom room, IUserInfo owner, TFurniture furniture, Point2D location, Point2D position, JsonDocument? extraData = null)
-		where TFurniture : IWallFurniture
+	public TRoomItem CreateWallItem<TRoomItem, TFurniture>(int itemId, IRoom room, IUserInfo owner, TFurniture furniture, Point2D location, Point2D position, JsonDocument? extraData = null)
 		where TRoomItem : IWallRoomItem, IFurnitureItem<TFurniture>
+		where TFurniture : IWallFurniture
 	{
 		ObjectFactory builderFactory = this.typeCache.GetOrAdd(furniture.GetType(), static (type, instance) => instance.Get(type), this);
 
@@ -68,9 +68,9 @@ internal sealed class WallRoomItemStrategy : IWallRoomItemStrategy
 			.Build();
 	}
 
-	public TRoomItem CreateWallItem<TFurniture, TRoomItem, TBuilder>(int itemId, IRoom room, IUserInfo owner, TFurniture furniture, Point2D location, Point2D position, Func<TBuilder, IFurnitureItemDataBuilder<TFurniture, TRoomItem, TBuilder>> builder)
-		where TFurniture : IWallFurniture
+	public TRoomItem CreateWallItem<TRoomItem, TFurniture, TBuilder>(int itemId, IRoom room, IUserInfo owner, TFurniture furniture, Point2D location, Point2D position, Action<TBuilder> builder)
 		where TRoomItem : IWallRoomItem, IFurnitureItem<TFurniture>
+		where TFurniture : IWallFurniture
 		where TBuilder : IFurnitureItemDataBuilder<TFurniture, TRoomItem, TBuilder>
 	{
 		ObjectFactory builderFactory = this.typeCache.GetOrAdd(furniture.GetType(), static (type, instance) => instance.Get(type), this);
