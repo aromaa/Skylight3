@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace Skylight.Server.Collections;
 
@@ -113,8 +114,15 @@ internal sealed class IntervalTree<TKey, TValue>
 		}
 	}
 
-	internal bool TryFindGab(TKey from, TKey emptySpace, out TKey value)
+	internal SearchResult FindGabGreedy(TKey from, TKey emptySpace, Predicate<TValue> predicate, out TKey value)
 	{
+		if (this.root is null)
+		{
+			Unsafe.SkipInit(out value);
+
+			return SearchResult.Fail;
+		}
+
 		Stack<Node> stack = new(2 * BitOperations.Log2((uint)this.count + 1));
 
 		Node? node = this.root;
@@ -138,13 +146,17 @@ internal sealed class IntervalTree<TKey, TValue>
 		{
 			if (node.Interval.Max <= from)
 			{
-				Node? compareAgainst = this.Successor(node);
-				if (compareAgainst is null || compareAgainst.Interval.Min - node.Interval.Max >= emptySpace)
+				if (predicate(node.Items.First()))
 				{
-					if (compareAgainst?.Left is null || compareAgainst.Left.Max <= from)
+					Node? compareAgainst = this.Successor(node);
+					if (compareAgainst is null || compareAgainst.Interval.Min - node.Interval.Max >= emptySpace)
 					{
-						value = node.Interval.Max;
-						return true;
+						if (compareAgainst?.Left is null || compareAgainst.Left.Max <= from)
+						{
+							value = node.Interval.Max;
+
+							return SearchResult.Success;
+						}
 					}
 				}
 
@@ -168,8 +180,13 @@ internal sealed class IntervalTree<TKey, TValue>
 			}
 		}
 
-		value = TKey.Zero;
-		return false;
+		for (node = this.root; node.Left is not null; node = node.Left)
+		{
+		}
+
+		value = node.Interval.Min - emptySpace;
+
+		return SearchResult.Fallback;
 	}
 
 	internal TKey? Max
@@ -571,5 +588,12 @@ internal sealed class IntervalTree<TKey, TValue>
 		}
 
 		public override string ToString() => $"{this.Min} - {this.Max}";
+	}
+
+	internal enum SearchResult
+	{
+		Fail,
+		Success,
+		Fallback
 	}
 }

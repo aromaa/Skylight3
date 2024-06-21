@@ -1,5 +1,7 @@
-﻿using Skylight.API.Game.Furniture.Floor.Wired.Triggers;
+﻿using Skylight.API.Game.Furniture.Floor;
+using Skylight.API.Game.Furniture.Floor.Wired.Triggers;
+using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Furniture.Floor.Wired.Triggers;
 
-internal sealed class UnitUseItemTriggerFurniture(int id, int width, int length, double height) : WiredTriggerFurniture(id, width, length, height), IUnitUseItemTriggerFurniture;
+internal sealed class UnitUseItemTriggerFurniture(int id, FloorFurnitureType type, Point2D dimensions, double height) : WiredTriggerFurniture(id, type, dimensions, height), IUnitUseItemTriggerFurniture;

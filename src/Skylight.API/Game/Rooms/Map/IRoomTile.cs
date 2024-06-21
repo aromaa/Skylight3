@@ -22,7 +22,7 @@ public interface IRoomTile
 
 	public void RemoveItem(IFloorRoomItem item);
 
-	public double GetStepHeight(double z);
+	public double? GetStepHeight(double z);
 
 	public void WalkOn(IRoomUnit unit);
 	public void WalkOff(IRoomUnit unit);

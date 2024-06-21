@@ -10,6 +10,9 @@ internal sealed class FloorFurnitureEntityTypeConfiguration : IEntityTypeConfigu
 	{
 		builder.ToTable("furniture_floor");
 
+		builder.Property(f => f.Type)
+			.HasDefaultValue("walkable");
+
 		builder.Property(f => f.ClassName)
 			.HasMaxLength(128);
 

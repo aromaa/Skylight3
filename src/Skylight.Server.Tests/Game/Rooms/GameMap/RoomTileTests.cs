@@ -1,4 +1,5 @@
 ﻿using Moq;
+using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Numerics;
@@ -20,16 +21,16 @@ public class RoomTileTests
 	{
 		yield return [CreateTile(), 123, 0, 0, 0];
 		yield return [CreateTile((123, 0)), 123, 0, 0, 123];
-		yield return [CreateTile((123, 0)), 23, 0, 100, 123];
-		yield return [CreateTile((123, 0.5)), 123, 0, 0.5, 123.5];
+		yield return [CreateTile((123, 0)), 23, 100, 0, 123];
+		yield return [CreateTile((123, 0.5)), 123, 0.5, 0.5, 123.5];
 		yield return [CreateTile((123, 0), (124, 0)), 123, 0, 1, 123];
 		yield return [CreateTile((123, 0.5), (124, 0.5)), 123, 0.5, 0.5, 123.5];
 		yield return [CreateTile((122, 0), (124, 0)), 123, 1, 0, 124];
 		yield return [CreateTile((120, 0), (126, 0)), 123, 10, 100, 126];
 		yield return [CreateTile((122.1, 0), (124, 0)), 123, 1, 0, 124];
-		yield return [CreateTile((123, 0), (123.99, 0)), 123, 0, 1, 123.99];
+		yield return [CreateTile((123, 0), (123.99, 0)), 123, 1, 1, 123.99];
 		yield return [CreateTile((123, 3), (124, 0)), 124, 10, 1, 124];
-		yield return [CreateTile((123, 0)), double.BitDecrement(123), 0, 0, 123];
+		yield return [CreateTile((123, 0)), double.BitDecrement(123), 0, 0, 0];
 		yield return [CreateTile((123, 0)), double.BitIncrement(123), 0, 0, 123];
 
 		static RoomTile CreateTile(params (double Z, double Height)[] slices)
@@ -43,6 +44,7 @@ public class RoomTileTests
 			foreach ((double z, double height) in slices)
 			{
 				Mock<IFloorRoomItem> itemMock = new();
+				itemMock.SetupGet(i => i.Furniture.Type).Returns(FloorFurnitureType.Walkable);
 				itemMock.SetupGet(i => i.Position).Returns(new Point3D(location, z));
 				itemMock.SetupGet(i => i.Height).Returns(height);
 

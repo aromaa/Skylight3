@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Interactions.Wired.Triggers;
 using Skylight.API.Game.Rooms.Map;
@@ -42,15 +43,23 @@ internal sealed class RoomTile : IRoomTile
 
 	public IEnumerable<IFloorRoomItem> GetFloorItemsBetween(double minZ, double maxZ) => this.heightMap.GetItemsBetween(minZ, maxZ);
 
-	public double GetStepHeight(double z) => this.GetStepHeight(z, 2, 2);
-	internal double GetStepHeight(double z, double range, double emptySpace)
+	public double? GetStepHeight(double z) => this.GetStepHeight(z, 2, 2);
+	internal double? GetStepHeight(double z, double range, double emptySpace)
 	{
-		if (this.heightMap.TryFindGab(z + range, emptySpace, out double value))
+		switch (this.heightMap.FindGabGreedy(z + range, emptySpace, static item => item.Furniture.Type == FloorFurnitureType.Walkable, out double value))
 		{
-			return value;
-		}
+			case IntervalTree<double, IFloorRoomItem>.SearchResult.Success:
+				return value;
+			case IntervalTree<double, IFloorRoomItem>.SearchResult.Fallback:
+				if (value - this.LayoutTile.Height < 0)
+				{
+					return null;
+				}
 
-		return this.Position.Z;
+				goto default;
+			default:
+				return this.LayoutTile.Height;
+		}
 	}
 
 	public void AddItem(IFloorRoomItem item)

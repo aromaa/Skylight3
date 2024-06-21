@@ -78,7 +78,7 @@ internal sealed class RoomUnit : IUserRoomUnit
 			IRoomTile lastTile = this.Room.Map.GetTile(this.Position.XY);
 			IRoomTile nextTile = this.Room.Map.GetTile(to);
 
-			this.NextStepPosition = new Point3D(to, nextTile.GetStepHeight(this.Position.Z));
+			this.NextStepPosition = new Point3D(to, nextTile.GetStepHeight(this.Position.Z).GetValueOrDefault());
 
 			lastTile.WalkOff(this);
 			nextTile.WalkOn(this);

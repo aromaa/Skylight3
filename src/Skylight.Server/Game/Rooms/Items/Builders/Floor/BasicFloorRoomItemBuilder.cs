@@ -10,6 +10,6 @@ internal sealed class BasicFloorRoomItemBuilder : FloorItemBuilder<IBasicFloorFu
 	{
 		this.CheckValid();
 
-		return new BasicFloorRoomItem(this.RoomValue, this.IdValue, this.OwnerValue, this.FurnitureValue, this.PositionValue, this.DirectionValue, this.ExtraDataValue!.RootElement.GetInt32());
+		return new BasicFloorRoomItem(this.RoomValue, this.IdValue, this.OwnerValue, this.FurnitureValue, this.PositionValue, this.DirectionValue, this.ExtraDataValue?.RootElement.GetInt32() ?? 0);
 	}
 }

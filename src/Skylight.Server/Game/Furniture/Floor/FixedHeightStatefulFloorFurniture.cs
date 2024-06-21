@@ -1,6 +1,9 @@
-﻿namespace Skylight.Server.Game.Furniture.Floor;
+﻿using Skylight.API.Game.Furniture.Floor;
+using Skylight.API.Numerics;
 
-internal abstract class FixedHeightStatefulFloorFurniture(int id, int width, int length, double height) : StatefulFloorFurniture(id, width, length)
+namespace Skylight.Server.Game.Furniture.Floor;
+
+internal abstract class FixedHeightStatefulFloorFurniture(int id, FloorFurnitureType type, Point2D dimensions, double height) : StatefulFloorFurniture(id, type, dimensions)
 {
 	public override double DefaultHeight => height;
 }

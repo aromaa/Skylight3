@@ -7,23 +7,23 @@ namespace Skylight.Server.Game.Furniture.Floor;
 
 internal abstract class FloorFurniture : AbstractFurniture, IFloorFurniture
 {
-	internal int Width { get; }
-	internal int Length { get; }
-	public abstract double DefaultHeight { get; }
+	public FloorFurnitureType Type { get; }
 
+	public Point2D Dimensions { get; }
 	public ImmutableArray<Point2D> EffectiveTiles { get; }
 
-	internal FloorFurniture(int id, int width, int length)
+	public abstract double DefaultHeight { get; }
+
+	internal FloorFurniture(int id, FloorFurnitureType type, Point2D dimensions)
 		: base(id)
 	{
-		this.Width = width;
-		this.Length = length;
+		this.Type = type;
+		this.Dimensions = dimensions;
 
-		ImmutableArray<Point2D>.Builder effectiveTilesBuilder = ImmutableArray.CreateBuilder<Point2D>(width * length);
-
-		for (int i = 0; i < width; i++)
+		ImmutableArray<Point2D>.Builder effectiveTilesBuilder = ImmutableArray.CreateBuilder<Point2D>(dimensions.X * dimensions.Y);
+		for (int i = 0; i < dimensions.X; i++)
 		{
-			for (int j = 0; j < length; j++)
+			for (int j = 0; j < dimensions.Y; j++)
 			{
 				effectiveTilesBuilder.Add(new Point2D(i, j));
 			}

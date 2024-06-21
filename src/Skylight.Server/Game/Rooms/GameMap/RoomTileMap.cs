@@ -89,8 +89,13 @@ internal sealed class RoomTileMap : IRoomMap
 			{
 				IRoomTile neighbor = nextPoints[i];
 
-				double nextZ = neighbor.GetStepHeight(current.Z);
-				double difference = nextZ - current.Z;
+				double? nextZ = neighbor.GetStepHeight(current.Z);
+				if (nextZ is null)
+				{
+					continue;
+				}
+
+				double difference = nextZ.Value - current.Z;
 				if (difference > 2)
 				{
 					//continue;
@@ -104,7 +109,7 @@ internal sealed class RoomTileMap : IRoomMap
 					distance += RoomTileMap.sums[Math.Min(Math.Abs((int)(difference / 0.1)), RoomTileMap.sums.Length - 1)];
 				}
 
-				ref (Point3D From, int Weight) pathData = ref gameMap.Get(neighborPosition.X, neighborPosition.Y, nextZ);
+				ref (Point3D From, int Weight) pathData = ref gameMap.Get(neighborPosition.X, neighborPosition.Y, nextZ.Value);
 
 				int neighborWeight = currentWeight + distance;
 				if (neighborWeight >= pathData.Weight)
@@ -115,7 +120,7 @@ internal sealed class RoomTileMap : IRoomMap
 				pathData.From = current;
 				pathData.Weight = neighborWeight;
 
-				points.Enqueue(new Point3D(neighborPosition, nextZ), priority + distance);
+				points.Enqueue(new Point3D(neighborPosition, nextZ.Value), priority + distance);
 			}
 		}
 
@@ -213,7 +218,7 @@ internal sealed class RoomTileMap : IRoomMap
 				else
 				{
 #pragma warning disable IDE0055
-					this.arraysList = [..this.arrays];
+					this.arraysList = [..this.Arrays]; //Don't use the inline array directly https://github.com/dotnet/roslyn/issues/70708
 #pragma warning restore IDE0055
 					this.arraysList.Add(array);
 				}
