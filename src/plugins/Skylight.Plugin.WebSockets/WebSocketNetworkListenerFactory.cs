@@ -1,17 +1,17 @@
-﻿using Skylight.API.Net.Connection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Skylight.API.Net.EndPoint;
 using Skylight.API.Net.Listener;
 
 namespace Skylight.Plugin.WebSockets;
 
-public sealed class WebSocketNetworkListenerFactory(INetworkConnectionHandler connectionHandler) : INetworkListenerFactory
+public sealed class WebSocketNetworkListenerFactory(IServiceProvider serviceProvider) : INetworkListenerFactory
 {
-	private readonly INetworkConnectionHandler connectionHandler = connectionHandler;
+	private readonly IServiceProvider serviceProvider = serviceProvider;
 
 	public bool CanHandle(INetworkEndPoint endPoint) => endPoint is IUriNetworkEndPoint { UriEndPoint.Scheme: "ws" or "wss" };
 
 	public INetworkListener CreateListener(INetworkEndPoint endPoint)
 	{
-		return new WebSocketNetworkListener(this.connectionHandler, ((IUriNetworkEndPoint)endPoint).UriEndPoint);
+		return ActivatorUtilities.CreateInstance<WebSocketNetworkListener>(this.serviceProvider, [((IUriNetworkEndPoint)endPoint).UriEndPoint]);
 	}
 }
