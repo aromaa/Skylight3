@@ -1,10 +1,18 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.EntityFrameworkCore;
+using Skylight.API.Game.Badges;
+using Skylight.API.Game.Furniture;
+using Skylight.API.Game.Furniture.Floor;
+using Skylight.API.Game.Furniture.Wall;
 using Skylight.API.Game.Inventory;
 using Skylight.API.Game.Inventory.Badges;
 using Skylight.API.Game.Inventory.Items;
 using Skylight.API.Game.Inventory.Items.Floor;
 using Skylight.API.Game.Inventory.Items.Wall;
+using Skylight.Domain.Badges;
+using Skylight.Domain.Items;
+using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Data.Inventory.Furni;
 using Skylight.Protocol.Packets.Data.Notifications;
 using Skylight.Protocol.Packets.Data.Room.Object;
@@ -12,6 +20,8 @@ using Skylight.Protocol.Packets.Outgoing.Inventory.Badges;
 using Skylight.Protocol.Packets.Outgoing.Inventory.Furni;
 using Skylight.Protocol.Packets.Outgoing.Notifications;
 using Skylight.Server.Extensions;
+using Skylight.Server.Game.Inventory.Items.Badges;
+using Skylight.Server.Game.Users.Authentication;
 
 namespace Skylight.Server.Game.Users.Inventory;
 
@@ -38,6 +48,69 @@ internal sealed class UserInventory : IInventory
 
 	public IEnumerable<IFloorInventoryItem> FloorItems => this.floorItems.Values;
 	public IEnumerable<IWallInventoryItem> WallItems => this.wallItems.Values;
+
+	internal async Task LoadAsync(SkylightContext dbContext, UserAuthentication.LoadContext loadContext, CancellationToken cancellationToken)
+	{
+		await this.LoadFurniAsync(dbContext, loadContext, cancellationToken).ConfigureAwait(false);
+		await this.LoadBadges(dbContext, loadContext, cancellationToken).ConfigureAwait(false);
+	}
+
+	private async Task LoadFurniAsync(SkylightContext dbContext, UserAuthentication.LoadContext loadContext, CancellationToken cancellationToken)
+	{
+		IFurnitureSnapshot furnitures = await loadContext.FurnitureManager.GetAsync().ConfigureAwait(false);
+
+		await foreach (FloorItemEntity item in dbContext.FloorItems
+						   .AsNoTracking()
+						   .Where(i => i.UserId == this.user.Profile.Id && i.RoomId == null)
+						   .Include(i => i.Data)
+						   .AsAsyncEnumerable()
+						   .WithCancellation(cancellationToken)
+						   .ConfigureAwait(false))
+		{
+			if (!furnitures.TryGetFloorFurniture(item.FurnitureId, out IFloorFurniture? furniture))
+			{
+				continue;
+			}
+
+			this.floorItems.TryAdd(item.Id, loadContext.FurnitureInventoryItemFactory.CreateFurnitureItem(item.Id, this.user.Profile, furniture, item.Data?.ExtraData));
+		}
+
+		await foreach (WallItemEntity item in dbContext.WallItems
+						   .AsNoTracking()
+						   .Where(i => i.UserId == this.user.Profile.Id && i.RoomId == null)
+						   .Include(i => i.Data)
+						   .AsAsyncEnumerable()
+						   .WithCancellation(cancellationToken)
+						   .ConfigureAwait(false))
+		{
+			if (!furnitures.TryGetWallFurniture(item.FurnitureId, out IWallFurniture? furniture))
+			{
+				continue;
+			}
+
+			this.wallItems.TryAdd(item.Id, loadContext.FurnitureInventoryItemFactory.CreateFurnitureItem(item.Id, this.user.Profile, furniture, item.Data?.ExtraData));
+		}
+	}
+
+	private async Task LoadBadges(SkylightContext dbContext, UserAuthentication.LoadContext loadContext, CancellationToken cancellationToken)
+	{
+		IBadgeSnapshot badges = await loadContext.BadgeManager.GetAsync().ConfigureAwait(false);
+
+		await foreach (UserBadgeEntity entity in dbContext.UserBadges
+						   .AsNoTracking()
+						   .Where(b => b.UserId == this.user.Profile.Id)
+						   .AsAsyncEnumerable()
+						   .WithCancellation(cancellationToken)
+						   .ConfigureAwait(false))
+		{
+			if (!badges.TryGetBadge(entity.BadgeCode, out IBadge? badge))
+			{
+				continue;
+			}
+
+			this.badges.TryAdd(badge.Code, new BadgeInventoryItem(badge, this.user.Profile));
+		}
+	}
 
 	public void RefreshFurniture()
 	{
