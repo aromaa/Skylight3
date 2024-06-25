@@ -217,9 +217,7 @@ internal sealed class RoomTileMap : IRoomMap
 				}
 				else
 				{
-#pragma warning disable IDE0055
-					this.arraysList = [..this.Arrays]; //Don't use the inline array directly https://github.com/dotnet/roslyn/issues/70708
-#pragma warning restore IDE0055
+					this.arraysList = [.. this.Arrays]; //Don't use the inline array directly https://github.com/dotnet/roslyn/issues/70708
 					this.arraysList.Add(array);
 				}
 			}

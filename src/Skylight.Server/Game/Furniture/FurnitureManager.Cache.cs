@@ -81,7 +81,7 @@ internal partial class FurnitureManager
 						"wired_teleport_unit" => new TeleportUnitEffectFurniture(entity.Id, type, dimensions, entity.Height[0]),
 						"wired_unit_walk_on" => new UnitWalkOnTriggerFurniture(entity.Id, type, dimensions, entity.Height[0]),
 						"wired_unit_walk_off" => new UnitWalkOffTriggerFurniture(entity.Id, type, dimensions, entity.Height[0]),
-						"variable_height" => new VariableHeightFurniture(entity.Id, type, dimensions, [..entity.Height], int.Parse(entity.InteractionData)),
+						"variable_height" => new VariableHeightFurniture(entity.Id, type, dimensions, [.. entity.Height], int.Parse(entity.InteractionData)),
 
 						_ => new StaticFloorFurniture(entity.Id, type, dimensions, entity.Height[0])
 					};
