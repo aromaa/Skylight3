@@ -13,11 +13,11 @@ internal abstract class FloorRoomItem<T>(IRoom room, int id, IUserInfo owner, T 
 	public Point3D Position { get; internal set; } = position;
 	public int Direction { get; internal set; } = direction;
 
-	public abstract double Height { get; }
-
 	public override int StripId => this.Id;
 
 	public new IFloorFurniture Furniture => this.furniture;
+
+	public virtual double Height => this.Furniture.DefaultHeight;
 
 	public EffectiveTilesEnumerator EffectiveTiles => new(this.furniture.EffectiveTiles, this.Direction);
 

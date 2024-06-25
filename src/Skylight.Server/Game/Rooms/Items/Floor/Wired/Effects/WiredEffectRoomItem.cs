@@ -15,8 +15,6 @@ internal abstract class WiredEffectRoomItem<T>(IRoom room, int id, IUserInfo own
 
 	public new IWiredEffectFurniture Furniture => this.furniture;
 
-	public override double Height => this.Furniture.DefaultHeight;
-
 	public abstract void Interact(IUserRoomUnit unit, int state);
 	public abstract void Trigger(IUserRoomUnit? cause = null);
 }

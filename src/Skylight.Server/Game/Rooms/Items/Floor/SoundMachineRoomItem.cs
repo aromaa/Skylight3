@@ -9,7 +9,7 @@ using Skylight.API.Numerics;
 namespace Skylight.Server.Game.Rooms.Items.Floor;
 
 internal sealed class SoundMachineRoomItem(IRoom room, int id, IUserInfo owner, ISoundMachineFurniture furniture, Point3D position, int direction, ISoundMachineInteractionManager handler)
-	: FixedHeightStatefulFloorRoomItem<ISoundMachineFurniture>(room, id, owner, furniture, position, direction), ISoundMachineRoomItem
+	: StatefulFloorRoomItem<ISoundMachineFurniture>(room, id, owner, furniture, position, direction), ISoundMachineRoomItem
 {
 	private readonly ISoundMachineInteractionManager handler = handler;
 
