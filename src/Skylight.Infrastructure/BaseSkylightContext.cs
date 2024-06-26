@@ -33,6 +33,7 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 
 	public DbSet<BadgeEntity> Badges { get; init; } = null!;
 	public DbSet<UserBadgeEntity> UserBadges { get; init; } = null!;
+	public DbSet<UserWardrobeSlotEntity> UserWardrobe { get; init; } = null!;
 
 	public DbSet<CatalogBadgeProductEntity> CatalogBadgeProducts { get; init; } = null!;
 	public DbSet<CatalogFloorProductEntity> CatalogFloorProducts { get; init; } = null!;
@@ -114,5 +115,6 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 
 		modelBuilder.ApplyConfiguration(new UserEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new UserSettingsEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new UserWardrobeEntityTypeConfiguration());
 	}
 }
