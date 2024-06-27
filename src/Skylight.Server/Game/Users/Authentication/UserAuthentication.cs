@@ -25,7 +25,7 @@ internal sealed class UserAuthentication(IConnectionMultiplexer redis, IDbContex
 
 	private readonly LoadContext loadContext = new(badgeManager, furnitureManager, furnitureInventoryItemFactory);
 
-	public async Task<IUser?> AuthenticateAsync(IClient client, string ssoTicket, CancellationToken cancellationToken)
+	public async Task<int?> AuthenticateAsync(IClient client, string ssoTicket, CancellationToken cancellationToken)
 	{
 		RedisKey ssoKey = UserAuthentication.redisSsoTicketKeyPrefix.Append(ssoTicket);
 
@@ -39,10 +39,10 @@ internal sealed class UserAuthentication(IConnectionMultiplexer redis, IDbContex
 			return null;
 		}
 
-		return await this.LoadAsync(client, (int)ssoUserId, cancellationToken).ConfigureAwait(false);
+		return (int)ssoUserId;
 	}
 
-	public async Task<IUser?> LoginAsync(IClient client, string username, string password, CancellationToken cancellationToken = default)
+	public async Task<int?> AuthenticateAsync(IClient client, string username, string password, CancellationToken cancellationToken = default)
 	{
 		await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
@@ -55,12 +55,16 @@ internal sealed class UserAuthentication(IConnectionMultiplexer redis, IDbContex
 			LastOnline = DateTime.UtcNow
 		}).RunAsync(cancellationToken).ConfigureAwait(false);
 
-		UserEntity user = await dbContext.Users.FirstAsync(u => u.Username == username, cancellationToken).ConfigureAwait(false);
+		int userId = await dbContext.Users
+			.Where(u => u.Username == username)
+			.Select(u => u.Id)
+			.SingleAsync(cancellationToken)
+			.ConfigureAwait(false);
 
-		return await this.LoadAsync(client, user.Id, cancellationToken).ConfigureAwait(false);
+		return userId;
 	}
 
-	private async Task<User?> LoadAsync(IClient client, int userId, CancellationToken cancellationToken = default)
+	public async Task<IUser?> LoginAsync(IClient client, int userId, CancellationToken cancellationToken = default)
 	{
 		IUserProfile? profile = await this.userManager.LoadUserProfileAsync(userId, cancellationToken).ConfigureAwait(false);
 		if (profile is null)

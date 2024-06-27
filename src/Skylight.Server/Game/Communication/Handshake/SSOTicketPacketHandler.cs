@@ -3,7 +3,6 @@ using Microsoft.Extensions.Options;
 using Net.Communication.Attributes;
 using Skylight.API.DependencyInjection;
 using Skylight.API.Game.Clients;
-using Skylight.API.Game.Users;
 using Skylight.API.Game.Users.Authentication;
 using Skylight.Protocol.Packets.Incoming.Handshake;
 using Skylight.Protocol.Packets.Manager;
@@ -44,18 +43,13 @@ internal sealed partial class SSOTicketPacketHandler<T>(IUserAuthentication user
 				await this.loadableServiceManager.Value.WaitForInitialization().ConfigureAwait(false);
 			}
 
-			IUser? user = await this.userAuthentication.AuthenticateAsync(client, ssoTicket).ConfigureAwait(false);
-			if (user is null)
+			int? userId = await this.userAuthentication.AuthenticateAsync(client, ssoTicket).ConfigureAwait(false);
+			if (userId is null)
 			{
 				return;
 			}
 
-			if (!this.clientManager.TryAdd(client, user))
-			{
-				return;
-			}
-
-			client.Authenticate(user);
+			await this.clientManager.LoginAsync(client, userId.Value).ConfigureAwait(false);
 		});
 	}
 }

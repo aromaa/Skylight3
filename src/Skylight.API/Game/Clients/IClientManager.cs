@@ -1,8 +1,6 @@
-﻿using Skylight.API.Game.Users;
-
-namespace Skylight.API.Game.Clients;
+﻿namespace Skylight.API.Game.Clients;
 
 public interface IClientManager
 {
-	public bool TryAdd(IClient client, IUser user);
+	public Task<bool> LoginAsync(IClient client, int userId);
 }
