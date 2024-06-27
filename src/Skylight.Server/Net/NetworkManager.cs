@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Text;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Skylight.API.Net.EndPoint;
 using Skylight.API.Net.Listener;
@@ -36,6 +37,7 @@ internal sealed class NetworkManager(ILogger<NetworkManager> logger, IOptions<Ne
 
 				listener.Start(new NetworkListenerConfiguration
 				{
+					Encoding = listenerSettings.Encoding is not null ? Encoding.GetEncoding(listenerSettings.Encoding) : Encoding.UTF8,
 					Revision = listenerSettings.Revision,
 					CryptoPrime = listenerSettings.CryptoPrime,
 					CryptoGenerator = listenerSettings.CryptoGenerator,

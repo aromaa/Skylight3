@@ -20,7 +20,7 @@ internal sealed class WebSocketNetworkListener(IServiceProvider serviceProvider,
 
 		IListener.CreateWebSocketListener(this.endPoint, socket =>
 		{
-			this.connectionHandler.Accept(socket, configuration!.Revision!, configuration.CryptoPrime, configuration.CryptoGenerator, configuration.CryptoKey, configuration.CryptoPremix);
+			this.connectionHandler.Accept(socket, configuration.Encoding, configuration.Revision!, configuration.CryptoPrime, configuration.CryptoGenerator, configuration.CryptoKey, configuration.CryptoPremix);
 		}, this.serviceProvider);
 	}
 

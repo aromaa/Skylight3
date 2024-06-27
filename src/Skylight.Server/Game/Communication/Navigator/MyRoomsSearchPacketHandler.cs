@@ -25,7 +25,7 @@ internal sealed class MyRoomsSearchPacketHandler<T>(IDbContextFactory<SkylightCo
 		foreach (RoomEntity room in dbContext.Rooms
 					 .AsNoTracking()
 					 .Include(r => r.Owner)
-					 .Where(r => r.OwnerId == 1))
+					 .Where(r => r.OwnerId == user.Profile.Id))
 		{
 			rooms.Add(new GuestRoomData(room.Id, room.Name, room.Owner!.Username, room.LayoutId, 0));
 		}

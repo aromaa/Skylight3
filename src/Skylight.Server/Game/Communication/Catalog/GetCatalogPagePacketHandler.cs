@@ -27,7 +27,7 @@ internal sealed class GetCatalogPagePacketHandler<T>(ICatalogManager catalogMana
 		user.SendAsync(new CatalogPageOutgoingPacket
 		{
 			PageId = packet.PageId,
-			CatalogType = Encoding.UTF8.GetString(packet.CatalogType),
+			CatalogType = Encoding.ASCII.GetString(packet.CatalogType),
 			LayoutCode = page.Layout,
 			Images = page.Images,
 			Texts = page.Texts,

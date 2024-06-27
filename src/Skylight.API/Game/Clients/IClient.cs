@@ -1,4 +1,5 @@
-﻿using Net.Sockets;
+﻿using System.Text;
+using Net.Sockets;
 using Skylight.API.Game.Users;
 using Skylight.API.Net;
 
@@ -7,6 +8,7 @@ namespace Skylight.API.Game.Clients;
 public interface IClient : IPacketSender
 {
 	public ISocket Socket { get; }
+	public Encoding Encoding { get; }
 
 	public IUser? User { get; }
 

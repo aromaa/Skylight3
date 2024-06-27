@@ -27,7 +27,7 @@ internal sealed partial class CreateFlatPacketHandler<T>(IDbContextFactory<Skyli
 	{
 		ReadOnlySpan<byte> roomNameSpan = packet.RoomName.ToArray();
 
-		int roomNameCharCount = Encoding.UTF8.GetCharCount(roomNameSpan);
+		int roomNameCharCount = user.Client.Encoding.GetCharCount(roomNameSpan);
 		if (roomNameCharCount is < 3 or > 25)
 		{
 			return;
@@ -35,13 +35,13 @@ internal sealed partial class CreateFlatPacketHandler<T>(IDbContextFactory<Skyli
 
 		ReadOnlySpan<byte> descriptionSpan = packet.Description.ToArray();
 
-		int descriptionCharCount = Encoding.UTF8.GetCharCount(descriptionSpan);
+		int descriptionCharCount = user.Client.Encoding.GetCharCount(descriptionSpan);
 		if (descriptionCharCount > 128)
 		{
 			return;
 		}
 
-		string model = Encoding.UTF8.GetString(packet.LayoutId);
+		string model = user.Client.Encoding.GetString(packet.LayoutId);
 		if (!this.navigatorManager.TryGetLayout(model, out IRoomLayout? layout))
 		{
 			return;
@@ -57,8 +57,8 @@ internal sealed partial class CreateFlatPacketHandler<T>(IDbContextFactory<Skyli
 			return;
 		}
 
-		string roomName = Encoding.UTF8.GetString(packet.RoomName);
-		string description = Encoding.UTF8.GetString(packet.Description);
+		string roomName = user.Client.Encoding.GetString(packet.RoomName);
+		string description = user.Client.Encoding.GetString(packet.Description);
 
 		int maxUserCount = packet.MaxUserCount;
 

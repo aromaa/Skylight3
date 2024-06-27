@@ -25,8 +25,8 @@ internal sealed partial class SaveSongNewPacketHandler<T>(IDbContextFactory<Skyl
 			return;
 		}
 
-		string name = Encoding.UTF8.GetString(packet.Name);
-		string songData = Encoding.UTF8.GetString(packet.SongData);
+		string name = user.Client.Encoding.GetString(packet.Name);
+		string songData = Encoding.ASCII.GetString(packet.SongData);
 
 		int songLength = 0;
 		foreach (Match match in SaveSongNewPacketHandler<T>.ParseSongData().Matches(songData))

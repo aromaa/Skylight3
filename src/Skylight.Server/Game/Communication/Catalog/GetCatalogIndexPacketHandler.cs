@@ -40,7 +40,7 @@ internal sealed partial class GetCatalogIndexPacketHandler<T>(ICatalogManager ca
 			return nodes;
 		}
 
-		string catalogType = Encoding.UTF8.GetString(packet.CatalogType);
+		string catalogType = Encoding.ASCII.GetString(packet.CatalogType);
 
 		user.Client.ScheduleTask(async client =>
 		{

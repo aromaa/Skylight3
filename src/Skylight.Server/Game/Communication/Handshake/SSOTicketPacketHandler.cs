@@ -29,7 +29,7 @@ internal sealed partial class SSOTicketPacketHandler<T>(IUserAuthentication user
 			return;
 		}
 
-		string ssoTicket = Encoding.UTF8.GetString(packet.SSOTicket);
+		string ssoTicket = Encoding.ASCII.GetString(packet.SSOTicket);
 
 		client.ScheduleTask(async client =>
 		{

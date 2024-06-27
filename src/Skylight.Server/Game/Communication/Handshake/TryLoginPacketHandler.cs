@@ -29,8 +29,8 @@ internal sealed class TryLoginPacketHandler<T>(IUserAuthentication userAuthentic
 			return;
 		}
 
-		string username = Encoding.UTF8.GetString(packet.Username);
-		string password = Encoding.UTF8.GetString(packet.Password);
+		string username = client.Encoding.GetString(packet.Username);
+		string password = client.Encoding.GetString(packet.Password);
 
 		client.ScheduleTask(async client =>
 		{

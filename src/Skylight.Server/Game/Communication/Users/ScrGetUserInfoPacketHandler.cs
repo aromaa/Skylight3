@@ -15,7 +15,7 @@ internal sealed class ScrGetUserInfoPacketHandler<T> : UserPacketHandler<T>
 	{
 		user.SendAsync(new ScrSendUserInfoOutgoingPacket
 		{
-			ProductName = Encoding.UTF8.GetString(packet.ProductName),
+			ProductName = user.Client.Encoding.GetString(packet.ProductName),
 			DaysToPeriodEnd = 0,
 			MemberPeriods = 1,
 			PeriodsSubscribedAhead = 1,

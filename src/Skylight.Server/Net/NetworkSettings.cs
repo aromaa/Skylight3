@@ -13,6 +13,8 @@ internal sealed class NetworkSettings
 	{
 		public List<string> EndPoints { get; set; } = null!;
 
+		public string? Encoding { get; set; }
+
 		public string Revision { get; set; } = null!;
 
 		public string? CryptoPrime { get; set; }

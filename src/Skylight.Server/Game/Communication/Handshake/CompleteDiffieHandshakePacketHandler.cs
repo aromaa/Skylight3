@@ -33,7 +33,7 @@ internal sealed class CompleteDiffieHandshakePacketHandler<T> : ClientPacketHand
 				BigInteger privateKey = new(privateKeyBytes, isUnsigned: true);
 				BigInteger serverPublicKey = BigInteger.ModPow(handler.CryptoGenerator, privateKey, handler.CryptoPrime);
 
-				BigInteger clientPublicKey = BigInteger.Parse(Encoding.UTF8.GetString(packet.PublicKey));
+				BigInteger clientPublicKey = BigInteger.Parse(Encoding.ASCII.GetString(packet.PublicKey));
 				BigInteger sharedKey = BigInteger.ModPow(clientPublicKey, privateKey, handler.CryptoPrime);
 
 				handler.EnableEncryption(sharedKey, incomingOnly: false);

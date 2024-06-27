@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Net.Metadata;
@@ -21,7 +22,7 @@ internal sealed class NetworkConnectionHandler(IServiceProvider serviceProvider,
 
 	private readonly PacketManagerCache packetManagerCache = packetManagerCache;
 
-	public void Accept(ISocket socket, string revision, string? cryptoPrime = null, string? cryptoGenerator = null, string? cryptoKey = null, string? cryptoPremix = null)
+	public void Accept(ISocket socket, Encoding encoding, string revision, string? cryptoPrime = null, string? cryptoGenerator = null, string? cryptoKey = null, string? cryptoPremix = null)
 	{
 		if (!this.packetManagerCache.TryCreatePacketManager(revision, out Func<AbstractGamePacketManager>? packetManagerGetter))
 		{
@@ -30,7 +31,7 @@ internal sealed class NetworkConnectionHandler(IServiceProvider serviceProvider,
 			return;
 		}
 
-		socket.Metadata.Set(NetworkConnectionHandler.GameClientMetadataKey, new Client(socket));
+		socket.Metadata.Set(NetworkConnectionHandler.GameClientMetadataKey, new Client(socket, encoding));
 
 		socket.Pipeline.AddHandlerFirst(new LeftOverHandler());
 

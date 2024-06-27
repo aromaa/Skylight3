@@ -23,7 +23,7 @@ internal sealed partial class ChangeMottoPacketHandler<T>(IDbContextFactory<Skyl
 			return;
 		}
 
-		string motto = Encoding.UTF8.GetString(packet.Motto);
+		string motto = user.Client.Encoding.GetString(packet.Motto);
 		if (motto.Length > 38 || motto == user.Profile.Motto)
 		{
 			return;

@@ -41,7 +41,7 @@ internal sealed partial class PurchaseFromCatalogPacketHandler<T>(ICatalogManage
 			return;
 		}
 
-		string extraData = Encoding.UTF8.GetString(packet.ExtraData);
+		string extraData = user.Client.Encoding.GetString(packet.ExtraData);
 		int amount = packet.Amount;
 
 		bool scheduled = user.Client.ScheduleTask(client =>

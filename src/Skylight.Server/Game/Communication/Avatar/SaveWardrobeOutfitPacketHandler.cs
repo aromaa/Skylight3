@@ -23,8 +23,8 @@ internal sealed class SaveWardrobeOutfitPacketHandler<T>(IDbContextFactory<Skyli
 			return;
 		}
 
-		string figure = Encoding.UTF8.GetString(packet.Figure);
-		string gender = Encoding.UTF8.GetString(packet.Gender);
+		string figure = Encoding.ASCII.GetString(packet.Figure);
+		string gender = Encoding.ASCII.GetString(packet.Gender);
 
 		user.Client.ScheduleTask(async _ =>
 		{

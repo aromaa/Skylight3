@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using Net.Sockets;
 using Skylight.API.Game.Clients;
 using Skylight.API.Game.Users;
@@ -19,14 +20,16 @@ namespace Skylight.Server.Game.Clients;
 internal sealed class Client : IClient
 {
 	public ISocket Socket { get; }
+	public Encoding Encoding { get; }
 
 	public IUser? User { get; private set; }
 
 	private readonly PacketScheduler packetScheduler;
 
-	internal Client(ISocket socket)
+	internal Client(ISocket socket, Encoding encoding)
 	{
 		this.Socket = socket;
+		this.Encoding = encoding;
 
 		this.packetScheduler = new PacketScheduler(this);
 	}

@@ -17,8 +17,8 @@ internal sealed class UpdateFigureDataPacketHandler<T>(IDbContextFactory<Skyligh
 
 	internal override void Handle(IUser user, in T packet)
 	{
-		string figure = Encoding.UTF8.GetString(packet.Figure);
-		string gender = Encoding.UTF8.GetString(packet.Gender);
+		string figure = Encoding.ASCII.GetString(packet.Figure);
+		string gender = Encoding.ASCII.GetString(packet.Gender);
 
 		user.Client.ScheduleTask(async client =>
 		{

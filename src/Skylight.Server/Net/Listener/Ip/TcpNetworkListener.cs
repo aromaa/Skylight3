@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using Net.Sockets.Listener;
 using Skylight.API.Net.Connection;
@@ -33,7 +34,7 @@ internal sealed class TcpNetworkListener(IServiceProvider serviceProvider, ILogg
 
 		IListener.CreateTcpListener(this.endPoint, socket =>
 		{
-			this.connectionHandler.Accept(socket, configuration.Revision!, configuration.CryptoPrime, configuration.CryptoGenerator, configuration.CryptoKey, configuration.CryptoPremix);
+			this.connectionHandler.Accept(socket, configuration.Encoding, configuration.Revision!, configuration.CryptoPrime, configuration.CryptoGenerator, configuration.CryptoKey, configuration.CryptoPremix);
 		}, this.serviceProvider);
 	}
 

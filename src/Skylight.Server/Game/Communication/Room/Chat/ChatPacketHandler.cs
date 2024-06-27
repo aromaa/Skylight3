@@ -17,7 +17,7 @@ internal sealed class ChatPacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		string message = Encoding.UTF8.GetString(packet.Text);
+		string message = user.Client.Encoding.GetString(packet.Text);
 		int styleId = packet.StyleId;
 		int trackingId = packet.TrackingId;
 

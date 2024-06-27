@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
+using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -7,6 +8,8 @@ using Skylight.API.Net.Listener;
 using Skylight.Bootstrap.Attributes;
 using Skylight.Plugin.WebSockets;
 using Skylight.Server.Extensions;
+
+Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 builder.ConfigureSkylightServer();
