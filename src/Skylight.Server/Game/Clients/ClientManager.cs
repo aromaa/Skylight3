@@ -37,7 +37,14 @@ internal sealed class ClientManager : IClientManager
 		await holder.PrepareLoginAsync().ConfigureAwait(false);
 
 		IUser? user = await this.userAuthentication.LoginAsync(client, userId).ConfigureAwait(false);
-		if (user is null || client.Socket.Closed || !this.users.TryUpdate(userId, new UserHolder(user), holder) || !this.clients.TryAdd(client.Socket, user))
+		if (user is null || client.Socket.Closed)
+		{
+			this.users.TryRemove(KeyValuePair.Create(userId, holder));
+
+			return false;
+		}
+
+		if (!this.users.TryUpdate(userId, new UserHolder(user), holder) || !this.clients.TryAdd(client.Socket, user))
 		{
 			return false;
 		}
