@@ -19,7 +19,7 @@ internal sealed class RoomManager(IServiceProvider serviceProvider, IDbContextFa
 
 	private readonly ConcurrentDictionary<int, IRoom> loadedRooms = new();
 
-	public ICollection<IRoom> Rooms => this.loadedRooms.Values;
+	public IEnumerable<IRoom> LoadedRooms => this.loadedRooms.Values;
 
 	public async ValueTask<IRoom?> GetRoomAsync(int id, CancellationToken cancellationToken)
 	{
