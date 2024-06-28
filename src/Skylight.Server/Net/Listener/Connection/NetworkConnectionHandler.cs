@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Net.Metadata;
 using Net.Sockets;
+using Skylight.API.Game.Clients;
 using Skylight.API.Net.Connection;
 using Skylight.Protocol.Packets.Manager;
 using Skylight.Protocol.Packets.Outgoing.Handshake;
@@ -13,13 +14,14 @@ using Skylight.Server.Net.Handlers;
 
 namespace Skylight.Server.Net.Listener.Connection;
 
-internal sealed class NetworkConnectionHandler(IServiceProvider serviceProvider, ILogger<NetworkConnectionHandler> logger, PacketManagerCache packetManagerCache) : INetworkConnectionHandler
+internal sealed class NetworkConnectionHandler(IServiceProvider serviceProvider, ILogger<NetworkConnectionHandler> logger, IClientManager clientManager, PacketManagerCache packetManagerCache) : INetworkConnectionHandler
 {
 	public static readonly MetadataKey<Client> GameClientMetadataKey = MetadataKey<Client>.Create("GameClient");
 
 	private readonly IServiceProvider serviceProvider = serviceProvider;
 	private readonly ILogger<NetworkConnectionHandler> logger = logger;
 
+	private readonly IClientManager clientManager = clientManager;
 	private readonly PacketManagerCache packetManagerCache = packetManagerCache;
 
 	public void Accept(ISocket socket, Encoding encoding, string revision, string? cryptoPrime = null, string? cryptoGenerator = null, string? cryptoKey = null, string? cryptoPremix = null)
@@ -31,7 +33,15 @@ internal sealed class NetworkConnectionHandler(IServiceProvider serviceProvider,
 			return;
 		}
 
-		socket.Metadata.Set(NetworkConnectionHandler.GameClientMetadataKey, new Client(socket, encoding));
+		Client client = new(socket, encoding);
+		if (!this.clientManager.TryAccept(client))
+		{
+			socket.Disconnect();
+
+			return;
+		}
+
+		socket.Metadata.Set(NetworkConnectionHandler.GameClientMetadataKey, client);
 
 		socket.Pipeline.AddHandlerFirst(new LeftOverHandler());
 

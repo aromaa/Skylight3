@@ -10,6 +10,8 @@ public interface IClient : IPacketSender
 	public ISocket Socket { get; }
 	public Encoding Encoding { get; }
 
+	public long LastPongReceived { get; set; } //TODO: Remove
+
 	public IUser? User { get; }
 
 	public void Authenticate(IUser user);

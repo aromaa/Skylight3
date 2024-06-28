@@ -22,6 +22,8 @@ internal sealed class Client : IClient
 	public ISocket Socket { get; }
 	public Encoding Encoding { get; }
 
+	public long LastPongReceived { get; set; }
+
 	public IUser? User { get; private set; }
 
 	private readonly PacketScheduler packetScheduler;
@@ -30,6 +32,8 @@ internal sealed class Client : IClient
 	{
 		this.Socket = socket;
 		this.Encoding = encoding;
+
+		this.LastPongReceived = Environment.TickCount64;
 
 		this.packetScheduler = new PacketScheduler(this);
 	}

@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Text;
 using Microsoft.Extensions.Logging;
 using Net.Sockets.Listener;
 using Skylight.API.Net.Connection;

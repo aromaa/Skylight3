@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using Microsoft.Extensions.Logging;
+using Net.Sockets;
 using Net.Sockets.Listener;
 using Skylight.API.Net.Listener;
 using Skylight.Server.Extensions;
@@ -22,6 +23,8 @@ internal sealed class XmlSocketNetworkListener(ILogger<XmlSocketNetworkListener>
 		IListener.CreateTcpListener(ipEndPoint, socket =>
 		{
 			socket.Pipeline.AddHandlerFirst(FlashSocketPolicyRequestHandler.Instance);
+
+			Task.Delay(TimeSpan.FromSeconds(5)).ContinueWith(static (_, state) => ((ISocket)state!).Disconnect("Timeout"), socket);
 		});
 	}
 
