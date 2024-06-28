@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Net.Communication.Attributes;
-using Skylight.API.Game.Navigator;
 using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Users;
 using Skylight.Domain.Rooms;

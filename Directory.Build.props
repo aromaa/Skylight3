@@ -13,6 +13,10 @@
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(BuildingInsideVisualStudio)' == 'true'">
+		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<EditorConfigFiles Include="$(MSBuildThisFileDirectory)CodeAnalysis.globalconfig" />
 		<PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" PrivateAssets="all" />
