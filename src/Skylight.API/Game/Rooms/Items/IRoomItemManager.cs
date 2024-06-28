@@ -19,6 +19,12 @@ public interface IRoomItemManager
 	public bool CanPlaceItem(IFloorFurniture floorFurniture, Point3D position, int direction, IUser? source = null);
 	public bool CanPlaceItem(IWallFurniture wallFurniture, Point2D location, Point2D position, int direction, IUser? source = null);
 
+	public bool CanMoveItem(IFloorRoomItem floorItem, Point3D position, int direction, IUser? source = null);
+	public bool CanMoveItem(IWallRoomItem wallItem, Point2D location, Point2D position, int direction, IUser? source = null);
+
+	public bool CanPickupItem(IFloorRoomItem floorItem, IUser? source = null);
+	public bool CanPickupItem(IWallRoomItem floorItem, IUser? source = null);
+
 	public bool ValidItemLocation(IFloorFurniture floorFurniture, Point2D location, int direction);
 	public bool ValidItemLocation(IWallFurniture wallFurniture, Point2D location, Point2D position, int direction);
 

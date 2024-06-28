@@ -47,7 +47,7 @@ internal sealed partial class PickupObjectPacketHandler<T>(IDbContextFactory<Sky
 		{
 			IFloorRoomItem? item = await roomUnit.Room.ScheduleTask(room =>
 			{
-				if (!roomUnit.InRoom || !room.ItemManager.TryGetFloorItem(floorItemId, out IFloorRoomItem? item))
+				if (!roomUnit.InRoom || !room.ItemManager.TryGetFloorItem(floorItemId, out IFloorRoomItem? item) || !room.ItemManager.CanPickupItem(item, roomUnit.User))
 				{
 					return default;
 				}
@@ -81,7 +81,7 @@ internal sealed partial class PickupObjectPacketHandler<T>(IDbContextFactory<Sky
 		{
 			IWallRoomItem? item = await roomUnit.Room.ScheduleTask(room =>
 			{
-				if (!roomUnit.InRoom || !room.ItemManager.TryGetWallItem(wallItemId, out IWallRoomItem? item))
+				if (!roomUnit.InRoom || !room.ItemManager.TryGetWallItem(wallItemId, out IWallRoomItem? item) || !room.ItemManager.CanPickupItem(item, roomUnit.User))
 				{
 					return default;
 				}

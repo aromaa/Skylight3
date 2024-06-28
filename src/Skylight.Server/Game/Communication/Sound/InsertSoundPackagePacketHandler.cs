@@ -26,7 +26,7 @@ internal sealed partial class InsertSoundPackagePacketHandler<T> : UserPacketHan
 
 		unit.Room.PostTask(_ =>
 		{
-			if (!unit.InRoom || !unit.Room.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
+			if (!unit.InRoom || !unit.Room.IsOwner(user) || !unit.Room.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
 			{
 				return;
 			}

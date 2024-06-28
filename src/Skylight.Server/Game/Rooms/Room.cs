@@ -82,6 +82,8 @@ internal sealed class Room : IRoom
 		this.roomClients.TryRemove(user.Client.Socket);
 	}
 
+	public bool IsOwner(IUser user) => this.Info.Owner.Id == user.Profile.Id;
+
 	private void DoTicking()
 	{
 		const int TickTime = 500;

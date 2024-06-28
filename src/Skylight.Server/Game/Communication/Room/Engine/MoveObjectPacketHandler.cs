@@ -25,12 +25,13 @@ internal sealed partial class MoveObjectPacketHandler<T> : UserPacketHandler<T>
 
 		roomUnit.Room.PostTask(room =>
 		{
-			if (!roomUnit.InRoom)
+			if (!roomUnit.InRoom || !room.ItemManager.TryGetFloorItem(itemId, out IFloorRoomItem? item))
 			{
 				return;
 			}
 
-			if (!room.ItemManager.TryGetFloorItem(itemId, out IFloorRoomItem? item) || !room.ItemManager.ValidItemLocation(item.Furniture, location, direction))
+			Point3D position = new(location, room.ItemManager.GetPlacementHeight(item.Furniture, location, direction));
+			if (!room.ItemManager.CanMoveItem(item, position, direction, user))
 			{
 				return;
 			}

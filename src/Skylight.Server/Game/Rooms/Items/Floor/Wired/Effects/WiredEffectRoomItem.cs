@@ -15,6 +15,19 @@ internal abstract class WiredEffectRoomItem<T>(IRoom room, int id, IUserInfo own
 
 	public new IWiredEffectFurniture Furniture => this.furniture;
 
-	public abstract void Interact(IUserRoomUnit unit, int state);
+	public bool Interact(IUserRoomUnit unit, int state)
+	{
+		if (!this.Room.IsOwner(unit.User))
+		{
+			return false;
+		}
+
+		this.Open(unit);
+
+		return true;
+	}
+
+	public abstract void Open(IUserRoomUnit unit);
+
 	public abstract void Trigger(IUserRoomUnit? cause = null);
 }

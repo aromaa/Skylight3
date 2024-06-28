@@ -7,7 +7,7 @@ public interface IInteractableRoomItem : IRoomItem, IFurnitureItem<IInteractable
 {
 	public new IInteractableFurniture Furniture { get; }
 
-	public void Interact(IUserRoomUnit unit, int state);
+	public bool Interact(IUserRoomUnit unit, int state);
 
 	IInteractableFurniture IFurnitureItem<IInteractableFurniture>.Furniture => this.Furniture;
 }

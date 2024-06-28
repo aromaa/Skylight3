@@ -16,7 +16,7 @@ internal sealed class UpdateTriggerPacketHandler<T> : UserPacketHandler<T>
 {
 	internal override void Handle(IUser user, in T packet)
 	{
-		if (user.RoomSession?.Unit is not { } roomUnit)
+		if (user.RoomSession?.Unit is not { } roomUnit || !roomUnit.Room.IsOwner(user))
 		{
 			return;
 		}

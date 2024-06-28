@@ -1,6 +1,7 @@
 ﻿using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Floor;
+using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
 
@@ -12,4 +13,6 @@ internal sealed class VariableHeightRoomItem(IRoom room, int id, IUserInfo owner
 	public new IVariableHeightFurniture Furniture => this.furniture;
 
 	public override double Height => this.furniture.Heights[this.State];
+
+	public bool Interact(IUserRoomUnit unit, int state) => this.CycleState(unit);
 }

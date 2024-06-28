@@ -89,7 +89,7 @@ internal sealed partial class PlaceObjectPacketHandler<T>(IDbContextFactory<Skyl
 			{
 				Point3D position = new(location, room.ItemManager.GetPlacementHeight(floorItem.Furniture, location, direction));
 
-				return roomUnit.InRoom && room.ItemManager.CanPlaceItem(floorItem.Furniture, position, direction) && roomUnit.User.Inventory.TryRemoveFloorItem(floorItem);
+				return roomUnit.InRoom && room.ItemManager.CanPlaceItem(floorItem.Furniture, position, direction, roomUnit.User) && roomUnit.User.Inventory.TryRemoveFloorItem(floorItem);
 			}).TryGetOrSuppressThrowing(out bool canPlaceAwait, out ValueTaskExtensions.Awaiter<bool> canPlaceAwaiter) ? canPlaceAwait : await canPlaceAwaiter;
 
 			if (!canPlace)
@@ -120,7 +120,7 @@ internal sealed partial class PlaceObjectPacketHandler<T>(IDbContextFactory<Skyl
 			bool placed = roomUnit.Room.ScheduleTask(room =>
 			{
 				Point3D position = new(location, room.ItemManager.GetPlacementHeight(floorItem.Furniture, location, direction));
-				if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(floorItem.Furniture, position, direction))
+				if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(floorItem.Furniture, position, direction, roomUnit.User))
 				{
 					return false;
 				}
@@ -192,7 +192,7 @@ internal sealed partial class PlaceObjectPacketHandler<T>(IDbContextFactory<Skyl
 			roomUnit.User.Client.ScheduleTask(async _ =>
 			{
 				bool canPlace = roomUnit.Room.ScheduleTask(room =>
-						roomUnit.InRoom && room.ItemManager.CanPlaceItem(wallItem.Furniture, location, position, direction) && roomUnit.User.Inventory.TryRemoveWallItem(wallItem))
+						roomUnit.InRoom && room.ItemManager.CanPlaceItem(wallItem.Furniture, location, position, direction, roomUnit.User) && roomUnit.User.Inventory.TryRemoveWallItem(wallItem))
 					.TryGetOrSuppressThrowing(out bool canPlaceAwait, out ValueTaskExtensions.Awaiter<bool> canPlaceAwaiter) ? canPlaceAwait : await canPlaceAwaiter;
 
 				if (!canPlace)
@@ -222,7 +222,7 @@ internal sealed partial class PlaceObjectPacketHandler<T>(IDbContextFactory<Skyl
 
 				bool placed = roomUnit.Room.ScheduleTask(room =>
 				{
-					if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(wallItem.Furniture, location, position, direction))
+					if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(wallItem.Furniture, location, position, direction, roomUnit.User))
 					{
 						return false;
 					}

@@ -1,6 +1,7 @@
 ﻿using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Floor;
+using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
 
@@ -10,4 +11,6 @@ internal sealed class BasicFloorRoomItem(IRoom room, int id, IUserInfo owner, IB
 	: MultiStateFloorRoomItem<IBasicFloorFurniture>(room, id, owner, furniture, position, direction, state), IBasicFloorRoomItem
 {
 	public new IBasicFloorFurniture Furniture => this.furniture;
+
+	public bool Interact(IUserRoomUnit unit, int state) => this.CycleState(unit);
 }

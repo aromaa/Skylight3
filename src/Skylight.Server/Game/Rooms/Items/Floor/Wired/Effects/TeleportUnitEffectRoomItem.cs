@@ -34,7 +34,7 @@ internal sealed class TeleportUnitEffectRoomItem(IRoom room, int id, IUserInfo o
 	public override void OnPlace() => this.interactionHandler.OnPlace(this);
 	public override void OnRemove() => this.interactionHandler.OnRemove(this);
 
-	public override void Interact(IUserRoomUnit unit, int state)
+	public override void Open(IUserRoomUnit unit)
 	{
 		unit.User.SendAsync(new WiredFurniActionOutgoingPacket(this.Id, this.Furniture.Id, ActionType.TeleportUnit, 100, this.SelectedItems.Select(i => i.Id).ToList(), 0, [], string.Empty));
 	}

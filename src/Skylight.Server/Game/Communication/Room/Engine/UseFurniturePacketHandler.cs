@@ -29,9 +29,7 @@ internal sealed partial class UseFurniturePacketHandler<T> : UserPacketHandler<T
 				return;
 			}
 
-			interactable.Interact(roomUnit, state);
-
-			if (room.ItemManager.TryGetInteractionHandler(out IUnitUseItemTriggerInteractionHandler? handler))
+			if (interactable.Interact(roomUnit, state) && room.ItemManager.TryGetInteractionHandler(out IUnitUseItemTriggerInteractionHandler? handler))
 			{
 				handler.OnUse(roomUnit, interactable);
 			}

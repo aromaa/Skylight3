@@ -39,7 +39,7 @@ internal sealed class ShowMessageEffectRoomItem(IRoom room, int id, IUserInfo ow
 		this.interactionHandler.OnRemove(this);
 	}
 
-	public override void Interact(IUserRoomUnit unit, int state)
+	public override void Open(IUserRoomUnit unit)
 	{
 		unit.User.SendAsync(new WiredFurniActionOutgoingPacket(this.Id, this.Furniture.Id, ActionType.ShowMessage, 0, [], 0, [], this.Message));
 	}

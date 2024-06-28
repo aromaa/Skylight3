@@ -25,6 +25,8 @@ public interface IRoom
 	public void Enter(IUser user);
 	public void Exit(IUser user);
 
+	public bool IsOwner(IUser user);
+
 	public bool PostTask<TTask>(TTask task)
 		where TTask : IRoomTask;
 

@@ -31,7 +31,7 @@ internal sealed class UnitEnterRoomTriggerRoomItem(IRoom room, int id, IUserInfo
 		this.interactionHandler.OnRemove(this);
 	}
 
-	public override void Interact(IUserRoomUnit unit, int state)
+	public override void Open(IUserRoomUnit unit)
 	{
 		unit.User.SendAsync(new WiredFurniTriggerOutgoingPacket(this.Id, this.Furniture.Id, TriggerType.UnitEnterRoom, 0, [], [], this.TriggerUsername ?? string.Empty));
 	}

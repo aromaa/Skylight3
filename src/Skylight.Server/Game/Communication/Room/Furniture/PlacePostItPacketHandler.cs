@@ -118,7 +118,7 @@ internal sealed partial class PlacePostItPacketHandler<T>(IDbContextFactory<Skyl
 
 				bool placed = roomUnit.Room.ScheduleTask(room =>
 				{
-					if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(inventoryItem.Furniture, location, position, direction))
+					if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(inventoryItem.Furniture, location, position, direction, roomUnit.User))
 					{
 						return false;
 					}

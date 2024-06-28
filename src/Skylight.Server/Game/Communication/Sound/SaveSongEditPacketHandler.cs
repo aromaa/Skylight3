@@ -20,7 +20,7 @@ internal sealed partial class SaveSongEditPacketHandler<T>(IDbContextFactory<Sky
 
 	internal override void Handle(IUser user, in T packet)
 	{
-		if (user.RoomSession?.Unit is not { } unit)
+		if (user.RoomSession?.Unit is not { } unit || !unit.Room.IsOwner(user))
 		{
 			return;
 		}

@@ -2,6 +2,7 @@
 using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
+using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
 
@@ -21,5 +22,19 @@ internal abstract class MultiStateFloorRoomItem<T>(IRoom room, int id, IUserInfo
 	{
 		get => this.InternalState;
 		set => this.InternalState = value;
+	}
+
+	protected bool CycleState(IUserRoomUnit unit)
+	{
+		if (!this.Room.IsOwner(unit.User))
+		{
+			return false;
+		}
+
+		this.InternalState = (this.State + 1) % this.furniture.StateCount;
+
+		this.Room.ItemManager.UpdateItem(this);
+
+		return true;
 	}
 }

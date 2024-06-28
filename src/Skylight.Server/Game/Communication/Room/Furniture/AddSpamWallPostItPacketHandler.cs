@@ -96,8 +96,8 @@ internal sealed partial class AddSpamWallPostItPacketHandler<T>(IDbContextFactor
 			{
 				bool canPlace = roomUnit.Room.ScheduleTask(room =>
 				{
-					return roomUnit.InRoom && room.ItemManager.CanPlaceItem(postItItem.Furniture, location, position, direction, roomUnit.User)
-											 && room.ItemManager.TryGetInteractionHandler(out IStickyNoteInteractionHandler? handler) && handler.HasStickyNotePole;
+					return roomUnit.InRoom && room.ItemManager.CanPlaceItem(postItItem.Furniture, location, position, direction)
+						&& room.ItemManager.TryGetInteractionHandler(out IStickyNoteInteractionHandler? handler) && handler.HasStickyNotePole;
 				}).TryGetOrSuppressThrowing(out bool canPlaceAwait, out ValueTaskExtensions.Awaiter<bool> canPlaceAwaiter) ? canPlaceAwait : await canPlaceAwaiter;
 
 				if (!canPlace)
@@ -122,7 +122,8 @@ internal sealed partial class AddSpamWallPostItPacketHandler<T>(IDbContextFactor
 
 				bool placed = roomUnit.Room.ScheduleTask(room =>
 				{
-					if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(inventoryItem.Furniture, location, position, direction))
+					if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(inventoryItem.Furniture, location, position, direction)
+						|| !room.ItemManager.TryGetInteractionHandler(out IStickyNoteInteractionHandler? handler) || !handler.HasStickyNotePole)
 					{
 						return false;
 					}

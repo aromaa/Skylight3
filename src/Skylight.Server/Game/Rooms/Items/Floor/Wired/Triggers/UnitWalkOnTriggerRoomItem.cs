@@ -40,7 +40,7 @@ internal sealed class UnitWalkOnTriggerRoomItem(IRoom room, int id, IUserInfo ow
 		this.interactionHandler.OnRemove(this);
 	}
 
-	public override void Interact(IUserRoomUnit unit, int state)
+	public override void Open(IUserRoomUnit unit)
 	{
 		unit.User.SendAsync(new WiredFurniTriggerOutgoingPacket(this.Id, this.Furniture.Id, TriggerType.UnitUseItem, 100, this.SelectedItems.Select(i => i.Id).ToList(), [], string.Empty));
 	}

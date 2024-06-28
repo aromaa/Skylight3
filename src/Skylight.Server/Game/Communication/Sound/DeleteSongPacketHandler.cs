@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Net.Communication.Attributes;
 using Skylight.API.Game.Users;
-using Skylight.Domain.Rooms.Sound;
 using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Incoming.Sound;
 using Skylight.Protocol.Packets.Manager;
@@ -22,12 +21,10 @@ internal sealed partial class DeleteSongPacketHandler<T>(IDbContextFactory<Skyli
 		{
 			await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
-			dbContext.Remove(new SongEntity
-			{
-				Id = songId
-			});
-
-			await dbContext.SaveChangesAsync().ConfigureAwait(false);
+			await dbContext.Songs
+				.Where(s => s.Id == songId && s.UserId == user.Profile.Id)
+				.ExecuteDeleteAsync()
+				.ConfigureAwait(false);
 		});
 	}
 }

@@ -32,7 +32,7 @@ internal sealed class UnitSayTriggerRoomItem(IRoom room, int id, IUserInfo owner
 		this.interactionHandler.OnRemove(this);
 	}
 
-	public override void Interact(IUserRoomUnit unit, int state)
+	public override void Open(IUserRoomUnit unit)
 	{
 		unit.User.SendAsync(new WiredFurniTriggerOutgoingPacket(this.Id, this.Furniture.Id, TriggerType.UnitSay, 0, [], [], this.Message));
 	}
