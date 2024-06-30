@@ -44,15 +44,13 @@ internal sealed class IntervalTree<TKey, TValue>
 		if (compare < 0)
 		{
 			parent.Left = node;
-			parent.Balance--;
 		}
 		else
 		{
 			parent.Right = node;
-			parent.Balance++;
 		}
 
-		this.RebalanceAfterInsert(parent);
+		this.RebalanceAfterInsert(node);
 		this.Fixup(node);
 
 		this.count++;
@@ -66,6 +64,9 @@ internal sealed class IntervalTree<TKey, TValue>
 		if (node is not null && node.Remove(value) && node.Items.Count <= 0)
 		{
 			this.Remove(node);
+			this.Fixup(node);
+
+			this.count--;
 		}
 	}
 
@@ -281,14 +282,10 @@ internal sealed class IntervalTree<TKey, TValue>
 		if (node.Left is null)
 		{
 			this.ShiftNodes(node, node.Right);
-
-			this.RebalanceAfterDeletion(node.Parent);
 		}
 		else if (node.Right is null)
 		{
 			this.ShiftNodes(node, node.Left);
-
-			this.RebalanceAfterDeletion(node.Parent);
 		}
 		else
 		{
@@ -305,9 +302,10 @@ internal sealed class IntervalTree<TKey, TValue>
 
 			successor.Left = node.Left;
 			successor.Left.Parent = successor;
-
-			this.RebalanceAfterDeletion(successor);
+			successor.Balance = node.Balance;
 		}
+
+		this.RebalanceAfterDeletion(node);
 	}
 
 	private void ShiftNodes(Node node, Node? replacement)
@@ -319,12 +317,10 @@ internal sealed class IntervalTree<TKey, TValue>
 		else if (node == node.Parent.Left)
 		{
 			node.Parent.Left = replacement;
-			node.Parent.Balance++;
 		}
 		else
 		{
 			node.Parent.Right = replacement;
-			node.Parent.Balance--;
 		}
 
 		if (replacement is not null)
@@ -383,165 +379,267 @@ internal sealed class IntervalTree<TKey, TValue>
 
 	private void RebalanceAfterInsert(Node node)
 	{
-		while (node.Balance != 0)
+		for (Node? parent = node.Parent; parent is not null; parent = node.Parent)
 		{
-			if (node.Balance == 2)
+			Node? parentOfParent;
+			Node newNode;
+			if (parent.Right == node)
 			{
-				if (node.Right is null)
+				if (parent.Balance > 0)
 				{
-					break;
-				}
+					parentOfParent = parent.Parent;
 
-				Node rightNode = node.Right;
-				if (rightNode.Balance == 1)
-				{
-					(rightNode.Balance, node.Balance) = (0, 0);
-
-					this.RotateLeft(node, rightNode);
+					newNode = node.Balance < 0
+						? this.RotateRightLeft(parent, node)
+						: this.RotateLeft(parent, node);
 				}
 				else
 				{
-					Node rightLeftNode = rightNode.Left!;
-
-					(int rightLeftBalance, rightLeftNode.Balance) = (rightLeftNode.Balance, 0);
-
-					(rightNode.Balance, node.Balance) = rightLeftBalance switch
+					if (parent.Balance < 0)
 					{
-						1 => (0, -1),
-						-1 => (1, 0),
-						_ => (0, 0)
-					};
+						parent.Balance = 0;
+						break;
+					}
 
-					this.RotateRight(rightNode, rightLeftNode);
-					this.RotateLeft(node, rightNode);
+					parent.Balance = 1;
+					node = parent;
+					continue;
 				}
-
-				break;
-			}
-			else if (node.Balance == -2)
-			{
-				if (node.Left is null)
-				{
-					break;
-				}
-
-				Node leftNode = node.Left;
-				if (leftNode.Balance == -1)
-				{
-					(leftNode.Balance, node.Balance) = (0, 0);
-
-					this.RotateRight(node, leftNode);
-				}
-				else
-				{
-					Node leftRightNode = leftNode.Right!;
-
-					(int leftRightBalance, leftRightNode.Balance) = (leftRightNode.Balance, 0);
-
-					(leftNode.Balance, node.Balance) = leftRightBalance switch
-					{
-						1 => (-1, 0),
-						-1 => (0, 1),
-						_ => (0, 0)
-					};
-
-					this.RotateLeft(leftNode, leftRightNode);
-					this.RotateRight(node, leftNode);
-				}
-
-				break;
-			}
-
-			if (node.Parent is null)
-			{
-				break;
-			}
-
-			if (node.Parent.Left == node)
-			{
-				node.Parent.Balance--;
 			}
 			else
 			{
-				node.Parent.Balance++;
+				if (parent.Balance < 0)
+				{
+					parentOfParent = parent.Parent;
+
+					newNode = node.Balance > 0
+						? this.RotateLeftRight(parent, node)
+						: this.RotateRight(parent, node);
+				}
+				else
+				{
+					if (parent.Balance > 0)
+					{
+						parent.Balance = 0;
+						break;
+					}
+
+					parent.Balance = -1;
+					node = parent;
+					continue;
+				}
 			}
 
-			node = node.Parent;
+			newNode.Parent = parentOfParent;
+
+			if (parentOfParent is not null)
+			{
+				if (parentOfParent.Left == parent)
+				{
+					parentOfParent.Left = newNode;
+				}
+				else
+				{
+					parentOfParent.Right = newNode;
+				}
+			}
+			else
+			{
+				this.root = newNode;
+			}
+
+			break;
 		}
 	}
 
 	private void RebalanceAfterDeletion(Node? node)
 	{
-		if (node is null)
+		Node? parentOfParent;
+		for (Node? parent = node?.Parent; parent is not null; parent = parentOfParent)
 		{
-			return;
-		}
+			parentOfParent = parent.Parent;
 
-		this.RebalanceAfterInsert(node);
+			int balance;
+			if (parent.Left == node)
+			{
+				if (parent.Balance > 0)
+				{
+					Node right = parent.Right!;
+					balance = right.Balance;
+
+					node = balance < 0
+						? this.RotateRightLeft(parent, right)
+						: this.RotateLeft(parent, right);
+				}
+				else
+				{
+					if (parent.Balance == 0)
+					{
+						parent.Balance = 1;
+						break;
+					}
+
+					node = parent;
+					node.Balance = 0;
+					continue;
+				}
+			}
+			else if (parent.Right == node)
+			{
+				if (parent.Balance < 0)
+				{
+					Node left = parent.Left!;
+					balance = left.Balance;
+
+					node = balance > 0
+						? this.RotateLeftRight(parent, left)
+						: this.RotateRight(parent, left);
+				}
+				else
+				{
+					if (parent.Balance == 0)
+					{
+						parent.Balance = -1;
+						break;
+					}
+
+					node = parent;
+					node.Balance = 0;
+					continue;
+				}
+			}
+			else
+			{
+				break;
+			}
+
+			node.Parent = parentOfParent;
+
+			if (parentOfParent is not null)
+			{
+				if (parent == parentOfParent.Left)
+				{
+					parentOfParent.Left = node;
+				}
+				else
+				{
+					parentOfParent.Right = node;
+				}
+			}
+			else
+			{
+				this.root = node;
+			}
+
+			if (balance == 0)
+			{
+				break;
+			}
+		}
 	}
 
-	private void RotateLeft(Node node, Node rightNode)
+	private Node RotateLeft(Node node, Node right)
 	{
-		Node? rightLeft = rightNode.Left;
-		Node? parent = node.Parent;
-
-		rightNode.Parent = parent;
-		rightNode.Left = node;
-		node.Right = rightLeft;
-		node.Parent = rightNode;
-
-		if (rightLeft is not null)
+		node.Right = right.Left;
+		if (node.Right is not null)
 		{
-			rightLeft.Parent = node;
+			node.Right.Parent = node;
 		}
 
-		if (this.root == node)
-		{
-			this.root = rightNode;
-		}
-		else if (parent!.Right == node)
-		{
-			parent.Right = rightNode;
-		}
-		else
-		{
-			parent.Left = rightNode;
-		}
+		right.Left = node;
+		node.Parent = right;
 
-		this.Fixup(node);
-		this.Fixup(rightNode);
+		(node.Balance, right.Balance) = right.Balance switch
+		{
+			0 => (1, -1),
+			_ => (0, 0)
+		};
+
+		return right;
 	}
 
-	private void RotateRight(Node node, Node leftNode)
+	private Node RotateRight(Node node, Node left)
 	{
-		Node? leftRight = leftNode.Right;
-		Node? parent = node.Parent;
-
-		leftNode.Parent = parent;
-		leftNode.Right = node;
-		node.Left = leftRight;
-		node.Parent = leftNode;
-
-		if (leftRight is not null)
+		node.Left = left.Right;
+		if (node.Left is not null)
 		{
-			leftRight.Parent = node;
+			node.Left.Parent = node;
 		}
 
-		if (this.root == node)
+		left.Right = node;
+		node.Parent = left;
+
+		(node.Balance, left.Balance) = left.Balance switch
 		{
-			this.root = leftNode;
-		}
-		else if (parent!.Left == node)
+			0 => (1, -1),
+			_ => (0, 0)
+		};
+
+		return left;
+	}
+
+	private Node RotateRightLeft(Node node, Node right)
+	{
+		Node rightLeft = right.Left!;
+
+		right.Left = rightLeft.Right;
+		if (right.Left is not null)
 		{
-			parent.Left = leftNode;
-		}
-		else
-		{
-			parent.Right = leftNode;
+			right.Left.Parent = right;
 		}
 
-		this.Fixup(node);
-		this.Fixup(leftNode);
+		rightLeft.Right = right;
+		right.Parent = rightLeft;
+
+		node.Right = rightLeft.Left;
+		if (node.Right is not null)
+		{
+			node.Right.Parent = node;
+		}
+
+		rightLeft.Left = node;
+		node.Parent = rightLeft;
+
+		(node.Balance, right.Balance, rightLeft.Balance) = rightLeft.Balance switch
+		{
+			0 => (0, 0, 0),
+			> 0 => (-1, 0, 0),
+			_ => (0, 1, 0)
+		};
+
+		return rightLeft;
+	}
+
+	private Node RotateLeftRight(Node node, Node left)
+	{
+		Node leftRight = left.Right!;
+
+		left.Right = leftRight.Left;
+		if (left.Right is not null)
+		{
+			left.Right.Parent = left;
+		}
+
+		leftRight.Left = left;
+		left.Parent = leftRight;
+
+		node.Left = leftRight.Right;
+		if (node.Left is not null)
+		{
+			node.Left.Parent = node;
+		}
+
+		leftRight.Right = node;
+		node.Parent = leftRight;
+
+		(node.Balance, left.Balance, leftRight.Balance) = leftRight.Balance switch
+		{
+			0 => (0, 0, 0),
+			< 0 => (1, 0, 0),
+			_ => (0, -1, 0)
+		};
+
+		return leftRight;
 	}
 
 	private sealed class Node
