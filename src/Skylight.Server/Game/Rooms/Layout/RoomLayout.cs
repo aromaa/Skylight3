@@ -1,7 +1,7 @@
-﻿using Skylight.API.Game.Rooms.Map;
+﻿using System.Text;
+using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Numerics;
 using Skylight.Domain.Items;
-using Skylight.Domain.Rooms.Layout;
 using Skylight.Server.Collections.Immutable;
 
 namespace Skylight.Server.Game.Rooms.Layout;
@@ -21,30 +21,27 @@ internal sealed class RoomLayout : IRoomLayout
 
 	internal List<PublicRoomItemEntity> Items { get; }
 
-	internal RoomLayout(RoomLayoutEntity layout)
+	internal RoomLayout(string id, string heightMap, int doorX, int doorY, int doorDirection)
 	{
-		this.Id = layout.Id;
+		this.Id = id;
 
-		(int width, int height, bool hasNewLine) = RoomLayout.GetSize(layout.HeightMap);
+		(this.Size, bool fixHeightMapData) = RoomLayout.GetSize(heightMap);
+		(this.HeightMap, this.Tiles) = RoomLayout.ParseHeightMap(heightMap, this.Size, fixHeightMapData);
 
-		this.Size = new Point2D(width, height);
-
-		this.HeightMap = hasNewLine ? layout.HeightMap.Replace("\n", string.Empty) : layout.HeightMap;
-
-		this.DoorLocation = new Point2D(layout.DoorX, layout.DoorY);
-		this.DoorDirection = layout.DoorDirection;
-
-		this.Tiles = RoomLayout.ParseHeightMap(layout.HeightMap, width, height);
+		this.DoorLocation = new Point2D(doorX, doorY);
+		this.DoorDirection = doorDirection;
 
 		this.Items = [];
 	}
 
-	private static ImmutableArray2D<RoomLayoutTile> ParseHeightMap(string heightMap, int width, int height)
+	private static (string HeightMap, ImmutableArray2D<RoomLayoutTile> Tiles) ParseHeightMap(string heightMap, Point2D size, bool generateNewHeightMap)
 	{
-		ImmutableArray2D<RoomLayoutTile>.Builder builder = ImmutableArray2D.CreateBuilder<RoomLayoutTile>(width, height);
+		StringBuilder? stringBuilder = generateNewHeightMap ? new StringBuilder(heightMap.Length) : null;
+
+		ImmutableArray2D<RoomLayoutTile>.Builder builder = ImmutableArray2D.CreateBuilder<RoomLayoutTile>(size.X, size.Y);
 
 		int i = 0;
-		for (int y = 0; y < height; y++)
+		for (int y = 0; y < size.Y; y++)
 		{
 			int x = 0;
 			for (; i < heightMap.Length; x++)
@@ -79,16 +76,20 @@ internal sealed class RoomLayout : IRoomLayout
 					throw new NotSupportedException("wtf, u idiot");
 				}
 
+				stringBuilder?.Append(tile);
+
 				builder[x, y] = new RoomLayoutTile(tileHeight);
 			}
 
-			while (x < width)
+			while (x < size.X)
 			{
 				builder[x++, y] = new RoomLayoutTile(-100);
 			}
+
+			stringBuilder?.Append('\r');
 		}
 
-		return builder.MoveToImmutable();
+		return (stringBuilder?.ToString() ?? heightMap, builder.MoveToImmutable());
 	}
 
 	internal void AddItem(PublicRoomItemEntity item)
@@ -96,47 +97,58 @@ internal sealed class RoomLayout : IRoomLayout
 		this.Items.Add(item);
 	}
 
-	private static (int Width, int Height, bool HasNewLine) GetSize(string heightMap)
+	private static (Point2D Size, bool FixHeightMapData) GetSize(string heightMap)
 	{
-		int lastIndex = 0;
 		int width = 0;
 		int height = 0;
-		bool hasNewLine = false;
+		int emptyLines = 0;
+		bool fixHeightMapData = false;
 
-		while (true)
+		ReadOnlySpan<char> span = heightMap;
+		while (!span.IsEmpty)
 		{
-			height++;
-
-			int index = heightMap.IndexOf('\r', lastIndex);
+			int index = span.IndexOfAny('\r', '\n');
 			if (index == -1)
 			{
-				int distance = heightMap.Length - lastIndex;
-				if (distance > width)
+				if (span.Length > 0)
 				{
-					width = distance;
+					height += emptyLines + 1;
 				}
+
+				width = int.Max(width, span.Length);
 
 				break;
 			}
+			else if (index == 0)
+			{
+				emptyLines++;
+				span = span[1..];
+
+				continue;
+			}
+
+			height += emptyLines + 1;
+			width = int.Max(width, index);
+
+			if (span[index] == '\r')
+			{
+				index++;
+			}
 			else
 			{
-				int distance = index - lastIndex;
-				if (distance > width)
-				{
-					width = distance;
-				}
-
-				lastIndex = index + 1;
-
-				//In case there is a new line
-				if (heightMap[lastIndex] == '\n')
-				{
-					lastIndex++;
-					hasNewLine = true;
-				}
+				fixHeightMapData = true;
 			}
+
+			if (span.Length > index && span[index] == '\n')
+			{
+				index++;
+				fixHeightMapData = true;
+			}
+
+			emptyLines = 0;
+			span = span[index..];
 		}
 
-		return (width, height, hasNewLine);
+		return (new Point2D(width, height), fixHeightMapData);
 	}
 }
