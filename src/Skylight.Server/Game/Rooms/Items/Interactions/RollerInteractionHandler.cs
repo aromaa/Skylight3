@@ -58,7 +58,7 @@ internal sealed class RollerInteractionHandler : IRollerInteractionHandler, IRoo
 
 			foreach (IFloorRoomItem item in rollerTile.RoomTile.GetFloorItemsBetween(roller.Position.Z + roller.Height, double.MaxValue).ToArray())
 			{
-				if (!itemsMoved.Add(item.Id))
+				if (item == roller || !itemsMoved.Add(item.Id))
 				{
 					continue;
 				}
