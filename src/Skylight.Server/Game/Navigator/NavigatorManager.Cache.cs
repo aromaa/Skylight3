@@ -51,7 +51,7 @@ internal partial class NavigatorManager
 
 				foreach (RoomLayoutEntity entity in this.layouts.Values)
 				{
-					RoomLayout layout = new(entity);
+					RoomLayout layout = new(entity.Id, entity.HeightMap, entity.DoorX, entity.DoorY, entity.DoorDirection);
 
 					layouts.Add(layout.Id, layout);
 				}

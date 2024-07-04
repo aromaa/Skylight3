@@ -25,8 +25,8 @@ internal sealed class RoomLayout : IRoomLayout
 	{
 		this.Id = id;
 
-		(this.Size, bool fixHeightMapData) = RoomLayout.GetSize(heightMap);
-		(this.HeightMap, this.Tiles) = RoomLayout.ParseHeightMap(heightMap, this.Size, fixHeightMapData);
+		(this.Size, bool normalizeHeightMap) = RoomLayout.GetSize(heightMap);
+		(this.HeightMap, this.Tiles) = RoomLayout.ParseHeightMap(heightMap, this.Size, normalizeHeightMap);
 
 		this.DoorLocation = new Point2D(doorX, doorY);
 		this.DoorDirection = doorDirection;
@@ -34,9 +34,9 @@ internal sealed class RoomLayout : IRoomLayout
 		this.Items = [];
 	}
 
-	private static (string HeightMap, ImmutableArray2D<RoomLayoutTile> Tiles) ParseHeightMap(string heightMap, Point2D size, bool generateNewHeightMap)
+	private static (string HeightMap, ImmutableArray2D<RoomLayoutTile> Tiles) ParseHeightMap(string heightMap, Point2D size, bool normalizeHeightMap)
 	{
-		StringBuilder? stringBuilder = generateNewHeightMap ? new StringBuilder(heightMap.Length) : null;
+		StringBuilder? stringBuilder = normalizeHeightMap ? new StringBuilder(heightMap.Length) : null;
 
 		ImmutableArray2D<RoomLayoutTile>.Builder builder = ImmutableArray2D.CreateBuilder<RoomLayoutTile>(size.X, size.Y);
 
@@ -57,23 +57,31 @@ internal sealed class RoomLayout : IRoomLayout
 				{
 					tileHeight = -100;
 				}
-				else if (char.IsAsciiLetter(tile))
+				else if (char.IsAsciiLetter(tile) && tile <= 'w')
 				{
 					tileHeight = tile - 'a' + 10;
 				}
 				else if (tile == '\r')
 				{
+					if (heightMap.Length > i && heightMap[i] == '\n')
+					{
+						i++;
+					}
+
 					break;
 				}
 				else if (tile == '\n')
 				{
-					x--; //Ignore new line
-
-					continue;
+					break;
 				}
 				else
 				{
-					throw new NotSupportedException("wtf, u idiot");
+					throw new ArgumentException($"Invalid char at [{x}, {y}], index {i}.");
+				}
+
+				if (x == 0 && y > 0)
+				{
+					stringBuilder?.Append('\r');
 				}
 
 				stringBuilder?.Append(tile);
@@ -83,10 +91,13 @@ internal sealed class RoomLayout : IRoomLayout
 
 			while (x < size.X)
 			{
+				if (x == 0 && y > 0)
+				{
+					stringBuilder?.Append('\r');
+				}
+
 				builder[x++, y] = new RoomLayoutTile(-100);
 			}
-
-			stringBuilder?.Append('\r');
 		}
 
 		return (stringBuilder?.ToString() ?? heightMap, builder.MoveToImmutable());
@@ -97,15 +108,15 @@ internal sealed class RoomLayout : IRoomLayout
 		this.Items.Add(item);
 	}
 
-	private static (Point2D Size, bool FixHeightMapData) GetSize(string heightMap)
+	private static (Point2D Size, bool NormalizeHeightMap) GetSize(string heightMap)
 	{
 		int width = 0;
 		int height = 0;
 		int emptyLines = 0;
-		bool fixHeightMapData = false;
+		bool normalizeHeightMap = false;
 
 		ReadOnlySpan<char> span = heightMap;
-		while (!span.IsEmpty)
+		while (true)
 		{
 			int index = span.IndexOfAny('\r', '\n');
 			if (index == -1)
@@ -113,6 +124,10 @@ internal sealed class RoomLayout : IRoomLayout
 				if (span.Length > 0)
 				{
 					height += emptyLines + 1;
+				}
+				else
+				{
+					normalizeHeightMap = true;
 				}
 
 				width = int.Max(width, span.Length);
@@ -136,19 +151,19 @@ internal sealed class RoomLayout : IRoomLayout
 			}
 			else
 			{
-				fixHeightMapData = true;
+				normalizeHeightMap = true;
 			}
 
 			if (span.Length > index && span[index] == '\n')
 			{
 				index++;
-				fixHeightMapData = true;
+				normalizeHeightMap = true;
 			}
 
 			emptyLines = 0;
 			span = span[index..];
 		}
 
-		return (new Point2D(width, height), fixHeightMapData);
+		return (new Point2D(width, height), normalizeHeightMap);
 	}
 }
