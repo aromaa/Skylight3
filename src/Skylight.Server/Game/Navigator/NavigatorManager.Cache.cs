@@ -1,5 +1,4 @@
 ﻿using System.Collections.Frozen;
-using System.Collections.Immutable;
 using Skylight.API.Game.Navigator.Nodes;
 using Skylight.API.Game.Rooms.Map;
 using Skylight.Domain.Navigator;
