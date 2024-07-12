@@ -1,15 +1,15 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Skylight.API.Game.Navigator;
-using Skylight.API.Game.Rooms;
+using Skylight.API.Game.Navigator.Nodes;
 using Skylight.API.Game.Rooms.Map;
 
 namespace Skylight.Server.Game.Navigator;
 
 internal partial class NavigatorManager
 {
-	public IEnumerable<IRoomFlatCat> FlatCats => this.Current.FlatCats;
+	public IEnumerable<INavigatorNode> Nodes => this.Current.Nodes;
 
-	public bool TryGetFlatCat(int id, [NotNullWhen(true)] out IRoomFlatCat? flatCat) => this.Current.TryGetFlatCat(id, out flatCat);
+	public bool TryGetNode(int id, [NotNullWhen(true)] out INavigatorNode? node) => this.Current.TryGetNode(id, out node);
 	public bool TryGetLayout(string id, [NotNullWhen(true)] out IRoomLayout? layout) => this.Current.TryGetLayout(id, out layout);
 
 	private sealed class Snapshot : INavigatorSnapshot
@@ -21,9 +21,9 @@ internal partial class NavigatorManager
 			this.cache = cache;
 		}
 
-		public IEnumerable<IRoomFlatCat> FlatCats => this.cache.FlatCats.Values;
+		public IEnumerable<INavigatorNode> Nodes => this.cache.Nodes.Values;
 
-		public bool TryGetFlatCat(int id, [NotNullWhen(true)] out IRoomFlatCat? flatCat) => this.cache.FlatCats.TryGetValue(id, out flatCat);
+		public bool TryGetNode(int id, [NotNullWhen(true)] out INavigatorNode? node) => this.cache.Nodes.TryGetValue(id, out node);
 		public bool TryGetLayout(string id, [NotNullWhen(true)] out IRoomLayout? layout) => this.cache.Layouts.TryGetValue(id, out layout);
 	}
 }

@@ -1,6 +1,7 @@
 ﻿using Net.Communication.Attributes;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Wall;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Game.Users.Rooms;
@@ -53,20 +54,23 @@ internal sealed partial class GetRoomEntryDataPacketHandler<T> : UserPacketHandl
 			});
 
 			List<PublicRoomObjectData> publicRoomObjects = [];
-			//TODO: Public items
-
 			List<ObjectData> objects = [];
-			foreach (IFloorRoomItem roomItem in room.ItemManager.FloorItems)
-			{
-				objects.Add(new ObjectData(roomItem.Id, roomItem.Furniture.Id, roomItem.Position.X, roomItem.Position.Y, roomItem.Position.Z, roomItem.Direction, roomItem.Height, 0, roomItem.GetItemData()));
-			}
-
 			List<ItemData> items = [];
-			foreach (IWallRoomItem roomItem in room.ItemManager.WallItems)
+
+			if (room is IPrivateRoom privateRoom)
 			{
-				items.Add(new ItemData(roomItem.Id, roomItem.Furniture.Id, new WallPosition(roomItem.Location.X, roomItem.Location.Y, roomItem.Position.X, roomItem.Position.Y), roomItem.GetItemData()));
+				foreach (IFloorRoomItem roomItem in privateRoom.ItemManager.FloorItems)
+				{
+					objects.Add(new ObjectData(roomItem.Id, roomItem.Furniture.Id, roomItem.Position.X, roomItem.Position.Y, roomItem.Position.Z, roomItem.Direction, roomItem.Height, 0, roomItem.GetItemData()));
+				}
+
+				foreach (IWallRoomItem roomItem in privateRoom.ItemManager.WallItems)
+				{
+					items.Add(new ItemData(roomItem.Id, roomItem.Furniture.Id, new WallPosition(roomItem.Location.X, roomItem.Location.Y, roomItem.Position.X, roomItem.Position.Y), roomItem.GetItemData()));
+				}
 			}
 
+			//TODO: Public items
 			roomSession.User.SendAsync(new PublicRoomObjectsOutgoingPacket(publicRoomObjects));
 			roomSession.User.SendAsync(new ObjectsOutgoingPacket(objects, Array.Empty<(int, string)>()));
 			roomSession.User.SendAsync(new ItemsOutgoingPacket(items, Array.Empty<(int, string)>()));

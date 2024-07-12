@@ -69,7 +69,7 @@ public static class HostBuilderExtensions
 		builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redis["ConnectionString"] ?? "localhost"));
 
 		builder.Services.AddPooledDbContextFactory<SkylightContext>(options => options
-			.UseModel(SkylightContextModel.Instance)
+			////.UseModel(SkylightContextModel.Instance)
 			.UseNpgsql(database["ConnectionString"])
 			.UseSnakeCaseNamingConvention()
 			.EnableThreadSafetyChecks(false));

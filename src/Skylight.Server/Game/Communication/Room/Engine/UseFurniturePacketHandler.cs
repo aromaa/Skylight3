@@ -2,6 +2,7 @@
 using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Interactions.Wired.Triggers;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
 using Skylight.Protocol.Packets.Incoming.Room.Engine;
 using Skylight.Protocol.Packets.Manager;
@@ -14,7 +15,7 @@ internal sealed partial class UseFurniturePacketHandler<T> : UserPacketHandler<T
 {
 	internal override void Handle(IUser user, in T packet)
 	{
-		if (user.RoomSession?.Unit is not { } roomUnit)
+		if (user.RoomSession?.Unit is not { Room: IPrivateRoom privateRoom } roomUnit)
 		{
 			return;
 		}
@@ -24,12 +25,12 @@ internal sealed partial class UseFurniturePacketHandler<T> : UserPacketHandler<T
 
 		roomUnit.Room.PostTask(room =>
 		{
-			if (!room.ItemManager.TryGetFloorItem(itemId, out IFloorRoomItem? item) || item is not IInteractableRoomItem interactable)
+			if (!privateRoom.ItemManager.TryGetFloorItem(itemId, out IFloorRoomItem? item) || item is not IInteractableRoomItem interactable)
 			{
 				return;
 			}
 
-			if (interactable.Interact(roomUnit, state) && room.ItemManager.TryGetInteractionHandler(out IUnitUseItemTriggerInteractionHandler? handler))
+			if (interactable.Interact(roomUnit, state) && privateRoom.ItemManager.TryGetInteractionHandler(out IUnitUseItemTriggerInteractionHandler? handler))
 			{
 				handler.OnUse(roomUnit, interactable);
 			}

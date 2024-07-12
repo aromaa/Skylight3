@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Net.Communication.Attributes;
 using Skylight.API.Game.Rooms.Items.Interactions;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
 using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Data.Sound;
@@ -18,16 +19,16 @@ internal sealed partial class GetSongListPacketHandler<T>(IDbContextFactory<Skyl
 
 	internal override void Handle(IUser user, in T packet)
 	{
-		if (user.RoomSession?.Unit is not { } unit)
+		if (user.RoomSession?.Unit is not { Room: IPrivateRoom privateRoom } roomUnit)
 		{
 			return;
 		}
 
 		user.Client.ScheduleTask(async client =>
 		{
-			int soundMachineId = await unit.Room.ScheduleTask(room =>
+			int soundMachineId = await privateRoom.ScheduleTask(_ =>
 			{
-				if (!unit.InRoom || !room.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
+				if (!roomUnit.InRoom || !privateRoom.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
 				{
 					return 0;
 				}

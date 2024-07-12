@@ -1,32 +1,22 @@
 ﻿using System.Diagnostics;
 using CommunityToolkit.HighPerformance;
-using Microsoft.EntityFrameworkCore;
 using Net.Collections;
-using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Rooms;
-using Skylight.API.Game.Rooms.Items;
-using Skylight.API.Game.Rooms.Items.Floor;
-using Skylight.API.Game.Rooms.Items.Interactions;
-using Skylight.API.Game.Rooms.Items.Wall;
 using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
-using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Outgoing;
-using Skylight.Server.Game.Rooms.GameMap;
-using Skylight.Server.Game.Rooms.Items;
 using Skylight.Server.Game.Rooms.Scheduler;
 using Skylight.Server.Game.Rooms.Units;
 
 namespace Skylight.Server.Game.Rooms;
 
-internal sealed class Room : IRoom
+internal abstract class Room : IRoom
 {
 	public IRoomInfo Info { get; }
 
-	public IRoomMap Map { get; }
+	public abstract IRoomMap Map { get; }
 	public IRoomUnitManager UnitManager { get; }
-	public IRoomItemManager ItemManager { get; }
 
 	internal RoomTaskScheduler RoomTaskScheduler { get; }
 
@@ -38,7 +28,7 @@ internal sealed class Room : IRoom
 
 	private readonly Thread thread;
 
-	public Room(RoomData roomData, IRoomLayout roomLayout, IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, IFloorRoomItemStrategy floorRoomItemStrategy, IWallRoomItemStrategy wallRoomItemStrategy, IUserManager userManager, IRoomItemInteractionManager itemInteractionManager)
+	protected Room(RoomData roomData, IRoomLayout roomLayout)
 	{
 		this.Info = roomData;
 
@@ -48,9 +38,7 @@ internal sealed class Room : IRoom
 
 		this.scheduledUpdateTasks = new Queue<IRoomTask>();
 
-		this.Map = new RoomTileMap(this, roomLayout);
 		this.UnitManager = new RoomUnitManager(this);
-		this.ItemManager = new RoomItemManager(this, dbContextFactory, userManager, furnitureManager, floorRoomItemStrategy, wallRoomItemStrategy, itemInteractionManager);
 
 		this.roomClients = new SocketCollection();
 
@@ -58,7 +46,6 @@ internal sealed class Room : IRoom
 		{
 			IsBackground = true
 		};
-		this.thread.Start();
 	}
 
 	internal ref SpinLock TickingLock => ref this.tickingLock;
@@ -67,9 +54,11 @@ internal sealed class Room : IRoom
 
 	internal int UserCount => this.roomClients.Count;
 
-	public async Task LoadAsync(CancellationToken cancellationToken)
+	public abstract Task LoadAsync(CancellationToken cancellationToken);
+
+	public void Start()
 	{
-		await this.ItemManager.LoadAsync(cancellationToken).ConfigureAwait(false);
+		this.thread.Start();
 	}
 
 	public void Enter(IUser user)
@@ -117,12 +106,15 @@ internal sealed class Room : IRoom
 			}
 
 			this.UnitManager.Tick();
-			this.ItemManager.Tick();
+
+			this.DoTick();
 
 			//After everything is done, run the tasks we received while ticking
 			this.RoomTaskScheduler.ExecuteTasks();
 		}
 	}
+
+	internal abstract void DoTick();
 
 	public bool PostTask<TTask>(TTask task)
 		where TTask : IRoomTask => this.RoomTaskScheduler.PostTask(task);

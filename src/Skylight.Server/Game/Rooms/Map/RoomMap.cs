@@ -5,53 +5,33 @@ using CommunityToolkit.HighPerformance;
 using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Numerics;
-using Skylight.Server.Collections.Immutable;
-using Skylight.Server.Game.Rooms.Layout;
 
-namespace Skylight.Server.Game.Rooms.GameMap;
+namespace Skylight.Server.Game.Rooms.Map;
 
-internal sealed class RoomTileMap : IRoomMap
+internal abstract class RoomMap : IRoomMap
 {
 	private static readonly Point2D[] directions =
 		[new Point2D(0, 1), new Point2D(1, 0), new Point2D(0, -1), new Point2D(-1, 0), new Point2D(1, 1), new Point2D(-1, -1), new Point2D(1, -1), new Point2D(-1, 1)];
 
-	private static readonly int[] sums = RoomTileMap.SumsTo(100);
-
-	internal Room Room { get; }
+	private static readonly int[] sums = RoomMap.SumsTo(100);
 
 	public IRoomLayout Layout { get; }
 
-	private readonly ImmutableArray2D<IRoomTile> tiles;
-
-	internal RoomTileMap(Room room, IRoomLayout layout)
+	internal RoomMap(IRoomLayout layout)
 	{
-		this.Room = room;
-
 		this.Layout = layout;
-
-		ImmutableArray2D<IRoomTile>.Builder builder = ImmutableArray2D.CreateBuilder<IRoomTile>(layout.Size.X, layout.Size.Y);
-
-		for (int x = 0; x < layout.Size.X; x++)
-		{
-			for (int y = 0; y < layout.Size.Y; y++)
-			{
-				builder[x, y] = new RoomTile(room, this, new Point2D(x, y), ((RoomLayout)layout).Tiles[x, y]);
-			}
-		}
-
-		this.tiles = builder.MoveToImmutable();
 	}
 
 	public bool IsValidLocation(Point2D point) => (uint)point.X < this.Layout.Size.X && (uint)point.Y < this.Layout.Size.Y;
 
-	public IRoomTile GetTile(int x, int y) => this.tiles[x, y];
-	public IRoomTile GetTile(Point2D point) => this.tiles[point.X, point.Y];
+	public abstract IRoomTile GetTile(int x, int y);
+	public abstract IRoomTile GetTile(Point2D point);
 
 	public Stack<Point2D> PathfindTo(Point3D start, Point3D target, IRoomUnit unit)
 	{
 		//Check if valid target
 
-		IRoomLayout layout = this.Room.Map.Layout;
+		IRoomLayout layout = this.Layout;
 
 		PointData[] bookkeepingArray = ArrayPool<PointData>.Shared.Rent(layout.Size.X * layout.Size.Y);
 		Array.Fill(bookkeepingArray, new PointData());
@@ -106,7 +86,7 @@ internal sealed class RoomTileMap : IRoomMap
 				int distance = Point2D.DistanceSquared(current.XY, neighborPosition);
 				if (difference < -2)
 				{
-					distance += RoomTileMap.sums[Math.Min(Math.Abs((int)(difference / 0.1)), RoomTileMap.sums.Length - 1)];
+					distance += RoomMap.sums[Math.Min(Math.Abs((int)(difference / 0.1)), RoomMap.sums.Length - 1)];
 				}
 
 				ref (Point3D From, int Weight) pathData = ref gameMap.Get(neighborPosition.X, neighborPosition.Y, nextZ.Value);
@@ -130,7 +110,7 @@ internal sealed class RoomTileMap : IRoomMap
 	private int GetNeighbors(Point2D point, Span<IRoomTile> buffer)
 	{
 		int i = 0;
-		foreach (Point2D direction in RoomTileMap.directions)
+		foreach (Point2D direction in RoomMap.directions)
 		{
 			Point2D newLocation = point + direction;
 			if (!this.IsValidLocation(newLocation))

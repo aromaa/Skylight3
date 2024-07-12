@@ -1,13 +1,13 @@
 ﻿using Skylight.API.Game.Furniture.Floor;
-using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Map;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor;
 
-internal abstract class FloorRoomItem<T>(IRoom room, int id, IUserInfo owner, T furniture, Point3D position, int direction) : RoomItem<T>(room, id, owner, furniture), IFloorRoomItem
+internal abstract class FloorRoomItem<T>(IPrivateRoom room, int id, IUserInfo owner, T furniture, Point3D position, int direction) : RoomItem<T>(room, id, owner, furniture), IFloorRoomItem
 	where T : IFloorFurniture
 {
 	public Point3D Position { get; internal set; } = position;

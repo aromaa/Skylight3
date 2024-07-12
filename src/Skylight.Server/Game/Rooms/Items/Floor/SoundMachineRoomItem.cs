@@ -1,14 +1,14 @@
 ﻿using System.Collections.Immutable;
 using Skylight.API.Game.Furniture.Floor;
-using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Interactions;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor;
 
-internal sealed class SoundMachineRoomItem(IRoom room, int id, IUserInfo owner, ISoundMachineFurniture furniture, Point3D position, int direction, ISoundMachineInteractionManager handler)
+internal sealed class SoundMachineRoomItem(IPrivateRoom room, int id, IUserInfo owner, ISoundMachineFurniture furniture, Point3D position, int direction, ISoundMachineInteractionManager handler)
 	: StatefulFloorRoomItem<ISoundMachineFurniture>(room, id, owner, furniture, position, direction), ISoundMachineRoomItem
 {
 	private readonly ISoundMachineInteractionManager handler = handler;

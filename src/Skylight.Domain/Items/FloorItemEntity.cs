@@ -1,5 +1,5 @@
 ﻿using Skylight.Domain.Furniture;
-using Skylight.Domain.Rooms;
+using Skylight.Domain.Rooms.Private;
 using Skylight.Domain.Users;
 
 namespace Skylight.Domain.Items;
@@ -15,7 +15,7 @@ public class FloorItemEntity
 	public FloorFurnitureEntity? Furniture { get; set; }
 
 	public int? RoomId { get; set; }
-	public RoomEntity? Room { get; set; }
+	public PrivateRoomEntity? Room { get; set; }
 
 	public int X { get; set; }
 	public int Y { get; set; }

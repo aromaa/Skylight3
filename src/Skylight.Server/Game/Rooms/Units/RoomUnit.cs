@@ -1,6 +1,7 @@
 ﻿using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Interactions.Wired.Triggers;
 using Skylight.API.Game.Rooms.Map;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
@@ -195,7 +196,12 @@ internal sealed class RoomUnit : IUserRoomUnit
 
 	private bool TriggerOnSayWired(string message, int styleId = 0, int trackingId = -1)
 	{
-		if (!this.Room.ItemManager.TryGetInteractionHandler(out IUnitSayTriggerInteractionHandler? interactionHandler) || !interactionHandler.OnSay(this, message))
+		if (this.Room is not IPrivateRoom privateRoom)
+		{
+			return false;
+		}
+
+		if (!privateRoom.ItemManager.TryGetInteractionHandler(out IUnitSayTriggerInteractionHandler? interactionHandler) || !interactionHandler.OnSay(this, message))
 		{
 			return false;
 		}

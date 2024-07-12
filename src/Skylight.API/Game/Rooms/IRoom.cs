@@ -1,5 +1,4 @@
-﻿using Skylight.API.Game.Rooms.Items;
-using Skylight.API.Game.Rooms.Map;
+﻿using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.Protocol.Packets.Outgoing;
@@ -12,7 +11,6 @@ public interface IRoom
 
 	public IRoomMap Map { get; }
 
-	public IRoomItemManager ItemManager { get; }
 	public IRoomUnitManager UnitManager { get; }
 
 	public int GameTime { get; }
@@ -24,8 +22,6 @@ public interface IRoom
 
 	public void Enter(IUser user);
 	public void Exit(IUser user);
-
-	public bool IsOwner(IUser user);
 
 	public bool PostTask<TTask>(TTask task)
 		where TTask : IRoomTask;

@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
 using Skylight.API.Game.Furniture.Floor.Wired.Effects;
-using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Floor.Wired.Effects;
 using Skylight.API.Game.Rooms.Items.Interactions.Wired.Effects;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
@@ -12,7 +12,7 @@ using Skylight.Protocol.Packets.Outgoing.UserDefinedRoomEvents;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor.Wired.Effects;
 
-internal sealed class ShowMessageEffectRoomItem(IRoom room, int id, IUserInfo owner, IShowMessageEffectFurniture furniture, Point3D position, int direction, IWiredEffectInteractionHandler interactionHandler,
+internal sealed class ShowMessageEffectRoomItem(IPrivateRoom room, int id, IUserInfo owner, IShowMessageEffectFurniture furniture, Point3D position, int direction, IWiredEffectInteractionHandler interactionHandler,
 	string message, int effectDelay)
 	: WiredEffectRoomItem<IShowMessageEffectFurniture>(room, id, owner, furniture, position, direction, effectDelay), IShowMessageEffectRoomItem
 {

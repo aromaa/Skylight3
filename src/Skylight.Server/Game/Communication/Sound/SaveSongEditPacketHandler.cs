@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Net.Communication.Attributes;
 using Skylight.API.Game.Rooms.Items.Interactions;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
 using Skylight.Domain.Rooms.Sound;
 using Skylight.Infrastructure;
@@ -20,7 +21,7 @@ internal sealed partial class SaveSongEditPacketHandler<T>(IDbContextFactory<Sky
 
 	internal override void Handle(IUser user, in T packet)
 	{
-		if (user.RoomSession?.Unit is not { } unit || !unit.Room.IsOwner(user))
+		if (user.RoomSession?.Unit is not { Room: IPrivateRoom privateRoom } roomUnit || !privateRoom.IsOwner(user))
 		{
 			return;
 		}
@@ -61,9 +62,9 @@ internal sealed partial class SaveSongEditPacketHandler<T>(IDbContextFactory<Sky
 
 		user.Client.ScheduleTask(async client =>
 		{
-			int soundMachineId = await unit.Room.ScheduleTask(room =>
+			int soundMachineId = await privateRoom.ScheduleTask(_ =>
 			{
-				if (!unit.InRoom || !room.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
+				if (!roomUnit.InRoom || !privateRoom.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
 				{
 					return 0;
 				}

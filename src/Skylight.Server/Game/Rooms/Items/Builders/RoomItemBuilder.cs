@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Skylight.API.Game.Furniture;
-using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.Server.Game.Furniture;
 
 namespace Skylight.Server.Game.Rooms.Items.Builders;
@@ -11,9 +11,9 @@ internal abstract class RoomItemBuilder<TFurniture, TTarget, TBuilder> : Furnitu
 	where TTarget : IRoomItem, IFurnitureItem<TFurniture>
 	where TBuilder : RoomItemBuilder<TFurniture, TTarget, TBuilder>
 {
-	protected IRoom? RoomValue { get; set; }
+	protected IPrivateRoom? RoomValue { get; set; }
 
-	public TBuilder Room(IRoom room)
+	public TBuilder Room(IPrivateRoom room)
 	{
 		this.RoomValue = room;
 

@@ -1,14 +1,14 @@
 ﻿using Skylight.API.Game.Furniture;
-using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
 
 namespace Skylight.Server.Game.Rooms.Items;
 
-internal abstract class RoomItem<T>(IRoom room, int id, IUserInfo owner, T furniture) : IRoomItem
+internal abstract class RoomItem<T>(IPrivateRoom room, int id, IUserInfo owner, T furniture) : IRoomItem
 	where T : IFurniture
 {
-	public IRoom Room { get; } = room;
+	public IPrivateRoom Room { get; } = room;
 
 	public int Id { get; } = id;
 

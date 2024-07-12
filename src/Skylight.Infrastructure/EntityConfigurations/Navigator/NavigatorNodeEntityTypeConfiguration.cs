@@ -4,13 +4,11 @@ using Skylight.Domain.Navigator;
 
 namespace Skylight.Infrastructure.EntityConfigurations.Navigator;
 
-internal sealed class RoomFlatCatEntityTypeConfiguration : IEntityTypeConfiguration<RoomFlatCatEntity>
+internal sealed class NavigatorNodeEntityTypeConfiguration : IEntityTypeConfiguration<NavigatorNodeEntity>
 {
-	public void Configure(EntityTypeBuilder<RoomFlatCatEntity> builder)
+	public void Configure(EntityTypeBuilder<NavigatorNodeEntity> builder)
 	{
-		builder.ToTable("navigator_flatcats");
-
-		builder.HasKey(f => f.Id);
+		builder.ToTable("navigator_nodes");
 
 		builder.Property(f => f.Caption)
 			.HasMaxLength(64);

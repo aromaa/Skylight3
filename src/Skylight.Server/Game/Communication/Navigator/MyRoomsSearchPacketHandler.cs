@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Net.Communication.Attributes;
 using Skylight.API.Game.Users;
-using Skylight.Domain.Rooms;
+using Skylight.Domain.Rooms.Private;
 using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Data.Navigator;
 using Skylight.Protocol.Packets.Incoming.Navigator;
@@ -22,7 +22,7 @@ internal sealed class MyRoomsSearchPacketHandler<T>(IDbContextFactory<SkylightCo
 
 		List<GuestRoomData> rooms = [];
 
-		foreach (RoomEntity room in dbContext.Rooms
+		foreach (PrivateRoomEntity room in dbContext.PrivateRooms
 					 .AsNoTracking()
 					 .Include(r => r.Owner)
 					 .Where(r => r.OwnerId == user.Profile.Id))

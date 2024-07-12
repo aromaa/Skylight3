@@ -7,6 +7,7 @@ using Skylight.API.Numerics;
 using Skylight.Protocol.Packets.Data.Room.Engine;
 using Skylight.Protocol.Packets.Outgoing.Room.Engine;
 using Skylight.Server.Extensions;
+using Skylight.Server.Game.Rooms.Private;
 using Skylight.Server.Game.Users;
 
 namespace Skylight.Server.Game.Rooms.Units;
@@ -104,7 +105,7 @@ internal sealed class RoomUnitManager : IRoomUnitManager
 				}
 			]));
 
-			if (this.room.ItemManager.TryGetInteractionHandler(out IUnitEnterRoomTriggerInteractionHandler? handler))
+			if (this.room is PrivateRoom privateRoom && privateRoom.ItemManager.TryGetInteractionHandler(out IUnitEnterRoomTriggerInteractionHandler? handler))
 			{
 				handler.OnEnterRoom(userUnit);
 			}

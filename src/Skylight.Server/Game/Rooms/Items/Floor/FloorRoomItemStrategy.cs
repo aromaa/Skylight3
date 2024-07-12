@@ -5,9 +5,9 @@ using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Furniture.Floor.Wired.Effects;
 using Skylight.API.Game.Furniture.Floor.Wired.Triggers;
-using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
 using Skylight.Server.Game.Rooms.Items.Builders.Floor;
@@ -64,7 +64,7 @@ internal sealed class FloorRoomItemStrategy : IFloorRoomItemStrategy
 		throw new NotSupportedException();
 	}
 
-	public TRoomItem CreateFloorItem<TRoomItem, TFurniture>(int itemId, IRoom room, IUserInfo owner, TFurniture furniture, Point3D position, int direction, JsonDocument? extraData = null)
+	public TRoomItem CreateFloorItem<TRoomItem, TFurniture>(int itemId, IPrivateRoom room, IUserInfo owner, TFurniture furniture, Point3D position, int direction, JsonDocument? extraData = null)
 		where TFurniture : IFloorFurniture
 		where TRoomItem : IFloorRoomItem, IFurnitureItem<TFurniture>
 	{
@@ -86,7 +86,7 @@ internal sealed class FloorRoomItemStrategy : IFloorRoomItemStrategy
 			.Build();
 	}
 
-	public TRoomItem CreateFloorItem<TRoomItem, TFurniture, TBuilder>(int itemId, IRoom room, IUserInfo owner, TFurniture furniture, Point3D position, int direction, Action<TBuilder> builder)
+	public TRoomItem CreateFloorItem<TRoomItem, TFurniture, TBuilder>(int itemId, IPrivateRoom room, IUserInfo owner, TFurniture furniture, Point3D position, int direction, Action<TBuilder> builder)
 		where TRoomItem : IFloorRoomItem, IFurnitureItem<TFurniture>
 		where TFurniture : IFloorFurniture
 		where TBuilder : IFurnitureItemDataBuilder<TFurniture, TRoomItem, TBuilder>

@@ -1,15 +1,15 @@
 ﻿using System.Drawing;
 using System.Text.Json;
 using Skylight.API.Game.Furniture.Wall;
-using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Interactions;
 using Skylight.API.Game.Rooms.Items.Wall;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Rooms.Items.Wall;
 
-internal sealed class PostItRoomItem(IRoom room, int id, IUserInfo owner, IStickyNoteFurniture furniture, Point2D location, Point2D position, int direction, Color color, string text, IStickyNoteInteractionHandler handler)
+internal sealed class PostItRoomItem(IPrivateRoom room, int id, IUserInfo owner, IStickyNoteFurniture furniture, Point2D location, Point2D position, int direction, Color color, string text, IStickyNoteInteractionHandler handler)
 	: WallRoomItem<IStickyNoteFurniture>(room, id, owner, furniture, location, position, direction), IStickyNoteRoomItem
 {
 	public Color Color { get; set; } = color;

@@ -19,24 +19,24 @@ internal sealed partial class OpenFlatConnectionPacketHandler<T>(IRoomManager ro
 	{
 		if (user.RoomSession is { State: <= IRoomSession.SessionState.Ready } roomSession)
 		{
-			if (roomSession.RoomId == packet.RoomId)
+			if (roomSession.InstanceType == 1 && roomSession.InstanceId == packet.RoomId)
 			{
 				return;
 			}
 		}
 
-		IRoomSession session = user.OpenRoomSession(packet.RoomId);
+		IRoomSession session = user.OpenRoomSession(1, packet.RoomId);
 
 		user.Client.ScheduleTask(async client =>
 		{
-			client.SendAsync(new OpenConnectionOutgoingPacket(session.RoomId));
+			client.SendAsync(new OpenConnectionOutgoingPacket(session.InstanceId));
 
-			IRoom? room = await this.roomManager.GetRoomAsync(session.RoomId).ConfigureAwait(false);
+			IRoom? room = await this.roomManager.GetPrivateRoomAsync(session.InstanceId).ConfigureAwait(false);
 			if (room is null)
 			{
 				if (session.Close())
 				{
-					client.SendAsync(new NoSuchFlatOutgoingPacket(session.RoomId));
+					client.SendAsync(new NoSuchFlatOutgoingPacket(session.InstanceId));
 					client.SendAsync(new CloseConnectionOutgoingPacket());
 				}
 

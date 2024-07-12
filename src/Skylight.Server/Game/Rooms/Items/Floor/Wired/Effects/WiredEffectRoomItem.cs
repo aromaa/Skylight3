@@ -1,13 +1,13 @@
 ﻿using Skylight.API.Game.Furniture.Floor.Wired.Effects;
-using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Floor.Wired.Effects;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor.Wired.Effects;
 
-internal abstract class WiredEffectRoomItem<T>(IRoom room, int id, IUserInfo owner, T furniture, Point3D position, int direction, int effectDelay)
+internal abstract class WiredEffectRoomItem<T>(IPrivateRoom room, int id, IUserInfo owner, T furniture, Point3D position, int direction, int effectDelay)
 	: FloorRoomItem<T>(room, id, owner, furniture, position, direction), IWiredEffectRoomItem
 	where T : IWiredEffectFurniture
 {

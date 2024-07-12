@@ -1,11 +1,12 @@
 ﻿using Skylight.API.Game.Furniture;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
 
 namespace Skylight.API.Game.Rooms.Items;
 
 public interface IRoomItem : IFurnitureItem<IFurniture>
 {
-	public IRoom Room { get; }
+	public IPrivateRoom Room { get; }
 
 	public int Id { get; }
 	public int StripId { get; }

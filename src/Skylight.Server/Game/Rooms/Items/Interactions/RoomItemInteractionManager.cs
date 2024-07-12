@@ -4,10 +4,10 @@ using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Furniture.Floor.Wired.Effects;
 using Skylight.API.Game.Furniture.Floor.Wired.Triggers;
 using Skylight.API.Game.Furniture.Wall;
-using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Interactions;
 using Skylight.API.Game.Rooms.Items.Interactions.Wired.Effects;
 using Skylight.API.Game.Rooms.Items.Interactions.Wired.Triggers;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.Server.Game.Rooms.Items.Interactions.Wired.Effects;
 using Skylight.Server.Game.Rooms.Items.Interactions.Wired.Triggers;
 
@@ -15,7 +15,7 @@ namespace Skylight.Server.Game.Rooms.Items.Interactions;
 
 internal sealed class RoomItemInteractionManager : IRoomItemInteractionManager
 {
-	public Dictionary<Type, IRoomItemInteractionHandler> CreateHandlers(IRoom room)
+	public Dictionary<Type, IRoomItemInteractionHandler> CreateHandlers(IPrivateRoom room)
 	{
 		WiredEffectInteractionHandler wiredInteractionHandler = new(room);
 

@@ -3,10 +3,10 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Net.Communication.Attributes;
 using Skylight.API.Game.Navigator;
-using Skylight.API.Game.Rooms;
+using Skylight.API.Game.Navigator.Nodes;
 using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Users;
-using Skylight.Domain.Rooms;
+using Skylight.Domain.Rooms.Private;
 using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Incoming.Navigator;
 using Skylight.Protocol.Packets.Manager;
@@ -47,7 +47,7 @@ internal sealed partial class CreateFlatPacketHandler<T>(IDbContextFactory<Skyli
 			return;
 		}
 
-		if (!this.navigatorManager.TryGetFlatCat(packet.CategoryId, out IRoomFlatCat? flatCat))
+		if (!this.navigatorManager.TryGetNode(packet.CategoryId, out INavigatorNode? node) || node is not INavigatorCategoryNode)
 		{
 			return;
 		}
@@ -64,16 +64,16 @@ internal sealed partial class CreateFlatPacketHandler<T>(IDbContextFactory<Skyli
 
 		user.Client.ScheduleTask(async client =>
 		{
-			RoomEntity room;
+			PrivateRoomEntity room;
 			await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false))
 			{
-				dbContext.Rooms.Add(room = new RoomEntity
+				dbContext.PrivateRooms.Add(room = new PrivateRoomEntity
 				{
 					Name = roomName,
 					Description = description,
 					LayoutId = layout.Id,
 
-					CategoryId = flatCat.Id,
+					CategoryId = node.Id,
 
 					UsersMax = maxUserCount,
 

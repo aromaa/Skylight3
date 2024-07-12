@@ -9,6 +9,7 @@ using Skylight.API.Game.Inventory.Items.Wall;
 using Skylight.API.Game.Rooms.Items.Interactions;
 using Skylight.API.Game.Rooms.Items.Wall;
 using Skylight.API.Game.Rooms.Items.Wall.Data;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
 using Skylight.Infrastructure;
@@ -30,7 +31,7 @@ internal sealed partial class AddSpamWallPostItPacketHandler<T>(IDbContextFactor
 
 	internal override void Handle(IUser user, in T packet)
 	{
-		if (user.RoomSession?.Unit is not { } roomUnit)
+		if (user.RoomSession?.Unit is not { Room: IPrivateRoom privateRoom } roomUnit)
 		{
 			return;
 		}
@@ -94,10 +95,10 @@ internal sealed partial class AddSpamWallPostItPacketHandler<T>(IDbContextFactor
 
 			user.Client.ScheduleTask(async _ =>
 			{
-				bool canPlace = roomUnit.Room.ScheduleTask(room =>
+				bool canPlace = roomUnit.Room.ScheduleTask(_ =>
 				{
-					return roomUnit.InRoom && room.ItemManager.CanPlaceItem(postItItem.Furniture, location, position, direction)
-						&& room.ItemManager.TryGetInteractionHandler(out IStickyNoteInteractionHandler? handler) && handler.HasStickyNotePole;
+					return roomUnit.InRoom && privateRoom.ItemManager.CanPlaceItem(postItItem.Furniture, location, position, direction)
+						&& privateRoom.ItemManager.TryGetInteractionHandler(out IStickyNoteInteractionHandler? handler) && handler.HasStickyNotePole;
 				}).TryGetOrSuppressThrowing(out bool canPlaceAwait, out ValueTaskExtensions.Awaiter<bool> canPlaceAwaiter) ? canPlaceAwait : await canPlaceAwaiter;
 
 				if (!canPlace)
@@ -120,15 +121,15 @@ internal sealed partial class AddSpamWallPostItPacketHandler<T>(IDbContextFactor
 
 				roomUnit.User.SendAsync(new PostItPlacedOutgoingPacket(postItItem.StripId, postItItem.Count));
 
-				bool placed = roomUnit.Room.ScheduleTask(room =>
+				bool placed = roomUnit.Room.ScheduleTask(_ =>
 				{
-					if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(inventoryItem.Furniture, location, position, direction)
-						|| !room.ItemManager.TryGetInteractionHandler(out IStickyNoteInteractionHandler? handler) || !handler.HasStickyNotePole)
+					if (!roomUnit.InRoom || !privateRoom.ItemManager.CanPlaceItem(inventoryItem.Furniture, location, position, direction)
+						|| !privateRoom.ItemManager.TryGetInteractionHandler(out IStickyNoteInteractionHandler? handler) || !handler.HasStickyNotePole)
 					{
 						return false;
 					}
 
-					room.ItemManager.AddItem(this.wallRoomItemStrategy.CreateWallItem(inventoryItem, room, location, position, (IStickyNoteRoomItemDataBuilder builder) => builder.Color(color).Text(text)));
+					privateRoom.ItemManager.AddItem(this.wallRoomItemStrategy.CreateWallItem(inventoryItem, privateRoom, location, position, (IStickyNoteRoomItemDataBuilder builder) => builder.Color(color).Text(text)));
 
 					return true;
 				}).TryGetOrSuppressThrowing(out bool placeAwait, out ValueTaskExtensions.Awaiter<bool> placeAwaiter) ? placeAwait : await placeAwaiter;

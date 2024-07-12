@@ -7,6 +7,7 @@ using Skylight.API.Game.Inventory.Items.Floor;
 using Skylight.API.Game.Inventory.Items.Wall;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Wall;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
@@ -29,7 +30,7 @@ internal sealed partial class PlaceObjectPacketHandler<T>(IDbContextFactory<Skyl
 
 	internal override void Handle(IUser user, in T packet)
 	{
-		if (user.RoomSession?.Unit is not { } roomUnit)
+		if (user.RoomSession?.Unit is not { Room: IPrivateRoom privateRoom } roomUnit)
 		{
 			return;
 		}
@@ -49,7 +50,7 @@ internal sealed partial class PlaceObjectPacketHandler<T>(IDbContextFactory<Skyl
 
 		if (item is IFloorInventoryItem floorItem)
 		{
-			this.PlaceFloorItem(roomUnit, floorItem, reader);
+			this.PlaceFloorItem(privateRoom, roomUnit, floorItem, reader);
 		}
 		else if (item is IWallInventoryItem wallItem)
 		{
@@ -58,11 +59,11 @@ internal sealed partial class PlaceObjectPacketHandler<T>(IDbContextFactory<Skyl
 				return;
 			}
 
-			this.PlaceWallItem(roomUnit, wallItem, reader);
+			this.PlaceWallItem(privateRoom, roomUnit, wallItem, reader);
 		}
 	}
 
-	private void PlaceFloorItem(IUserRoomUnit roomUnit, IFloorInventoryItem floorItem, SequenceReader<byte> reader)
+	private void PlaceFloorItem(IPrivateRoom privateRoom, IUserRoomUnit roomUnit, IFloorInventoryItem floorItem, SequenceReader<byte> reader)
 	{
 		if (!reader.TryReadTo(out ReadOnlySpan<byte> xBuffer, (byte)' ')
 			|| !Utf8Parser.TryParse(xBuffer, out int x, out _))
@@ -85,11 +86,11 @@ internal sealed partial class PlaceObjectPacketHandler<T>(IDbContextFactory<Skyl
 
 		roomUnit.User.Client.ScheduleTask(async _ =>
 		{
-			bool canPlace = roomUnit.Room.ScheduleTask(room =>
+			bool canPlace = roomUnit.Room.ScheduleTask(_ =>
 			{
-				Point3D position = new(location, room.ItemManager.GetPlacementHeight(floorItem.Furniture, location, direction));
+				Point3D position = new(location, privateRoom.ItemManager.GetPlacementHeight(floorItem.Furniture, location, direction));
 
-				return roomUnit.InRoom && room.ItemManager.CanPlaceItem(floorItem.Furniture, position, direction, roomUnit.User) && roomUnit.User.Inventory.TryRemoveFloorItem(floorItem);
+				return roomUnit.InRoom && privateRoom.ItemManager.CanPlaceItem(floorItem.Furniture, position, direction, roomUnit.User) && roomUnit.User.Inventory.TryRemoveFloorItem(floorItem);
 			}).TryGetOrSuppressThrowing(out bool canPlaceAwait, out ValueTaskExtensions.Awaiter<bool> canPlaceAwaiter) ? canPlaceAwait : await canPlaceAwaiter;
 
 			if (!canPlace)
@@ -117,15 +118,15 @@ internal sealed partial class PlaceObjectPacketHandler<T>(IDbContextFactory<Skyl
 				}
 			}
 
-			bool placed = roomUnit.Room.ScheduleTask(room =>
+			bool placed = roomUnit.Room.ScheduleTask(_ =>
 			{
-				Point3D position = new(location, room.ItemManager.GetPlacementHeight(floorItem.Furniture, location, direction));
-				if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(floorItem.Furniture, position, direction, roomUnit.User))
+				Point3D position = new(location, privateRoom.ItemManager.GetPlacementHeight(floorItem.Furniture, location, direction));
+				if (!roomUnit.InRoom || !privateRoom.ItemManager.CanPlaceItem(floorItem.Furniture, position, direction, roomUnit.User))
 				{
 					return false;
 				}
 
-				room.ItemManager.AddItem(this.floorRoomItemStrategy.CreateFloorItem(floorItem, room, position, direction));
+				privateRoom.ItemManager.AddItem(this.floorRoomItemStrategy.CreateFloorItem(floorItem, privateRoom, position, direction));
 
 				return true;
 			}).TryGetOrSuppressThrowing(out bool placeAwait, out ValueTaskExtensions.Awaiter<bool> placeAwaiter) ? placeAwait : await placeAwaiter;
@@ -151,7 +152,7 @@ internal sealed partial class PlaceObjectPacketHandler<T>(IDbContextFactory<Skyl
 		});
 	}
 
-	private void PlaceWallItem(IUserRoomUnit roomUnit, IWallInventoryItem wallItem, SequenceReader<byte> reader)
+	private void PlaceWallItem(IPrivateRoom privateRoom, IUserRoomUnit roomUnit, IWallInventoryItem wallItem, SequenceReader<byte> reader)
 	{
 		if (reader.IsNext((byte)':', advancePast: true))
 		{
@@ -191,8 +192,8 @@ internal sealed partial class PlaceObjectPacketHandler<T>(IDbContextFactory<Skyl
 
 			roomUnit.User.Client.ScheduleTask(async _ =>
 			{
-				bool canPlace = roomUnit.Room.ScheduleTask(room =>
-						roomUnit.InRoom && room.ItemManager.CanPlaceItem(wallItem.Furniture, location, position, direction, roomUnit.User) && roomUnit.User.Inventory.TryRemoveWallItem(wallItem))
+				bool canPlace = roomUnit.Room.ScheduleTask(_ =>
+						roomUnit.InRoom && privateRoom.ItemManager.CanPlaceItem(wallItem.Furniture, location, position, direction, roomUnit.User) && roomUnit.User.Inventory.TryRemoveWallItem(wallItem))
 					.TryGetOrSuppressThrowing(out bool canPlaceAwait, out ValueTaskExtensions.Awaiter<bool> canPlaceAwaiter) ? canPlaceAwait : await canPlaceAwaiter;
 
 				if (!canPlace)
@@ -220,14 +221,14 @@ internal sealed partial class PlaceObjectPacketHandler<T>(IDbContextFactory<Skyl
 					}
 				}
 
-				bool placed = roomUnit.Room.ScheduleTask(room =>
+				bool placed = roomUnit.Room.ScheduleTask(_ =>
 				{
-					if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(wallItem.Furniture, location, position, direction, roomUnit.User))
+					if (!roomUnit.InRoom || !privateRoom.ItemManager.CanPlaceItem(wallItem.Furniture, location, position, direction, roomUnit.User))
 					{
 						return false;
 					}
 
-					room.ItemManager.AddItem(this.wallRoomItemStrategy.CreateWallItem(wallItem, room, location, position));
+					privateRoom.ItemManager.AddItem(this.wallRoomItemStrategy.CreateWallItem(wallItem, privateRoom, location, position));
 
 					return true;
 				}).TryGetOrSuppressThrowing(out bool placeAwait, out ValueTaskExtensions.Awaiter<bool> placeAwaiter) ? placeAwait : await placeAwaiter;

@@ -17,12 +17,13 @@ using Skylight.Protocol.Packets.Data.Room.Engine;
 using Skylight.Protocol.Packets.Data.Room.Object.Data.Wall;
 using Skylight.Protocol.Packets.Outgoing.Room.Engine;
 using Skylight.Server.Extensions;
+using Skylight.Server.Game.Rooms.Private;
 
 namespace Skylight.Server.Game.Rooms.Items;
 
 internal sealed class RoomItemManager : IRoomItemManager
 {
-	private readonly Room room;
+	private readonly PrivateRoom room;
 
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
 
@@ -41,7 +42,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 	private readonly HashSet<IFloorRoomItem> floorItemsDatabaseQueue;
 	private readonly HashSet<IWallRoomItem> wallItemsDatabaseQueue;
 
-	internal RoomItemManager(Room room, IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager, IFurnitureManager furnitureManager, IFloorRoomItemStrategy floorRoomItemStrategy, IWallRoomItemStrategy wallRoomItemStrategy, IRoomItemInteractionManager interactionManager)
+	internal RoomItemManager(PrivateRoom room, IRoomLayout layout, IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager, IFurnitureManager furnitureManager, IFloorRoomItemStrategy floorRoomItemStrategy, IWallRoomItemStrategy wallRoomItemStrategy, IRoomItemInteractionManager interactionManager)
 	{
 		this.room = room;
 

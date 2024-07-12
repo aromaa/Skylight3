@@ -2,9 +2,9 @@
 using Skylight.Domain.Rooms.Layout;
 using Skylight.Domain.Users;
 
-namespace Skylight.Domain.Rooms;
+namespace Skylight.Domain.Rooms.Private;
 
-public class RoomEntity
+public class PrivateRoomEntity
 {
 	public int Id { get; init; }
 
@@ -18,7 +18,7 @@ public class RoomEntity
 	public RoomLayoutEntity? Layout { get; set; }
 
 	public int CategoryId { get; set; }
-	public RoomFlatCatEntity? Category { get; set; }
+	public NavigatorCategoryNodeEntity? Category { get; set; }
 
 	public int UsersMax { get; set; }
 }

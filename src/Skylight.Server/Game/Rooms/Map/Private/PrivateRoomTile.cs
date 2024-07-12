@@ -1,50 +1,36 @@
-﻿using System.Diagnostics;
-using Skylight.API.Game.Furniture.Floor;
+﻿using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Interactions.Wired.Triggers;
 using Skylight.API.Game.Rooms.Map;
+using Skylight.API.Game.Rooms.Map.Private;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Numerics;
 using Skylight.Server.Collections;
 using Skylight.Server.Game.Rooms.Layout;
+using Skylight.Server.Game.Rooms.Private;
 
-namespace Skylight.Server.Game.Rooms.GameMap;
+namespace Skylight.Server.Game.Rooms.Map.Private;
 
-internal sealed class RoomTile : IRoomTile
+internal sealed class PrivateRoomTile : RoomTile, IPrivateRoomTile
 {
-	private readonly Room room;
-
-	public IRoomMap Map { get; }
-	public Point3D Position { get; private set; }
+	private readonly PrivateRoom room;
 
 	private readonly IntervalTree<double, IFloorRoomItem> heightMap;
-	private readonly Dictionary<int, IRoomUnit> roomUnits;
 
-	internal RoomLayoutTile LayoutTile { get; }
-
-	internal RoomTile(Room room, IRoomMap map, Point2D location, RoomLayoutTile layoutTile)
+	internal PrivateRoomTile(PrivateRoom room, IRoomMap map, Point2D location, RoomLayoutTile layoutTile)
+		: base(map, location, layoutTile)
 	{
 		this.room = room;
 
-		this.Map = map;
-		this.Position = new Point3D(location, layoutTile.Height);
-
 		this.heightMap = new IntervalTree<double, IFloorRoomItem>();
-		this.roomUnits = [];
-
-		this.LayoutTile = layoutTile;
 	}
 
-	public bool IsHole => this.LayoutTile.IsHole;
-	public bool HasRoomUnit => this.roomUnits.Count > 0;
-
 	public IEnumerable<IFloorRoomItem> FloorItems => this.heightMap.Values;
-	public IEnumerable<IRoomUnit> Units => this.roomUnits.Values;
 
 	public IEnumerable<IFloorRoomItem> GetFloorItemsBetween(double minZ, double maxZ) => this.heightMap.GetItemsBetween(minZ, maxZ);
 
-	public double? GetStepHeight(double z) => this.GetStepHeight(z, 2, 2);
-	internal double? GetStepHeight(double z, double range, double emptySpace)
+	public override double? GetStepHeight(double z) => this.GetStepHeight(z, 2, 2);
+	internal override double? GetStepHeight(double z, double range, double emptySpace)
 	{
 		switch (this.heightMap.FindGabGreedy(z + range, emptySpace, static item => item.Furniture.Type == FloorFurnitureType.Walkable, out double value))
 		{
@@ -76,11 +62,9 @@ internal sealed class RoomTile : IRoomTile
 		this.Position = new Point3D(this.Position.XY, this.heightMap.Count > 0 ? this.heightMap.Max : this.LayoutTile.Height);
 	}
 
-	public void WalkOff(IRoomUnit unit)
+	public override void WalkOff(IRoomUnit unit)
 	{
-		bool result = this.roomUnits.Remove(unit.Id);
-
-		Debug.Assert(result);
+		base.WalkOff(unit);
 
 		IFloorRoomItem? item = this.FloorItems.FirstOrDefault(i => i.Position.Z + i.Height == unit.Position.Z);
 		if (item is not null && this.room.ItemManager.TryGetInteractionHandler(out IUnitWalkOffTriggerInteractionHandler? handler))
@@ -89,11 +73,9 @@ internal sealed class RoomTile : IRoomTile
 		}
 	}
 
-	public void WalkOn(IRoomUnit unit)
+	public override void WalkOn(IRoomUnit unit)
 	{
-		bool result = this.roomUnits.TryAdd(unit.Id, unit);
-
-		Debug.Assert(result);
+		base.WalkOn(unit);
 
 		IFloorRoomItem? item = this.FloorItems.FirstOrDefault(i => i.Position.Z + i.Height == unit.Position.Z);
 		if (item is not null && this.room.ItemManager.TryGetInteractionHandler(out IUnitWalkOnTriggerInteractionHandler? handler))

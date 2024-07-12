@@ -1,12 +1,12 @@
 ﻿using Skylight.API.Game.Furniture.Wall;
-using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Wall;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Rooms.Items.Wall;
 
-internal abstract class WallRoomItem<T>(IRoom room, int id, IUserInfo owner, T furniture, Point2D location, Point2D position, int direction) : RoomItem<T>(room, id, owner, furniture), IWallRoomItem
+internal abstract class WallRoomItem<T>(IPrivateRoom room, int id, IUserInfo owner, T furniture, Point2D location, Point2D position, int direction) : RoomItem<T>(room, id, owner, furniture), IWallRoomItem
 	where T : IWallFurniture
 {
 	public Point2D Location { get; set; } = location;

@@ -1,6 +1,6 @@
 ﻿using Net.Communication.Attributes;
 using Skylight.API.Game.Navigator;
-using Skylight.API.Game.Rooms;
+using Skylight.API.Game.Navigator.Nodes;
 using Skylight.API.Game.Users;
 using Skylight.Protocol.Packets.Data.Navigator;
 using Skylight.Protocol.Packets.Incoming.Navigator;
@@ -22,9 +22,12 @@ internal sealed class GetUserFlatCatsPacketHandler<T>(INavigatorManager navigato
 			INavigatorSnapshot navigator = await this.navigatorManager.GetAsync().ConfigureAwait(false);
 
 			List<FlatCategoryData> cats = [];
-			foreach (IRoomFlatCat flatCat in navigator.FlatCats)
+			foreach (INavigatorNode node in navigator.Nodes)
 			{
-				cats.Add(new FlatCategoryData(flatCat.Id, flatCat.Caption, true, false, flatCat.Caption, string.Empty, false));
+				if (node is INavigatorCategoryNode)
+				{
+					cats.Add(new FlatCategoryData(node.Id, node.Caption, true, false, node.Caption, string.Empty, false));
+				}
 			}
 
 			client.SendAsync(new UserFlatCatsOutgoingPacket(cats));

@@ -14,18 +14,22 @@ internal sealed partial class RoomSession : IRoomSession
 
 	public IUser User { get; }
 
-	public int RoomId { get; }
+	public int InstanceType { get; }
+	public int InstanceId { get; }
+	public int WorldId { get; }
 
 	public IRoom? Room { get; set; }
 	public IUserRoomUnit? Unit { get; set; }
 
-	internal RoomSession(IUser user, int roomId)
+	internal RoomSession(IUser user, int instanceType, int instanceId, int worldId)
 	{
 		this.state = IRoomSession.SessionState.Connected;
 
 		this.User = user;
 
-		this.RoomId = roomId;
+		this.InstanceType = instanceType;
+		this.InstanceId = instanceId;
+		this.WorldId = worldId;
 	}
 
 	public IRoomSession.SessionState State => this.state;

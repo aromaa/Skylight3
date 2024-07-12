@@ -3,6 +3,7 @@ using Net.Communication.Attributes;
 using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Floor.Wired.Triggers;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
 using Skylight.Protocol.Packets.Incoming.UserDefinedRoomEvents;
 using Skylight.Protocol.Packets.Manager;
@@ -16,7 +17,7 @@ internal sealed class UpdateTriggerPacketHandler<T> : UserPacketHandler<T>
 {
 	internal override void Handle(IUser user, in T packet)
 	{
-		if (user.RoomSession?.Unit is not { } roomUnit || !roomUnit.Room.IsOwner(user))
+		if (user.RoomSession?.Unit is not { Room: IPrivateRoom privateRoom } roomUnit || !privateRoom.IsOwner(user))
 		{
 			return;
 		}
@@ -27,9 +28,9 @@ internal sealed class UpdateTriggerPacketHandler<T> : UserPacketHandler<T>
 		IList<int> integerParameters = packet.IntegerParameters;
 		string stringParameter = Encoding.UTF8.GetString(packet.StringParameter);
 
-		roomUnit.Room.PostTask(room =>
+		privateRoom.PostTask(room =>
 		{
-			if (!roomUnit.InRoom || !room.ItemManager.TryGetFloorItem(itemId, out IFloorRoomItem? item) || item is not IWiredTriggerRoomItem trigger)
+			if (!roomUnit.InRoom || !privateRoom.ItemManager.TryGetFloorItem(itemId, out IFloorRoomItem? item) || item is not IWiredTriggerRoomItem trigger)
 			{
 				return;
 			}
@@ -37,7 +38,7 @@ internal sealed class UpdateTriggerPacketHandler<T> : UserPacketHandler<T>
 			HashSet<IRoomItem> selectedItems = [];
 			foreach (int selectedItemId in selectedItemIds)
 			{
-				if (!room.ItemManager.TryGetFloorItem(selectedItemId, out IFloorRoomItem? selectedItem))
+				if (!privateRoom.ItemManager.TryGetFloorItem(selectedItemId, out IFloorRoomItem? selectedItem))
 				{
 					continue;
 				}

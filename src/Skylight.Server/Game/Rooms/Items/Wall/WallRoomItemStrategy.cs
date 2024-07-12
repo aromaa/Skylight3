@@ -3,8 +3,8 @@ using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Furniture.Wall;
-using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Wall;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
 using Skylight.Server.Game.Rooms.Items.Builders.Wall;
@@ -46,7 +46,7 @@ internal sealed class WallRoomItemStrategy : IWallRoomItemStrategy
 		throw new NotSupportedException();
 	}
 
-	public TRoomItem CreateWallItem<TRoomItem, TFurniture>(int itemId, IRoom room, IUserInfo owner, TFurniture furniture, Point2D location, Point2D position, JsonDocument? extraData = null)
+	public TRoomItem CreateWallItem<TRoomItem, TFurniture>(int itemId, IPrivateRoom room, IUserInfo owner, TFurniture furniture, Point2D location, Point2D position, JsonDocument? extraData = null)
 		where TRoomItem : IWallRoomItem, IFurnitureItem<TFurniture>
 		where TFurniture : IWallFurniture
 	{
@@ -68,7 +68,7 @@ internal sealed class WallRoomItemStrategy : IWallRoomItemStrategy
 			.Build();
 	}
 
-	public TRoomItem CreateWallItem<TRoomItem, TFurniture, TBuilder>(int itemId, IRoom room, IUserInfo owner, TFurniture furniture, Point2D location, Point2D position, Action<TBuilder> builder)
+	public TRoomItem CreateWallItem<TRoomItem, TFurniture, TBuilder>(int itemId, IPrivateRoom room, IUserInfo owner, TFurniture furniture, Point2D location, Point2D position, Action<TBuilder> builder)
 		where TRoomItem : IWallRoomItem, IFurnitureItem<TFurniture>
 		where TFurniture : IWallFurniture
 		where TBuilder : IFurnitureItemDataBuilder<TFurniture, TRoomItem, TBuilder>

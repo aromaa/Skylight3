@@ -1,6 +1,6 @@
 ﻿using Skylight.Domain.Badges;
 using Skylight.Domain.Items;
-using Skylight.Domain.Rooms;
+using Skylight.Domain.Rooms.Private;
 
 namespace Skylight.Domain.Users;
 
@@ -20,7 +20,7 @@ public class UserEntity
 	public List<FloorItemEntity>? FloorItems { get; set; }
 	public List<WallItemEntity>? WallItems { get; set; }
 
-	public List<RoomEntity>? Rooms { get; set; }
+	public List<PrivateRoomEntity>? Rooms { get; set; }
 
 	public List<UserBadgeEntity>? Badges { get; set; }
 }

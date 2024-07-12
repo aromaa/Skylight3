@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Net.Communication.Attributes;
 using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Users;
-using Skylight.Domain.Rooms;
+using Skylight.Domain.Rooms.Private;
 using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Data.Navigator;
 using Skylight.Protocol.Packets.Data.NewNavigator;
@@ -32,7 +32,7 @@ internal sealed class NewNavigatorSearchPacketHandler<T>(IDbContextFactory<Skyli
 		{
 			using SkylightContext dbContext = this.dbContextFactory.CreateDbContext();
 
-			foreach (RoomEntity room in dbContext.Rooms.AsNoTracking()
+			foreach (PrivateRoomEntity room in dbContext.PrivateRooms.AsNoTracking()
 						 .Include(r => r.Owner)
 						 .Where(r => r.OwnerId == user.Profile.Id))
 			{

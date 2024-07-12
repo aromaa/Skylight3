@@ -6,6 +6,7 @@ using Skylight.API.Game.Inventory.Items;
 using Skylight.API.Game.Inventory.Items.Wall;
 using Skylight.API.Game.Rooms.Items.Interactions;
 using Skylight.API.Game.Rooms.Items.Wall;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
 using Skylight.Infrastructure;
@@ -29,7 +30,7 @@ internal sealed partial class PlacePostItPacketHandler<T>(IDbContextFactory<Skyl
 
 	internal override void Handle(IUser user, in T packet)
 	{
-		if (user.RoomSession?.Unit is not { } roomUnit)
+		if (user.RoomSession?.Unit is not { Room: IPrivateRoom privateRoom } roomUnit)
 		{
 			return;
 		}
@@ -79,14 +80,14 @@ internal sealed partial class PlacePostItPacketHandler<T>(IDbContextFactory<Skyl
 
 			user.Client.ScheduleTask(async _ =>
 			{
-				bool canPlace = roomUnit.Room.ScheduleTask(room =>
+				bool canPlace = roomUnit.Room.ScheduleTask(_ =>
 				{
-					if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(postItItem.Furniture, location, position, direction, roomUnit.User))
+					if (!roomUnit.InRoom || !privateRoom.ItemManager.CanPlaceItem(postItItem.Furniture, location, position, direction, roomUnit.User))
 					{
 						return false;
 					}
 
-					if (room.ItemManager.TryGetInteractionHandler(out IStickyNoteInteractionHandler? handler) && handler.HasStickyNotePole)
+					if (privateRoom.ItemManager.TryGetInteractionHandler(out IStickyNoteInteractionHandler? handler) && handler.HasStickyNotePole)
 					{
 						roomUnit.User.SendAsync(new RequestSpamWallPostItOutgoingPacket(postItItem.Id, new WallPosition(location.X, location.Y, position.X, position.Y)));
 
@@ -116,14 +117,14 @@ internal sealed partial class PlacePostItPacketHandler<T>(IDbContextFactory<Skyl
 
 				roomUnit.User.SendAsync(new PostItPlacedOutgoingPacket(postItItem.StripId, postItItem.Count));
 
-				bool placed = roomUnit.Room.ScheduleTask(room =>
+				bool placed = roomUnit.Room.ScheduleTask(_ =>
 				{
-					if (!roomUnit.InRoom || !room.ItemManager.CanPlaceItem(inventoryItem.Furniture, location, position, direction, roomUnit.User))
+					if (!roomUnit.InRoom || !privateRoom.ItemManager.CanPlaceItem(inventoryItem.Furniture, location, position, direction, roomUnit.User))
 					{
 						return false;
 					}
 
-					room.ItemManager.AddItem(this.wallRoomItemStrategy.CreateWallItem(inventoryItem, room, location, position));
+					privateRoom.ItemManager.AddItem(this.wallRoomItemStrategy.CreateWallItem(inventoryItem, privateRoom, location, position));
 
 					return true;
 				}).TryGetOrSuppressThrowing(out bool placeAwait, out ValueTaskExtensions.Awaiter<bool> placeAwaiter) ? placeAwait : await placeAwaiter;

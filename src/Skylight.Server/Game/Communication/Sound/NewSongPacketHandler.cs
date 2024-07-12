@@ -2,6 +2,7 @@
 using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Inventory.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Interactions;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
 using Skylight.Protocol.Packets.Data.Sound;
 using Skylight.Protocol.Packets.Incoming.Sound;
@@ -16,14 +17,14 @@ internal sealed partial class NewSongPacketHandler<T> : UserPacketHandler<T>
 {
 	internal override void Handle(IUser user, in T packet)
 	{
-		if (user.RoomSession?.Unit is not { } unit)
+		if (user.RoomSession?.Unit is not { Room: IPrivateRoom privateRoom } roomUnit)
 		{
 			return;
 		}
 
-		unit.Room.PostTask(_ =>
+		privateRoom.PostTask(_ =>
 		{
-			if (!unit.InRoom || !unit.Room.IsOwner(user) || !unit.Room.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
+			if (!roomUnit.InRoom || !privateRoom.IsOwner(user) || !privateRoom.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
 			{
 				return;
 			}
@@ -34,10 +35,10 @@ internal sealed partial class NewSongPacketHandler<T> : UserPacketHandler<T>
 				filledSlots.Add(new SoundSetData(slot, soundSet.SoundSetId, soundSet.Samples));
 			}
 
-			unit.User.SendAsync(new TraxSoundPackagesOutgoingPacket(soundMachine.Furniture.SoundSetSlotCount, filledSlots));
+			user.SendAsync(new TraxSoundPackagesOutgoingPacket(soundMachine.Furniture.SoundSetSlotCount, filledSlots));
 
 			List<int> soundSets = [];
-			foreach (IFloorInventoryItem item in unit.User.Inventory.FloorItems)
+			foreach (IFloorInventoryItem item in user.Inventory.FloorItems)
 			{
 				if (item is not ISoundSetInventoryItem soundSet)
 				{
@@ -52,7 +53,7 @@ internal sealed partial class NewSongPacketHandler<T> : UserPacketHandler<T>
 				soundSets.Add(soundSet.Furniture.SoundSetId);
 			}
 
-			unit.User.SendAsync(new UserSoundPackagesOutgoingPacket(soundSets));
+			user.SendAsync(new UserSoundPackagesOutgoingPacket(soundSets));
 		});
 	}
 }

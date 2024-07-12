@@ -4,6 +4,8 @@ using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Interactions;
 using Skylight.API.Game.Rooms.Map;
+using Skylight.API.Game.Rooms.Map.Private;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Numerics;
 using Skylight.Server.Collections.Immutable;
@@ -12,11 +14,11 @@ namespace Skylight.Server.Game.Rooms.Items.Interactions;
 
 internal sealed class RollerInteractionHandler : IRollerInteractionHandler, IRoomTask
 {
-	private readonly IRoom room;
+	private readonly IPrivateRoom room;
 
 	private readonly ImmutableArray2D<RollerRoomTile> tiles;
 
-	internal RollerInteractionHandler(IRoom room)
+	internal RollerInteractionHandler(IPrivateRoom room)
 	{
 		this.room = room;
 
@@ -99,14 +101,14 @@ internal sealed class RollerInteractionHandler : IRollerInteractionHandler, IRoo
 	{
 		private readonly RollerInteractionHandler handler;
 
-		internal IRoomTile RoomTile { get; }
+		internal IPrivateRoomTile RoomTile { get; }
 
 		private readonly SortedSet<IRollerRoomItem> rollers;
 
 		internal IRollerRoomItem? Roller { get; private set; }
 		internal RollerRoomTile? TargetTile { get; private set; }
 
-		internal RollerRoomTile(RollerInteractionHandler handler, IRoomTile roomTile)
+		internal RollerRoomTile(RollerInteractionHandler handler, IPrivateRoomTile roomTile)
 		{
 			this.handler = handler;
 

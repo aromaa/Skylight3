@@ -1,14 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Skylight.Domain.Rooms;
+using Skylight.Domain.Rooms.Private;
 
-namespace Skylight.Infrastructure.EntityConfigurations.Room;
+namespace Skylight.Infrastructure.EntityConfigurations.Room.Private;
 
-internal sealed class RoomEntityTypeConfiguration : IEntityTypeConfiguration<RoomEntity>
+internal sealed class PrivateRoomEntityTypeConfiguration : IEntityTypeConfiguration<PrivateRoomEntity>
 {
-	public void Configure(EntityTypeBuilder<RoomEntity> builder)
+	public void Configure(EntityTypeBuilder<PrivateRoomEntity> builder)
 	{
-		builder.ToTable("rooms");
+		builder.ToTable("rooms_private");
 
 		builder.HasKey(r => r.Id);
 

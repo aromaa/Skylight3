@@ -13,7 +13,7 @@ public interface IUser : IPacketSender
 	public IInventory Inventory { get; }
 	public IRoomSession? RoomSession { get; }
 
-	public IRoomSession OpenRoomSession(int roomId);
+	public IRoomSession OpenRoomSession(int instanceType, int instanceId, int worldId = 0);
 	public bool CloseRoomSession(IRoomSession session);
 
 	public void Disconnect();

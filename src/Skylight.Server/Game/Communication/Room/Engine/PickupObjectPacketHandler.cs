@@ -3,6 +3,7 @@ using Net.Communication.Attributes;
 using Skylight.API.Game.Inventory.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Wall;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.Infrastructure;
@@ -22,7 +23,7 @@ internal sealed partial class PickupObjectPacketHandler<T>(IDbContextFactory<Sky
 
 	internal override void Handle(IUser user, in T packet)
 	{
-		if (user.RoomSession?.Unit is not { } roomUnit)
+		if (user.RoomSession?.Unit is not { Room: IPrivateRoom privateRoom } roomUnit)
 		{
 			return;
 		}
@@ -31,28 +32,28 @@ internal sealed partial class PickupObjectPacketHandler<T>(IDbContextFactory<Sky
 		{
 			int floorItemId = packet.ItemId;
 
-			this.PickupWallItem(roomUnit, floorItemId);
+			this.PickupWallItem(privateRoom, roomUnit, floorItemId);
 		}
 		else if (packet.ItemType == 2)
 		{
 			int wallItemId = packet.ItemId;
 
-			this.PickupFloorItem(roomUnit, wallItemId);
+			this.PickupFloorItem(privateRoom, roomUnit, wallItemId);
 		}
 	}
 
-	private void PickupFloorItem(IUserRoomUnit roomUnit, int floorItemId)
+	private void PickupFloorItem(IPrivateRoom privateRoom, IUserRoomUnit roomUnit, int floorItemId)
 	{
 		roomUnit.User.Client.ScheduleTask(async _ =>
 		{
-			IFloorRoomItem? item = await roomUnit.Room.ScheduleTask(room =>
+			IFloorRoomItem? item = await roomUnit.Room.ScheduleTask(_ =>
 			{
-				if (!roomUnit.InRoom || !room.ItemManager.TryGetFloorItem(floorItemId, out IFloorRoomItem? item) || !room.ItemManager.CanPickupItem(item, roomUnit.User))
+				if (!roomUnit.InRoom || !privateRoom.ItemManager.TryGetFloorItem(floorItemId, out IFloorRoomItem? item) || !privateRoom.ItemManager.CanPickupItem(item, roomUnit.User))
 				{
 					return default;
 				}
 
-				room.ItemManager.RemoveItem(item);
+				privateRoom.ItemManager.RemoveItem(item);
 
 				roomUnit.User.Inventory.TryAddFloorItem(this.furnitureInventoryItemFactory.CreateFurnitureItem(item.Id, item.Owner, item.Furniture, null));
 
@@ -75,18 +76,18 @@ internal sealed partial class PickupObjectPacketHandler<T>(IDbContextFactory<Sky
 		});
 	}
 
-	private void PickupWallItem(IUserRoomUnit roomUnit, int wallItemId)
+	private void PickupWallItem(IPrivateRoom privateRoom, IUserRoomUnit roomUnit, int wallItemId)
 	{
 		roomUnit.User.Client.ScheduleTask(async _ =>
 		{
-			IWallRoomItem? item = await roomUnit.Room.ScheduleTask(room =>
+			IWallRoomItem? item = await roomUnit.Room.ScheduleTask(_ =>
 			{
-				if (!roomUnit.InRoom || !room.ItemManager.TryGetWallItem(wallItemId, out IWallRoomItem? item) || !room.ItemManager.CanPickupItem(item, roomUnit.User))
+				if (!roomUnit.InRoom || !privateRoom.ItemManager.TryGetWallItem(wallItemId, out IWallRoomItem? item) || !privateRoom.ItemManager.CanPickupItem(item, roomUnit.User))
 				{
 					return default;
 				}
 
-				room.ItemManager.RemoveItem(item);
+				privateRoom.ItemManager.RemoveItem(item);
 
 				roomUnit.User.Inventory.TryAddWallItem(this.furnitureInventoryItemFactory.CreateFurnitureItem(item.Id, item.Owner, item.Furniture, null));
 

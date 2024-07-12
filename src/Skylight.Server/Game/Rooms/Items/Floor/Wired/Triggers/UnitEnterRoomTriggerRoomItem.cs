@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
 using Skylight.API.Game.Furniture.Floor.Wired.Triggers;
-using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Floor.Wired.Triggers;
 using Skylight.API.Game.Rooms.Items.Interactions.Wired.Triggers;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
@@ -11,7 +11,7 @@ using Skylight.Protocol.Packets.Outgoing.UserDefinedRoomEvents;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor.Wired.Triggers;
 
-internal sealed class UnitEnterRoomTriggerRoomItem(IRoom room, int id, IUserInfo owner, IUnitEnterRoomTriggerFurniture furniture, Point3D position, int direction, IUnitEnterRoomTriggerInteractionHandler interactionHandler,
+internal sealed class UnitEnterRoomTriggerRoomItem(IPrivateRoom room, int id, IUserInfo owner, IUnitEnterRoomTriggerFurniture furniture, Point3D position, int direction, IUnitEnterRoomTriggerInteractionHandler interactionHandler,
 	string triggerUsername)
 	: WiredTriggerRoomItem<IUnitEnterRoomTriggerFurniture>(room, id, owner, furniture, position, direction), IUnitEnterRoomTriggerRoomItem
 {

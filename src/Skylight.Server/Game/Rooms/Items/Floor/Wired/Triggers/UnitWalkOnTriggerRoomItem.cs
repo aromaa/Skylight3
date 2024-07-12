@@ -1,9 +1,9 @@
 ﻿using System.Text.Json;
 using Skylight.API.Game.Furniture.Floor.Wired.Triggers;
-using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor.Wired.Triggers;
 using Skylight.API.Game.Rooms.Items.Interactions.Wired.Triggers;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
@@ -12,7 +12,7 @@ using Skylight.Protocol.Packets.Outgoing.UserDefinedRoomEvents;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor.Wired.Triggers;
 
-internal sealed class UnitWalkOnTriggerRoomItem(IRoom room, int id, IUserInfo owner, IUnitWalkOnTriggerFurniture furniture, Point3D position, int direction, IUnitWalkOnTriggerInteractionHandler interactionHandler,
+internal sealed class UnitWalkOnTriggerRoomItem(IPrivateRoom room, int id, IUserInfo owner, IUnitWalkOnTriggerFurniture furniture, Point3D position, int direction, IUnitWalkOnTriggerInteractionHandler interactionHandler,
 	HashSet<IRoomItem>? selectedItems, JsonDocument? extraData)
 	: WiredTriggerRoomItem<IUnitWalkOnTriggerFurniture>(room, id, owner, furniture, position, direction), IUnitWalkOnTriggerRoomItem
 {

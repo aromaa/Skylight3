@@ -6,8 +6,9 @@ using Skylight.Domain.Furniture;
 using Skylight.Domain.Items;
 using Skylight.Domain.Navigator;
 using Skylight.Domain.Recycler.FurniMatic;
-using Skylight.Domain.Rooms;
 using Skylight.Domain.Rooms.Layout;
+using Skylight.Domain.Rooms.Private;
+using Skylight.Domain.Rooms.Public;
 using Skylight.Domain.Rooms.Sound;
 using Skylight.Domain.Server;
 using Skylight.Domain.Users;
@@ -18,8 +19,9 @@ using Skylight.Infrastructure.EntityConfigurations.Furniture;
 using Skylight.Infrastructure.EntityConfigurations.Items;
 using Skylight.Infrastructure.EntityConfigurations.Navigator;
 using Skylight.Infrastructure.EntityConfigurations.Recycler.FurniMatic;
-using Skylight.Infrastructure.EntityConfigurations.Room;
 using Skylight.Infrastructure.EntityConfigurations.Room.Layout;
+using Skylight.Infrastructure.EntityConfigurations.Room.Private;
+using Skylight.Infrastructure.EntityConfigurations.Room.Public;
 using Skylight.Infrastructure.EntityConfigurations.Room.Sound;
 using Skylight.Infrastructure.EntityConfigurations.Server;
 using Skylight.Infrastructure.EntityConfigurations.Users;
@@ -51,7 +53,9 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 	public DbSet<WallItemDataEntity> WallItemsData { get; init; } = null!;
 	public DbSet<WallItemEntity> WallItems { get; init; } = null!;
 
-	public DbSet<RoomFlatCatEntity> FlatCats { get; init; } = null!;
+	public DbSet<NavigatorCategoryNodeEntity> NavigatorCategoryNodes { get; init; } = null!;
+	public DbSet<NavigatorNodeEntity> NavigatorNodes { get; init; } = null!;
+	public DbSet<NavigatorPublicRoomNodeEntity> NavigatorPublicRooms { get; init; } = null!;
 
 	public DbSet<FurniMaticFloorItemEntity> FurniMaticFloorItems { get; init; } = null!;
 	public DbSet<FurniMaticGiftEntity> FurniMaticGifts { get; init; } = null!;
@@ -63,9 +67,12 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 	public DbSet<CustomRoomLayoutEntity> CustomRoomLayouts { get; init; } = null!;
 	public DbSet<RoomLayoutEntity> RoomLayouts { get; init; } = null!;
 
-	public DbSet<SongEntity> Songs { get; init; } = null!;
+	public DbSet<PrivateRoomEntity> PrivateRooms { get; init; } = null!;
 
-	public DbSet<RoomEntity> Rooms { get; init; } = null!;
+	public DbSet<PublicRoomEntity> PublicRooms { get; init; } = null!;
+	public DbSet<PublicRoomWorldEntity> PublicRoomWorlds { get; init; } = null!;
+
+	public DbSet<SongEntity> Songs { get; init; } = null!;
 
 	public DbSet<SettingsEntity> Settings { get; init; } = null!;
 
@@ -97,7 +104,9 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 		modelBuilder.ApplyConfiguration(new WallItemDataEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new WallItemEntityTypeConfiguration());
 
-		modelBuilder.ApplyConfiguration(new RoomFlatCatEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new NavigatorCategoryNodeEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new NavigatorNodeEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new NavigatorPublicRoomNodeEntityTypeConfiguration());
 
 		modelBuilder.ApplyConfiguration(new FurniMaticFloorItemEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new FurniMaticGiftEntityTypeConfiguration());
@@ -109,9 +118,12 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 		modelBuilder.ApplyConfiguration(new CustomRoomLayoutEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new RoomLayoutEntityTypeConfiguration());
 
-		modelBuilder.ApplyConfiguration(new SongEntityEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new PrivateRoomEntityTypeConfiguration());
 
-		modelBuilder.ApplyConfiguration(new RoomEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new PublicRoomEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new PublicRoomWorldEntityTypeConfiguration());
+
+		modelBuilder.ApplyConfiguration(new SongEntityEntityTypeConfiguration());
 
 		modelBuilder.ApplyConfiguration(new SettingsEntityTypeConfiguration());
 

@@ -43,9 +43,9 @@ internal sealed class User : IUser
 		where T : IGameOutgoingPacket
 		=> this.Client.SendAsync(packet);
 
-	public IRoomSession OpenRoomSession(int roomId)
+	public IRoomSession OpenRoomSession(int instanceType, int instanceId, int worldId)
 	{
-		RoomSession newSession = new(this, roomId);
+		RoomSession newSession = new(this, instanceType, instanceId, worldId);
 
 		IRoomSession? oldSession = Interlocked.Exchange(ref this.roomSession, newSession);
 		oldSession?.OnClose();

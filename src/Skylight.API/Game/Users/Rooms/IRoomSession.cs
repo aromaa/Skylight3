@@ -9,7 +9,9 @@ public interface IRoomSession
 
 	public SessionState State { get; }
 
-	public int RoomId { get; }
+	public int InstanceType { get; }
+	public int InstanceId { get; }
+	public int WorldId { get; }
 
 	public IRoom? Room { get; }
 	public IUserRoomUnit? Unit { get; }
