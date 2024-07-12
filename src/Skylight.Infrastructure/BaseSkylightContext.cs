@@ -60,6 +60,7 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 	public DbSet<FurniMaticPrizeLevelEntity> FurniMaticPrizeLevels { get; init; } = null!;
 	public DbSet<FurniMaticWallItemEntity> FurniMaticWallItems { get; init; } = null!;
 
+	public DbSet<CustomRoomLayoutEntity> CustomRoomLayouts { get; init; } = null!;
 	public DbSet<RoomLayoutEntity> RoomLayouts { get; init; } = null!;
 
 	public DbSet<SongEntity> Songs { get; init; } = null!;
@@ -105,6 +106,7 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 		modelBuilder.ApplyConfiguration(new FurniMaticPrizeLevelEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new FurniMaticWallItemEntityTypeConfiguration());
 
+		modelBuilder.ApplyConfiguration(new CustomRoomLayoutEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new RoomLayoutEntityTypeConfiguration());
 
 		modelBuilder.ApplyConfiguration(new SongEntityEntityTypeConfiguration());

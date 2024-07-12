@@ -4,7 +4,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Skylight.API.Game.Navigator;
 using Skylight.API.Game.Rooms;
+using Skylight.API.Game.Rooms.Map;
+using Skylight.Domain.Rooms.Layout;
 using Skylight.Infrastructure;
+using Skylight.Server.Game.Rooms.Layout;
 
 namespace Skylight.Server.Game.Rooms;
 
@@ -28,22 +31,27 @@ internal sealed class RoomManager(IServiceProvider serviceProvider, IDbContextFa
 			return room;
 		}
 
-		await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
-
 		IRoomInfo? roomInfo = await this.navigatorManager.GetRoomDataAsync(id, cancellationToken).ConfigureAwait(false);
 		if (roomInfo is null)
 		{
 			return null;
 		}
 
+		await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+		//TODO: Clean up
+		CustomRoomLayoutEntity? customLayout = await dbContext.CustomRoomLayouts.FirstOrDefaultAsync(e => e.RoomId == id, cancellationToken).ConfigureAwait(false);
+
 		ObjectFactory roomFactory = ActivatorUtilities.CreateFactory(typeof(Room),
 		[
-			typeof(RoomData)
+			typeof(RoomData),
+			typeof(IRoomLayout)
 		]);
 
 		room = (Room)roomFactory(this.serviceProvider,
 		[
-			roomInfo
+			roomInfo,
+			customLayout is null ? roomInfo.Layout : new RoomLayout(roomInfo.Layout.Id, customLayout.HeightMap, customLayout.DoorX, customLayout.DoorY, customLayout.DoorDirection)
 		]);
 
 		this.loadedRooms.TryAdd(id, room);
