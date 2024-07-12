@@ -3,8 +3,9 @@ using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Numerics;
-using Skylight.Server.Game.Rooms.GameMap;
 using Skylight.Server.Game.Rooms.Layout;
+using Skylight.Server.Game.Rooms.Map;
+using Skylight.Server.Game.Rooms.Map.Private;
 
 namespace Skylight.Server.Tests.Game.Rooms.GameMap;
 
@@ -39,7 +40,7 @@ public class RoomTileTests
 
 			Mock<IRoomMap> roomMapMock = new();
 
-			RoomTile rangeMap = new(null!, roomMapMock.Object, location, new RoomLayoutTile(0));
+			PrivateRoomTile rangeMap = new(null!, roomMapMock.Object, location, new RoomLayoutTile(0));
 
 			foreach ((double z, double height) in slices)
 			{
