@@ -15,7 +15,7 @@ using Skylight.Server.Game.Rooms;
 
 namespace Skylight.Server.Game.Navigator;
 
-internal sealed partial class NavigatorManager : LoadableServiceBase<INavigatorSnapshot>, INavigatorManager
+internal sealed partial class NavigatorManager : VersionedLoadableServiceBase<INavigatorSnapshot, NavigatorSnapshot>, INavigatorManager
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
 
@@ -24,7 +24,7 @@ internal sealed partial class NavigatorManager : LoadableServiceBase<INavigatorS
 	private readonly AsyncTypedCache<int, IRoomInfo?> roomData;
 
 	public NavigatorManager(IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager)
-		: base(new Snapshot(Cache.CreateBuilder().ToImmutable()))
+		: base(NavigatorSnapshot.CreateBuilder().Build())
 	{
 		this.dbContextFactory = dbContextFactory;
 
@@ -33,9 +33,9 @@ internal sealed partial class NavigatorManager : LoadableServiceBase<INavigatorS
 		this.roomData = new AsyncTypedCache<int, IRoomInfo?>(this.InternalLoadRoomDataAsync);
 	}
 
-	public override async Task<INavigatorSnapshot> LoadAsyncCore(ILoadableServiceContext context, CancellationToken cancellationToken = default)
+	internal override async Task<VersionedServiceSnapshot.Transaction<NavigatorSnapshot>> LoadAsyncCore(ILoadableServiceContext context, CancellationToken cancellationToken = default)
 	{
-		Cache.Builder builder = Cache.CreateBuilder();
+		NavigatorSnapshot.Builder builder = NavigatorSnapshot.CreateBuilder();
 
 		await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
 		{
@@ -74,7 +74,7 @@ internal sealed partial class NavigatorManager : LoadableServiceBase<INavigatorS
 			}
 		}
 
-		return new Snapshot(builder.ToImmutable());
+		return builder.BuildAndStartTransaction(this, this.Current);
 	}
 
 	public ValueTask<IRoomInfo?> GetRoomDataAsync(int id, CancellationToken cancellationToken)
