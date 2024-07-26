@@ -16,7 +16,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 9.0.0-preview.6.24327.7
+        dotnet-version: 9.0.100-preview.6.24328.19
     - name: Add Github NuGet source
       run: dotnet nuget update source --username aromaa --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text github-aromaa
     - name: Restore dependencies
