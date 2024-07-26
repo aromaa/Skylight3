@@ -67,6 +67,7 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 	public DbSet<CustomRoomLayoutEntity> CustomRoomLayouts { get; init; } = null!;
 	public DbSet<RoomLayoutEntity> RoomLayouts { get; init; } = null!;
 
+	public DbSet<PrivateRoomActivityEntity> PrivateRoomActivity { get; init; } = null!;
 	public DbSet<PrivateRoomEntity> PrivateRooms { get; init; } = null!;
 
 	public DbSet<PublicRoomEntity> PublicRooms { get; init; } = null!;
@@ -118,6 +119,7 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 		modelBuilder.ApplyConfiguration(new CustomRoomLayoutEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new RoomLayoutEntityTypeConfiguration());
 
+		modelBuilder.ApplyConfiguration(new PrivateRoomActivityEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new PrivateRoomEntityTypeConfiguration());
 
 		modelBuilder.ApplyConfiguration(new PublicRoomEntityTypeConfiguration());

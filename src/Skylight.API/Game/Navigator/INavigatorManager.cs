@@ -10,4 +10,7 @@ public interface INavigatorManager : INavigatorSnapshot, ILoadableService<INavig
 	public bool TryGetNode(int nodeId, [NotNullWhen(true)] out IServiceValue<INavigatorNode>? node);
 
 	public ValueTask<IRoomInfo?> GetRoomDataAsync(int roomId, CancellationToken cancellationToken = default);
+
+	//TODO: Figure out better shape for this
+	public void PushRoomActivity(int roomId, int activity);
 }

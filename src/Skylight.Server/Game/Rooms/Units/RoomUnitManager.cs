@@ -12,9 +12,9 @@ using Skylight.Server.Game.Users;
 
 namespace Skylight.Server.Game.Rooms.Units;
 
-internal sealed class RoomUnitManager : IRoomUnitManager
+internal abstract class RoomUnitManager : IRoomUnitManager
 {
-	private readonly Room room;
+	protected readonly Room room;
 
 	private readonly Dictionary<int, IRoomUnit> roomUnits;
 
@@ -22,7 +22,7 @@ internal sealed class RoomUnitManager : IRoomUnitManager
 
 	private int nextUnitId;
 
-	internal RoomUnitManager(Room room)
+	protected RoomUnitManager(Room room)
 	{
 		this.room = room;
 
@@ -35,7 +35,7 @@ internal sealed class RoomUnitManager : IRoomUnitManager
 
 	public IEnumerable<IRoomUnit> Units => this.roomUnits.Values;
 
-	public void Tick()
+	public virtual void Tick()
 	{
 		if (this.movingUnits.Count > 0)
 		{

@@ -7,7 +7,6 @@ using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.Protocol.Packets.Outgoing;
 using Skylight.Server.Game.Rooms.Scheduler;
-using Skylight.Server.Game.Rooms.Units;
 
 namespace Skylight.Server.Game.Rooms;
 
@@ -16,7 +15,7 @@ internal abstract class Room : IRoom
 	public IRoomInfo Info { get; }
 
 	public abstract IRoomMap Map { get; }
-	public IRoomUnitManager UnitManager { get; }
+	public abstract IRoomUnitManager UnitManager { get; }
 
 	internal RoomTaskScheduler RoomTaskScheduler { get; }
 
@@ -37,8 +36,6 @@ internal abstract class Room : IRoom
 		this.RoomTaskScheduler = new RoomTaskScheduler(this);
 
 		this.scheduledUpdateTasks = new Queue<IRoomTask>();
-
-		this.UnitManager = new RoomUnitManager(this);
 
 		this.roomClients = new SocketCollection();
 
