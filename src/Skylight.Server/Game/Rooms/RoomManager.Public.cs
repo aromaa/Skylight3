@@ -105,6 +105,8 @@ internal partial class RoomManager
 				return loadHandler.LoadAsync(this, serviceProvider, dbContextFactory, world);
 			}
 
+			this.publicInstance.ReleaseTicket();
+
 			return Task.CompletedTask;
 		}
 
@@ -135,6 +137,8 @@ internal partial class RoomManager
 			{
 				if (this.initialized != 0 || Interlocked.CompareExchange(ref this.initialized, 1, 0) != 0)
 				{
+					instance.publicInstance.ReleaseTicket();
+
 					return this.taskCompletionSource.Task;
 				}
 
@@ -143,32 +147,39 @@ internal partial class RoomManager
 
 			private async Task InternalLoadAsync(LoadedPublicRoom instance, IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, PublicRoomWorldEntity world, CancellationToken cancellationToken = default)
 			{
-				if (!instance.publicInstance.RoomManager.navigatorManager.TryGetLayout(world.LayoutId, out IRoomLayout? layout))
+				try
 				{
-					throw new InvalidOperationException($"Missing room layout data for {world.LayoutId}");
-				}
-
-				ObjectFactory roomFactory = ActivatorUtilities.CreateFactory(typeof(PublicRoom),
-				[
-					typeof(RoomData),
-					typeof(IRoomLayout)
-				]);
-
-				PublicRoom room = (PublicRoom)roomFactory(serviceProvider,
-				[
-					new RoomData(new PrivateRoomEntity
+					if (!instance.publicInstance.RoomManager.navigatorManager.TryGetLayout(world.LayoutId, out IRoomLayout? layout))
 					{
-						Id = instance.publicInstance.PublicRoom.Id,
-						Name = instance.publicInstance.PublicRoom.Name
-					}, null!, layout),
-					layout
-				]);
+						throw new InvalidOperationException($"Missing room layout data for {world.LayoutId}");
+					}
 
-				await room.LoadAsync(cancellationToken).ConfigureAwait(false);
+					ObjectFactory roomFactory = ActivatorUtilities.CreateFactory(typeof(PublicRoom),
+					[
+						typeof(RoomData),
+						typeof(IRoomLayout)
+					]);
 
-				room.Start();
+					PublicRoom room = (PublicRoom)roomFactory(serviceProvider,
+					[
+						new RoomData(new PrivateRoomEntity {Id = instance.publicInstance.PublicRoom.Id, Name = instance.publicInstance.PublicRoom.Name}, null!, layout),
+						layout
+					]);
 
-				instance.value = room;
+					await room.LoadAsync(cancellationToken).ConfigureAwait(false);
+
+					room.Start();
+
+					instance.value = room;
+
+					this.taskCompletionSource.SetResult(room);
+				}
+				catch (Exception ex)
+				{
+					this.taskCompletionSource.SetException(ex);
+
+					throw;
+				}
 			}
 		}
 	}

@@ -23,9 +23,11 @@ internal struct LazyRoomItemSetHolder
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public HashSet<IRoomItem> Get(IRoomItemManager itemManager)
 	{
-		return this.list.GetType() != typeof(HashSet<IRoomItem>)
+		object list = this.list;
+
+		return list.GetType() != typeof(HashSet<IRoomItem>)
 			? this.Create(itemManager)
-			: Unsafe.As<HashSet<IRoomItem>>(this.list);
+			: Unsafe.As<HashSet<IRoomItem>>(list);
 	}
 
 	private HashSet<IRoomItem> Create(IRoomItemManager itemManager)

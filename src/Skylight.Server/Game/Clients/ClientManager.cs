@@ -129,9 +129,18 @@ internal sealed class ClientManager : IClientManager
 			this.value = loader;
 		}
 
-		internal IUser? User => this.value.GetType() == typeof(UserLoading)
-			? Unsafe.As<UserLoading>(this.value).OldUser
-			: Unsafe.As<IUser>(this.value);
+		internal IUser? User
+		{
+			get
+			{
+				//Structs can tear
+				object value = this.value;
+
+				return value.GetType() == typeof(UserLoading)
+					? Unsafe.As<UserLoading>(value).OldUser
+					: Unsafe.As<IUser>(value);
+			}
+		}
 
 		internal UserHolder CreateNewAndChain() => new(new UserLoading(this.User));
 

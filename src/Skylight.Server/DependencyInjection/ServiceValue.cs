@@ -8,9 +8,17 @@ internal sealed class ServiceValue<T>(T value) : IServiceValue<T>
 {
 	private object value = value;
 
-	public T Value => this.value.GetType() == typeof(Transaction)
-		? Unsafe.As<Transaction>(this.value).Value
-		: Unsafe.As<T>(this.value);
+	public T Value
+	{
+		get
+		{
+			object value = this.value;
+
+			return value.GetType() == typeof(Transaction)
+				? Unsafe.As<Transaction>(value).Value
+				: Unsafe.As<T>(value);
+		}
+	}
 
 	internal void StartTransaction(VersionedLoadableServiceBase instance, int oldVersion, T node)
 	{
