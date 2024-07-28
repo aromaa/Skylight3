@@ -162,7 +162,11 @@ internal partial class RoomManager
 
 					PublicRoom room = (PublicRoom)roomFactory(serviceProvider,
 					[
-						new RoomData(new PrivateRoomEntity {Id = instance.publicInstance.PublicRoom.Id, Name = instance.publicInstance.PublicRoom.Name}, null!, layout),
+						new RoomData(new PrivateRoomEntity
+						{
+							Id = instance.publicInstance.PublicRoom.Id,
+							Name = instance.publicInstance.PublicRoom.Name
+						}, null!, layout),
 						layout
 					]);
 
