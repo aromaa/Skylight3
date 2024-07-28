@@ -27,6 +27,8 @@ internal abstract class Room : IRoom
 
 	private readonly Thread thread;
 
+	private bool active = true;
+
 	protected Room(RoomData roomData, IRoomLayout roomLayout)
 	{
 		this.Info = roomData;
@@ -74,7 +76,7 @@ internal abstract class Room : IRoom
 	{
 		const int TickTime = 500;
 
-		while (true)
+		while (this.active)
 		{
 			long startTime = Stopwatch.GetTimestamp();
 
@@ -142,5 +144,10 @@ internal abstract class Room : IRoom
 		where T : IGameOutgoingPacket
 	{
 		this.roomClients.SendAsync(packet);
+	}
+
+	public void Unload()
+	{
+		this.active = false;
 	}
 }

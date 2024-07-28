@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading.Channels;
 using Microsoft.EntityFrameworkCore;
+using Skylight.API.Collections.Cache;
 using Skylight.API.DependencyInjection;
 using Skylight.API.Game.Navigator;
 using Skylight.API.Game.Rooms;
@@ -26,7 +27,7 @@ internal sealed partial class NavigatorManager : VersionedLoadableServiceBase<IN
 
 	private readonly IUserManager userManager;
 
-	private readonly AsyncTypedCache<int, IRoomInfo?> roomData;
+	private readonly AsyncCache<int, IRoomInfo> roomData;
 
 	private readonly ConcurrentDictionary<int, RoomActivity> roomActivity;
 	private readonly Channel<(int RoomId, int Activity)> roomActivityChannel;
@@ -40,7 +41,7 @@ internal sealed partial class NavigatorManager : VersionedLoadableServiceBase<IN
 
 		this.userManager = userManager;
 
-		this.roomData = new AsyncTypedCache<int, IRoomInfo?>(this.InternalLoadRoomDataAsync);
+		this.roomData = new AsyncCache<int, IRoomInfo>(this.InternalLoadRoomDataAsync);
 
 		this.roomActivity = [];
 		this.roomActivityChannel = Channel.CreateUnbounded<ValueTuple<int, int>>(new UnboundedChannelOptions
@@ -99,6 +100,11 @@ internal sealed partial class NavigatorManager : VersionedLoadableServiceBase<IN
 	public ValueTask<IRoomInfo?> GetRoomDataAsync(int id, CancellationToken cancellationToken)
 	{
 		return this.roomData.GetAsync(id);
+	}
+
+	public ValueTask<ICacheValue<IRoomInfo>?> GetRoomDataUnsafeAsync(int roomId, CancellationToken cancellationToken = default)
+	{
+		return this.roomData.GetValueAsync(roomId)!;
 	}
 
 	private async Task<IRoomInfo?> InternalLoadRoomDataAsync(int id)

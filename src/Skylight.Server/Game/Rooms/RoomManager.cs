@@ -1,80 +1,119 @@
 ﻿using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+using Skylight.API.Collections.Cache;
 using Skylight.API.Game.Navigator;
 using Skylight.API.Game.Rooms;
-using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Rooms.Public;
-using Skylight.Domain.Rooms.Layout;
-using Skylight.Domain.Rooms.Private;
 using Skylight.Domain.Rooms.Public;
 using Skylight.Infrastructure;
-using Skylight.Server.Game.Rooms.Layout;
-using Skylight.Server.Game.Rooms.Private;
-using Skylight.Server.Game.Rooms.Public;
 
 namespace Skylight.Server.Game.Rooms;
 
-internal sealed class RoomManager(IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, INavigatorManager navigatorManager)
-	: IRoomManager
+internal sealed partial class RoomManager : IRoomManager
 {
-	private readonly IServiceProvider serviceProvider = serviceProvider;
+	private readonly IServiceProvider serviceProvider;
 
-	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
+	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
 
-	private readonly INavigatorManager navigatorManager = navigatorManager;
+	private readonly INavigatorManager navigatorManager;
 
-	private readonly ConcurrentDictionary<int, IPrivateRoom> loadedPrivateRooms = new();
-	private readonly ConcurrentDictionary<int, IPublicRoomInstance> loadedPublicInstances = new();
+	private readonly ConcurrentDictionary<int, LoadedPrivateRoom> loadedPrivateRooms = new();
+	private readonly ConcurrentDictionary<int, LoadedPublicInstance> loadedPublicInstances = new();
 
-	public IEnumerable<IRoom> LoadedRooms => this.loadedPrivateRooms.Values;
+	private readonly OrderedDictionary<long, LoadedPrivateRoom> unloadQueue = [];
+	private readonly Lock unloadQueueLock = new();
 
-	public async ValueTask<IPrivateRoom?> GetPrivateRoomAsync(int id, CancellationToken cancellationToken)
+	public RoomManager(IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, INavigatorManager navigatorManager)
 	{
-		if (this.loadedPrivateRooms.TryGetValue(id, out IPrivateRoom? room))
+		this.serviceProvider = serviceProvider;
+
+		this.dbContextFactory = dbContextFactory;
+
+		this.navigatorManager = navigatorManager;
+
+		_ = this.ProcessUnloadQueueAsync();
+	}
+
+	public IEnumerable<IRoom> LoadedRooms
+	{
+		get
 		{
-			return room;
+			foreach (LoadedPrivateRoom loadedRoom in this.loadedPrivateRooms.Values)
+			{
+				if (loadedRoom.Room is { } room)
+				{
+					yield return room;
+				}
+			}
+		}
+	}
+
+	public async ValueTask<ICacheValue<IPrivateRoom>?> GetPrivateRoomAsync(int id, CancellationToken cancellationToken)
+	{
+		if (this.loadedPrivateRooms.TryGetValue(id, out LoadedPrivateRoom? loadedRoom))
+		{
+			if (loadedRoom.TryAcquireTicket())
+			{
+				ValueTask<IPrivateRoom> roomTask = loadedRoom.RoomTask;
+				if (roomTask.IsCompletedSuccessfully)
+				{
+					return new RoomTicket<IPrivateRoom, LoadedPrivateRoom>(loadedRoom);
+				}
+				else
+				{
+					//In case of exception, the load initializing thread takes care of the cleanup.
+					await loadedRoom.RoomTask.ConfigureAwait(false);
+
+					return new RoomTicket<IPrivateRoom, LoadedPrivateRoom>(loadedRoom);
+				}
+			}
+
+			//This is a rare path. The room was just unloaded, perform remove to ensure we add a new instance.
+			this.loadedPrivateRooms.TryRemove(KeyValuePair.Create(id, loadedRoom));
 		}
 
-		IRoomInfo? roomInfo = await this.navigatorManager.GetRoomDataAsync(id, cancellationToken).ConfigureAwait(false);
-		if (roomInfo is null)
+		ICacheValue<IRoomInfo>? roomInfoValue = await this.navigatorManager.GetRoomDataUnsafeAsync(id, cancellationToken).ConfigureAwait(false);
+		if (roomInfoValue is null)
 		{
 			return null;
 		}
 
-		await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+		while (true)
+		{
+			loadedRoom = this.loadedPrivateRooms.GetOrAdd(id, static (_, roomManager) => new LoadedPrivateRoom(roomManager), this);
+			if (loadedRoom.TryAcquireTicket())
+			{
+				try
+				{
+					//The "ownership" of the room info is handed over here, we don't need to worry about disposing it.
+					await loadedRoom.LoadAsync(this.serviceProvider, this.dbContextFactory, roomInfoValue).ConfigureAwait(false);
 
-		//TODO: Clean up
-		CustomRoomLayoutEntity? customLayout = await dbContext.CustomRoomLayouts.FirstOrDefaultAsync(e => e.RoomId == id, cancellationToken).ConfigureAwait(false);
+					return new RoomTicket<IPrivateRoom, LoadedPrivateRoom>(loadedRoom);
+				}
+				catch
+				{
+					//Room load failed, remove it. Don't release the ticket however to avoid the room going to the unload queue.
+					this.loadedPrivateRooms.TryRemove(KeyValuePair.Create(id, loadedRoom));
 
-		ObjectFactory roomFactory = ActivatorUtilities.CreateFactory(typeof(PrivateRoom),
-		[
-			typeof(RoomData),
-			typeof(IRoomLayout)
-		]);
+					throw;
+				}
+			}
 
-		room = (PrivateRoom)roomFactory(this.serviceProvider,
-		[
-			roomInfo,
-			customLayout is null ? roomInfo.Layout : new RoomLayout(roomInfo.Layout.Id, customLayout.HeightMap, customLayout.DoorX, customLayout.DoorY, customLayout.DoorDirection)
-		]);
-
-		this.loadedPrivateRooms.TryAdd(id, room);
-
-		await room.LoadAsync(cancellationToken).ConfigureAwait(false);
-
-		((PrivateRoom)room).Start();
-
-		return room;
+			//This is a rare path. The room was just unloaded, perform remove to ensure we add a new instance.
+			this.loadedPrivateRooms.TryRemove(KeyValuePair.Create(id, loadedRoom));
+		}
 	}
 
-	public async ValueTask<IPublicRoomInstance?> GetPublicRoomAsync(int instanceId, CancellationToken cancellationToken = default)
+	public async ValueTask<ICacheValue<IPublicRoomInstance>?> GetPublicRoomAsync(int instanceId, CancellationToken cancellationToken = default)
 	{
-		if (this.loadedPublicInstances.TryGetValue(instanceId, out IPublicRoomInstance? instance))
+		if (this.loadedPublicInstances.TryGetValue(instanceId, out LoadedPublicInstance? loadedInstance))
 		{
-			return instance;
+			if (loadedInstance.TryAcquireTicket())
+			{
+				return new RoomTicket<IPublicRoomInstance, LoadedPublicInstance>(loadedInstance);
+			}
 		}
 
 		await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
@@ -85,67 +124,208 @@ internal sealed class RoomManager(IServiceProvider serviceProvider, IDbContextFa
 			return null;
 		}
 
-		List<IPublicRoom> rooms = [];
-		await foreach (PublicRoomWorldEntity world in dbContext.PublicRoomWorlds
-			.Where(e => e.RoomId == instanceId)
-			.AsNoTracking()
-			.AsAsyncEnumerable()
-			.WithCancellation(cancellationToken)
-			.ConfigureAwait(false))
+		while (true)
 		{
-			if (!this.navigatorManager.TryGetLayout(world.LayoutId, out IRoomLayout? layout))
+			loadedInstance = this.loadedPublicInstances.GetOrAdd(instanceId, static (_, state) => new LoadedPublicInstance(state.RoomManager, state.PublicRoom), (RoomManager: this, PublicRoom: publicRoom));
+			if (loadedInstance.TryAcquireTicket())
 			{
-				continue;
+				return new RoomTicket<IPublicRoomInstance, LoadedPublicInstance>(loadedInstance);
 			}
 
-			ObjectFactory roomFactory = ActivatorUtilities.CreateFactory(typeof(PublicRoom),
-			[
-				typeof(RoomData),
-				typeof(IRoomLayout)
-			]);
+			//This is a rare path. The whole instance was just unloaded, perform remove to ensure we add a new instance.
+			this.loadedPublicInstances.TryRemove(KeyValuePair.Create(instanceId, loadedInstance));
+		}
+	}
 
-			PublicRoom room = (PublicRoom)roomFactory(this.serviceProvider,
-			[
-				new RoomData(new PrivateRoomEntity
+	public async ValueTask<ICacheValue<IPublicRoom>?> GetPublicRoomAsync(int instanceId, int worldId, CancellationToken cancellationToken = default)
+	{
+		if (this.loadedPublicInstances.TryGetValue(instanceId, out LoadedPublicInstance? loadedInstance))
+		{
+			if (loadedInstance.GetWorldAsync(worldId, out LoadedPublicRoom? loadedRoom))
+			{
+				if (loadedRoom.TryAcquireTicket())
 				{
-					Id = publicRoom.Id,
-					Name = publicRoom.Name
-				}, null!, layout),
-				layout
-			]);
+					ValueTask<IPublicRoom> roomTask = loadedRoom.RoomTask;
+					if (roomTask.IsCompletedSuccessfully)
+					{
+						return new RoomTicket<IPublicRoom, LoadedPublicRoom>(loadedRoom);
+					}
+					else
+					{
+						//In case of exception, the load initializing thread takes care of the cleanup.
+						await loadedRoom.RoomTask.ConfigureAwait(false);
 
-			await room.LoadAsync(cancellationToken).ConfigureAwait(false);
+						return new RoomTicket<IPublicRoom, LoadedPublicRoom>(loadedRoom);
+					}
+				}
 
-			room.Start();
+				//This is a rare path. The room was just unloaded, perform remove to ensure we add a new instance.
+				loadedInstance.RemoveUnloadedWorld(worldId, loadedRoom);
+			}
 
-			rooms.Add(room);
+			if (loadedInstance.TryAcquireTicket())
+			{
+				await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+				PublicRoomWorldEntity? world = await dbContext.PublicRoomWorlds.FirstOrDefaultAsync(e => e.RoomId == instanceId && e.WorldId == worldId, cancellationToken).ConfigureAwait(false);
+				if (world is null)
+				{
+					return null;
+				}
+
+				//The ticket is handed over.
+				return await loadedInstance.LoadAsync(this.serviceProvider, this.dbContextFactory, world).ConfigureAwait(false);
+			}
+			else
+			{
+				//This is a rare path. The whole instance was just unloaded, perform remove to ensure we add a new instance.
+				this.loadedPublicInstances.TryRemove(KeyValuePair.Create(instanceId, loadedInstance));
+			}
 		}
 
-		instance = new PublicRoomInstance([.. rooms]);
+		await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
+		{
+			PublicRoomEntity? publicRoom = await dbContext.PublicRooms.FirstOrDefaultAsync(e => e.Id == instanceId, cancellationToken).ConfigureAwait(false);
+			if (publicRoom is null)
+			{
+				return null;
+			}
 
-		this.loadedPublicInstances.TryAdd(instanceId, instance);
+			PublicRoomWorldEntity? world = await dbContext.PublicRoomWorlds.FirstOrDefaultAsync(e => e.RoomId == instanceId && e.WorldId == worldId, cancellationToken).ConfigureAwait(false);
+			if (world is null)
+			{
+				return null;
+			}
 
-		return instance;
+			while (true)
+			{
+				loadedInstance = this.loadedPublicInstances.GetOrAdd(instanceId, static (_, state) => new LoadedPublicInstance(state.RoomManager, state.PublicRoom), (RoomManager: this, PublicRoom: publicRoom));
+				if (loadedInstance.TryAcquireTicket())
+				{
+					//The ticket is handed over.
+					return await loadedInstance.LoadAsync(this.serviceProvider, this.dbContextFactory, world).ConfigureAwait(false);
+				}
+
+				//This is a rare path. The whole instance was just unloaded, perform remove to ensure we add a new instance.
+				this.loadedPublicInstances.TryRemove(KeyValuePair.Create(instanceId, loadedInstance));
+			}
+		}
 	}
 
-	public async ValueTask<IPublicRoom?> GetPublicRoomAsync(int instanceId, int worldId, CancellationToken cancellationToken = default)
+	private void QueueUnload(LoadedPrivateRoom loadedRoomData)
 	{
-		IPublicRoomInstance? instance = await this.GetPublicRoomAsync(instanceId, cancellationToken).ConfigureAwait(false);
-		if (instance is null)
+		lock (this.unloadQueueLock)
 		{
-			return null;
+			this.unloadQueue.Add(Environment.TickCount64 + (10 * 1000), loadedRoomData);
 		}
-
-		return instance.Rooms[0];
 	}
 
-	public bool TryGetRoom(int id, [NotNullWhen(true)] out IPrivateRoom? room)
+	private async Task ProcessUnloadQueueAsync()
 	{
-		if (this.loadedPrivateRooms.TryGetValue(id, out room))
+		PeriodicTimer timer = new(TimeSpan.FromSeconds(10));
+		while (await timer.WaitForNextTickAsync().ConfigureAwait(false))
 		{
-			return true;
+			lock (this.unloadQueueLock)
+			{
+				long now = Environment.TickCount64;
+
+				if (this.unloadQueue.Count > 0)
+				{
+					(long unloadTime, LoadedPrivateRoom loadedRoomData) = this.unloadQueue.GetAt(0);
+					if (unloadTime > now)
+					{
+						continue;
+					}
+
+					loadedRoomData.TryUnload();
+
+					this.unloadQueue.RemoveAt(0);
+				}
+			}
+		}
+	}
+
+	private sealed class RoomTicket<TRoom, TInstance>(TInstance loadedRoom) : ICacheValue<TRoom>
+		where TInstance : TicketTracked<TRoom>
+	{
+		private TInstance? loadedRoom = loadedRoom;
+
+#if DEBUG
+		~RoomTicket()
+		{
+			Debug.Assert(this.loadedRoom is null, "Ticket was not disposed");
+		}
+#endif
+
+		public TRoom Value
+		{
+			get
+			{
+				ObjectDisposedException.ThrowIf(this.loadedRoom is null, this);
+
+				return this.loadedRoom.Room!;
+			}
 		}
 
-		return false;
+		public void Dispose()
+		{
+			ObjectDisposedException.ThrowIf(this.loadedRoom is null, this);
+
+			this.loadedRoom.ReleaseTicket();
+			this.loadedRoom = null;
+		}
+	}
+
+	private abstract class TicketTracked
+	{
+		private const uint Killed = 1u << 31;
+		private const uint Unloading = 1u << 30;
+		private const uint Mask = TicketTracked.Killed | TicketTracked.Unloading;
+
+		//Bit 32 means we have unloaded, Bit 31 that we are performing unload.
+		private volatile uint ticketsCount;
+
+		internal bool TryAcquireTicket()
+		{
+			while (true)
+			{
+				uint ticketsCount = this.ticketsCount;
+				if ((ticketsCount & TicketTracked.Killed) == 0)
+				{
+					//We are allowed the clear the unloading bit but NOT the killed.
+					uint newTicketsCount = (ticketsCount & ~TicketTracked.Unloading) + 1;
+
+					if (Interlocked.CompareExchange(ref this.ticketsCount, newTicketsCount, ticketsCount) == ticketsCount)
+					{
+						return true;
+					}
+				}
+				else
+				{
+					return false;
+				}
+			}
+		}
+
+		internal void ReleaseTicket()
+		{
+			Debug.Assert(this.ticketsCount > 0, "Tickets count overflow");
+			Debug.Assert((this.ticketsCount & TicketTracked.Mask) == 0, "Ticket released when unloading");
+
+			if (Interlocked.Decrement(ref this.ticketsCount) == 0)
+			{
+				this.QueueUnload();
+			}
+		}
+
+		protected abstract void QueueUnload();
+
+		protected bool TryChangeStateToUnloading() => Interlocked.CompareExchange(ref this.ticketsCount, LoadedPrivateRoom.Unloading, 0) == 0;
+		protected bool TryChangeStateToKilled() => Interlocked.CompareExchange(ref this.ticketsCount, LoadedPrivateRoom.Killed, LoadedPrivateRoom.Unloading) == LoadedPrivateRoom.Unloading;
+	}
+
+	private abstract class TicketTracked<T> : TicketTracked
+	{
+		internal abstract T? Room { get; }
 	}
 }

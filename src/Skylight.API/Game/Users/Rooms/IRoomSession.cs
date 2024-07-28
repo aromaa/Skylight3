@@ -1,4 +1,5 @@
-﻿using Skylight.API.Game.Rooms;
+﻿using Skylight.API.Collections.Cache;
+using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Units;
 
 namespace Skylight.API.Game.Users.Rooms;
@@ -18,7 +19,7 @@ public interface IRoomSession
 
 	public bool TryChangeState(SessionState value, SessionState current);
 
-	public void LoadRoom(IRoom room);
+	public void LoadRoom(ICacheValue<IRoom> roomValue);
 	public void EnterRoom(IUserRoomUnit unit);
 
 	public bool Close();

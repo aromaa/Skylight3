@@ -1,4 +1,5 @@
 ﻿using Net.Communication.Attributes;
+using Skylight.API.Collections.Cache;
 using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Users;
 using Skylight.API.Game.Users.Rooms;
@@ -31,7 +32,7 @@ internal sealed partial class OpenFlatConnectionPacketHandler<T>(IRoomManager ro
 		{
 			client.SendAsync(new OpenConnectionOutgoingPacket(session.InstanceId));
 
-			IRoom? room = await this.roomManager.GetPrivateRoomAsync(session.InstanceId).ConfigureAwait(false);
+			ICacheValue<IRoom>? room = await this.roomManager.GetPrivateRoomAsync(session.InstanceId).ConfigureAwait(false);
 			if (room is null)
 			{
 				if (session.Close())

@@ -1,4 +1,5 @@
-﻿using Skylight.API.Game.Rooms;
+﻿using Skylight.API.Collections.Cache;
+using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Game.Users.Rooms;
@@ -11,6 +12,7 @@ namespace Skylight.Server.Game.Users.Rooms;
 internal sealed partial class RoomSession : IRoomSession
 {
 	private IRoomSession.SessionState state;
+	private ICacheValue<IRoom>? room;
 
 	public IUser User { get; }
 
@@ -18,7 +20,7 @@ internal sealed partial class RoomSession : IRoomSession
 	public int InstanceId { get; }
 	public int WorldId { get; }
 
-	public IRoom? Room { get; set; }
+	public IRoom? Room => this.room?.Value;
 	public IUserRoomUnit? Unit { get; set; }
 
 	internal RoomSession(IUser user, int instanceType, int instanceId, int worldId)
@@ -44,7 +46,7 @@ internal sealed partial class RoomSession : IRoomSession
 		return InterlockedExtensions.CompareExchange(ref this.state, value, current) == current;
 	}
 
-	public void LoadRoom(IRoom room)
+	public void LoadRoom(ICacheValue<IRoom> roomValue)
 	{
 		if (this.Room is not null)
 		{
@@ -56,7 +58,9 @@ internal sealed partial class RoomSession : IRoomSession
 			return;
 		}
 
-		this.Room = room;
+		this.room = roomValue;
+
+		IRoom room = roomValue.Value;
 
 		this.User.SendAsync(new RoomReadyOutgoingPacket(room.Map.Layout.Id, room.Info.Id));
 		this.User.SendAsync(new YouAreControllerOutgoingPacket(room.Info.Id, 4)); //0 = No rights, 1 = Basic rights, 2 = Can place, 3 = Can pickup, 4 = Can remove rights, 5 = IDK
@@ -89,5 +93,7 @@ internal sealed partial class RoomSession : IRoomSession
 
 			room.UnitManager.RemoveUnit(this.Unit!);
 		});
+
+		this.room!.Dispose();
 	}
 }

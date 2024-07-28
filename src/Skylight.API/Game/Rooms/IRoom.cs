@@ -41,4 +41,6 @@ public interface IRoom
 	public ValueTask<TResult> ScheduleTaskAsync<TResult>(Func<IRoom, ValueTask<TResult>> func);
 
 	public void ScheduleUpdateTask(IRoomTask task);
+
+	public void Unload();
 }

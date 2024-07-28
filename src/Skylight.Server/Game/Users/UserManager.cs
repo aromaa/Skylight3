@@ -10,15 +10,15 @@ internal sealed class UserManager : IUserManager
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
 
-	private readonly AsyncTypedCache<int, IUserInfo?> userInfos;
-	private readonly AsyncTypedCache<int, IUserProfile?> userProfiles;
+	private readonly AsyncCache<int, IUserInfo> userInfos;
+	private readonly AsyncCache<int, IUserProfile> userProfiles;
 
 	public UserManager(IDbContextFactory<SkylightContext> dbContextFactory)
 	{
 		this.dbContextFactory = dbContextFactory;
 
-		this.userInfos = new AsyncTypedCache<int, IUserInfo?>(null!);
-		this.userProfiles = new AsyncTypedCache<int, IUserProfile?>(this.InternalLoadUserProfileAsync);
+		this.userInfos = new AsyncCache<int, IUserInfo>(null!);
+		this.userProfiles = new AsyncCache<int, IUserProfile>(this.InternalLoadUserProfileAsync);
 	}
 
 	public async ValueTask<IUserInfo?> GetUserInfoAsync(int id, CancellationToken cancellationToken = default)
