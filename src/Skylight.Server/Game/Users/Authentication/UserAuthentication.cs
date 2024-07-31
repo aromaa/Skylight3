@@ -7,17 +7,18 @@ using Skylight.API.Game.Users;
 using Skylight.API.Game.Users.Authentication;
 using Skylight.Domain.Users;
 using Skylight.Infrastructure;
+using Skylight.Server.Redis;
 using StackExchange.Redis;
 
 namespace Skylight.Server.Game.Users.Authentication;
 
-internal sealed class UserAuthentication(IConnectionMultiplexer redis, IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager, IBadgeManager badgeManager, IFurnitureManager furnitureManager, IFurnitureInventoryItemStrategy furnitureInventoryItemFactory)
+internal sealed class UserAuthentication(RedisConnector redis, IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager, IBadgeManager badgeManager, IFurnitureManager furnitureManager, IFurnitureInventoryItemStrategy furnitureInventoryItemFactory)
 	: IUserAuthentication
 {
 	private static readonly RedisKey redisSsoTicketKeyPrefix = new("sso-ticket:");
 	private static readonly RedisValue[] redisSsoTicketValues = ["user-id", "user-ip"];
 
-	private readonly IDatabase redis = redis.GetDatabase();
+	private readonly RedisConnector redis = redis;
 
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
@@ -29,7 +30,8 @@ internal sealed class UserAuthentication(IConnectionMultiplexer redis, IDbContex
 	{
 		RedisKey ssoKey = UserAuthentication.redisSsoTicketKeyPrefix.Append(ssoTicket);
 
-		IBatch batch = this.redis.CreateBatch();
+		IDatabase redis = await this.redis.GetDatabaseAsync().ConfigureAwait(false);
+		IBatch batch = redis.CreateBatch();
 		Task<RedisValue[]> hashGetResult = batch.HashGetAsync(ssoKey, UserAuthentication.redisSsoTicketValues);
 		_ = batch.KeyDeleteAsync(ssoKey, CommandFlags.FireAndForget);
 		batch.Execute();

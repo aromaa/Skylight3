@@ -20,6 +20,7 @@ using Skylight.API.Game.Users.Authentication;
 using Skylight.API.Net.Connection;
 using Skylight.API.Net.EndPoint;
 using Skylight.API.Net.Listener;
+using Skylight.API.Server;
 using Skylight.Infrastructure;
 using Skylight.Server.DependencyInjection;
 using Skylight.Server.Game.Achievements;
@@ -44,8 +45,7 @@ using Skylight.Server.Net.Listener;
 using Skylight.Server.Net.Listener.Connection;
 using Skylight.Server.Net.Listener.Ip;
 using Skylight.Server.Net.Listener.XmlSocket;
-using StackExchange.Redis;
-using IServer = Skylight.API.Server.IServer;
+using Skylight.Server.Redis;
 
 namespace Skylight.Server.Extensions;
 
@@ -66,7 +66,7 @@ public static class HostBuilderExtensions
 
 		builder.Services.AddSingleton(_ => TimeProvider.System);
 
-		builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redis["ConnectionString"] ?? "localhost"));
+		builder.Services.AddSingleton<RedisConnector>(_ => new RedisConnector(redis["ConnectionString"] ?? "localhost"));
 
 		builder.Services.AddPooledDbContextFactory<SkylightContext>(options => options
 			////.UseModel(SkylightContextModel.Instance)
