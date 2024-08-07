@@ -26,14 +26,17 @@ internal sealed partial class CatalogManager(IDbContextFactory<SkylightContext> 
 		await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
 		{
 			await foreach (CatalogPageEntity page in dbContext.CatalogPages
-						 .AsNoTrackingWithIdentityResolution()
-						 .AsSplitQuery()
-						 .Include(p => p.Children!)
-						 .Include(p => p.Offers!)
-						 .ThenInclude(o => o.Products)
-						 .AsAsyncEnumerable()
-						 .WithCancellation(cancellationToken)
-						 .ConfigureAwait(false))
+				.AsNoTrackingWithIdentityResolution()
+				.AsSplitQuery()
+				.Include(p => p.Children!)
+				.Include(p => p.Offers!)
+				.ThenInclude(o => o.Products)
+				.OrderBy(p => p.ParentId)
+				.ThenBy(p => p.OrderNum)
+				.ThenBy(p => p.Name)
+				.AsAsyncEnumerable()
+				.WithCancellation(cancellationToken)
+				.ConfigureAwait(false))
 			{
 				cancellationToken.ThrowIfCancellationRequested();
 

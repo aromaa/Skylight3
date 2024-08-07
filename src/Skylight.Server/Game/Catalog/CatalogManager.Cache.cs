@@ -45,6 +45,11 @@ internal partial class CatalogManager
 
 			internal void AddPage(CatalogPageEntity page)
 			{
+				if (page.Id < 0)
+				{
+					throw new ArgumentException("Negative ids are not supported by the client.", nameof(page));
+				}
+
 				if (page.ParentId is null)
 				{
 					this.rootPages.Add(page);
@@ -66,7 +71,7 @@ internal partial class CatalogManager
 						offers.Add(offer.Id, offer);
 					}
 
-					Dictionary<int, ICatalogPage> children = [];
+					OrderedDictionary<int, ICatalogPage> children = [];
 					foreach (CatalogPageEntity childEntity in pageEntity.Children!)
 					{
 						CatalogPage child = CreatePage(childEntity);

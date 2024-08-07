@@ -18,7 +18,7 @@ internal sealed class GetCatalogPagePacketHandler<T>(ICatalogManager catalogMana
 
 	internal override void Handle(IUser user, in T packet)
 	{
-		if (!this.catalogManager.TryGetPage(packet.PageId, out ICatalogPage? page) || !page.CanAccess(user))
+		if (packet.PageId < 0 || !this.catalogManager.TryGetPage(packet.PageId, out ICatalogPage? page) || !page.CanAccess(user))
 		{
 			return;
 		}

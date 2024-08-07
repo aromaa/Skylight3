@@ -30,9 +30,9 @@ internal sealed class CatalogPage : ICatalogPage
 	public bool AcceptSeasonCurrencyAsCredits { get; }
 
 	private readonly Dictionary<int, ICatalogOffer> offers;
-	private readonly Dictionary<int, ICatalogPage> children;
+	private readonly OrderedDictionary<int, ICatalogPage> children;
 
-	internal CatalogPage(int id, string name, string localization, int orderNum, bool enabled, bool visible, int minRank, int clubRank, int iconColor, int iconImage, string layout, ImmutableArray<string> texts, ImmutableArray<string> images, bool acceptSeasonCurrencyAsCredits, Dictionary<int, ICatalogOffer> offers, Dictionary<int, ICatalogPage> children)
+	internal CatalogPage(int id, string name, string localization, int orderNum, bool enabled, bool visible, int minRank, int clubRank, int iconColor, int iconImage, string layout, ImmutableArray<string> texts, ImmutableArray<string> images, bool acceptSeasonCurrencyAsCredits, Dictionary<int, ICatalogOffer> offers, OrderedDictionary<int, ICatalogPage> children)
 	{
 		this.Id = id;
 
@@ -58,7 +58,6 @@ internal sealed class CatalogPage : ICatalogPage
 		this.AcceptSeasonCurrencyAsCredits = acceptSeasonCurrencyAsCredits;
 
 		this.offers = offers;
-
 		this.children = children;
 	}
 

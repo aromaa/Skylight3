@@ -9,6 +9,7 @@ internal sealed class CatalogPageEntityTypeConfiguration : IEntityTypeConfigurat
 	public void Configure(EntityTypeBuilder<CatalogPageEntity> builder)
 	{
 		builder.ToTable("catalog_pages");
+		builder.ToTable(t => t.HasCheckConstraint("ck_catalog_pages_id_range", "id >= 0"));
 
 		builder.HasKey(p => p.Id);
 

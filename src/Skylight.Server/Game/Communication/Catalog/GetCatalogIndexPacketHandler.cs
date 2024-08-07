@@ -26,7 +26,9 @@ internal sealed partial class GetCatalogIndexPacketHandler<T>(ICatalogManager ca
 			{
 				nodes.Add(new CatalogNodeData
 				{
-					Id = page.Id,
+					Id = !page.Enabled
+						? -1 //Modern client avoids opening the page for negative ids but that's not true for old client, however it doesn't break them.
+						: page.Id,
 					Name = page.Name,
 					Localization = page.Localization,
 					Visible = page.Visible,
@@ -48,7 +50,7 @@ internal sealed partial class GetCatalogIndexPacketHandler<T>(ICatalogManager ca
 
 			client.SendAsync(new CatalogIndexOutgoingPacket(catalogType, new CatalogNodeData
 			{
-				Id = 0,
+				Id = -1,
 				Visible = true,
 				Icon = 0,
 				Color = 0,
