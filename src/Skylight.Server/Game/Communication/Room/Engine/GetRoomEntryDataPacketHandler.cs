@@ -44,7 +44,7 @@ internal sealed partial class GetRoomEntryDataPacketHandler<T> : UserPacketHandl
 			roomSession.User.SendAsync(new HeightMapOutgoingPacket
 			{
 				Width = room.Map.Layout.Size.X,
-				HeightMap = Enumerable.Repeat((short)0, room.Map.Layout.Size.X * room.Map.Layout.Size.Y).ToArray()
+				HeightMap = Enumerable.Repeat(new TileHeightMap(1, false, true), room.Map.Layout.Size.X * room.Map.Layout.Size.Y).ToArray()
 			});
 			roomSession.User.SendAsync(new FloorHeightMapOutgoingPacket
 			{
