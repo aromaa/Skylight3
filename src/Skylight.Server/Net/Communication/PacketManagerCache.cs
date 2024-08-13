@@ -48,6 +48,13 @@ internal sealed partial class PacketManagerCache
 	{
 		foreach (string protocolPath in this.networkSettings.AdditionalProtocols)
 		{
+			if (!File.Exists(protocolPath))
+			{
+				this.logger.LogWarning($"Additional protocol not found at path {protocolPath}");
+
+				continue;
+			}
+
 			using FileStream fileStream = File.OpenRead(protocolPath);
 
 			AssemblyLoadContext assemblyLoadContext = new("Unloadable Packet Manager", isCollectible: true);
