@@ -1,12 +1,14 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading.Channels;
 using Microsoft.EntityFrameworkCore;
 using Skylight.API.Collections.Cache;
 using Skylight.API.DependencyInjection;
 using Skylight.API.Game.Navigator;
-using Skylight.API.Game.Rooms;
+using Skylight.API.Game.Navigator.Nodes;
 using Skylight.API.Game.Rooms.Map;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
 using Skylight.Domain.Navigator;
 using Skylight.Domain.Rooms.Layout;
@@ -16,6 +18,7 @@ using Skylight.Infrastructure;
 using Skylight.Server.Collections.Cache;
 using Skylight.Server.DependencyInjection;
 using Skylight.Server.Game.Rooms;
+using Skylight.Server.Game.Rooms.Private;
 
 namespace Skylight.Server.Game.Navigator;
 
@@ -27,7 +30,7 @@ internal sealed partial class NavigatorManager : VersionedLoadableServiceBase<IN
 
 	private readonly IUserManager userManager;
 
-	private readonly AsyncCache<int, IRoomInfo> roomData;
+	private readonly AsyncCache<int, IPrivateRoomInfo> roomData;
 
 	private readonly ConcurrentDictionary<int, RoomActivity> roomActivity;
 	private readonly Channel<(int RoomId, int Activity)> roomActivityChannel;
@@ -41,7 +44,7 @@ internal sealed partial class NavigatorManager : VersionedLoadableServiceBase<IN
 
 		this.userManager = userManager;
 
-		this.roomData = new AsyncCache<int, IRoomInfo>(this.InternalLoadRoomDataAsync);
+		this.roomData = new AsyncCache<int, IPrivateRoomInfo>(this.InternalLoadRoomDataAsync);
 
 		this.roomActivity = [];
 		this.roomActivityChannel = Channel.CreateUnbounded<ValueTuple<int, int>>(new UnboundedChannelOptions
@@ -97,17 +100,17 @@ internal sealed partial class NavigatorManager : VersionedLoadableServiceBase<IN
 		return builder.BuildAndStartTransaction(this, this.Current);
 	}
 
-	public ValueTask<IRoomInfo?> GetRoomDataAsync(int id, CancellationToken cancellationToken)
+	public ValueTask<IPrivateRoomInfo?> GetPrivateRoomInfoAsync(int id, CancellationToken cancellationToken)
 	{
 		return this.roomData.GetAsync(id);
 	}
 
-	public ValueTask<ICacheValue<IRoomInfo>?> GetRoomDataUnsafeAsync(int roomId, CancellationToken cancellationToken = default)
+	public ValueTask<ICacheValue<IPrivateRoomInfo>?> GetPrivateRoomInfoUnsafeAsync(int roomId, CancellationToken cancellationToken = default)
 	{
 		return this.roomData.GetValueAsync(roomId)!;
 	}
 
-	private async Task<IRoomInfo?> InternalLoadRoomDataAsync(int id)
+	private async Task<IPrivateRoomInfo?> InternalLoadRoomDataAsync(int id)
 	{
 		await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
@@ -122,9 +125,38 @@ internal sealed partial class NavigatorManager : VersionedLoadableServiceBase<IN
 			throw new InvalidOperationException($"Missing room layout data for {entity.LayoutId}");
 		}
 
-		IUserInfo? owner = await this.userManager.GetUserInfoAsync(entity.OwnerId).ConfigureAwait(false);
+		if (!this.TryGetNode(entity.CategoryId, out IServiceValue<INavigatorCategoryNode>? category))
+		{
+			throw new InvalidOperationException($"Missing category {entity.CategoryId}");
+		}
 
-		return new RoomData(entity, owner!, layout);
+		IUserInfo? owner = await this.userManager.GetUserInfoAsync(entity.OwnerId).ConfigureAwait(false);
+		if (owner is null)
+		{
+			throw new InvalidOperationException($"Missing owner {entity.OwnerId}");
+		}
+
+		RoomEntryMode entryMode = entity.EntryMode switch
+		{
+			PrivateRoomEntryMode.Open => RoomEntryMode.Open(),
+			PrivateRoomEntryMode.Locked => RoomEntryMode.Locked(),
+			PrivateRoomEntryMode.Password => RoomEntryMode.Password(entity.Password!),
+			PrivateRoomEntryMode.Invisible => RoomEntryMode.Invisible(),
+			PrivateRoomEntryMode.NoobsOnly => RoomEntryMode.NoobsOnly(),
+
+			_ => throw new InvalidOperationException($"Unknown entry mode: {entity.EntryMode}")
+		};
+
+		RoomTradeMode tradeMode = entity.TradeMode switch
+		{
+			PrivateRoomTradeMode.None => RoomTradeMode.None,
+			PrivateRoomTradeMode.WithRights => RoomTradeMode.WithRights,
+			PrivateRoomTradeMode.Everyone => RoomTradeMode.Everyone,
+
+			_ => throw new InvalidOperationException($"Unknown trade mode: {entity.TradeMode}")
+		};
+
+		return new PrivateRoomInfo(id, owner, layout, new PrivateRoomSettings(entity.Name, entity.Description, category, ImmutableCollectionsMarshal.AsImmutableArray(entity.Tags), entryMode, entity.UsersMax, tradeMode, entity.WalkThrough, entity.AllowPets, entity.AllowPetsToEat, new PrivateRoomCustomizationSettings(entity.HideWalls, entity.FloorThickness, entity.WallThickness), new PrivateRoomChatSettings(), new PrivateRoomModerationSettings()));
 	}
 
 	public void PushRoomActivity(int roomId, int activity)

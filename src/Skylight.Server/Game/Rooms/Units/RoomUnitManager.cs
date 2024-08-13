@@ -14,24 +14,12 @@ namespace Skylight.Server.Game.Rooms.Units;
 
 internal abstract class RoomUnitManager : IRoomUnitManager
 {
-	protected readonly Room room;
+	protected abstract Room Room { get; }
 
-	private readonly Dictionary<int, IRoomUnit> roomUnits;
+	private readonly Dictionary<int, IRoomUnit> roomUnits = [];
+	private readonly LinkedList<IRoomUnit> movingUnits = [];
 
-	private readonly LinkedList<IRoomUnit> movingUnits;
-
-	private int nextUnitId;
-
-	protected RoomUnitManager(Room room)
-	{
-		this.room = room;
-
-		this.roomUnits = [];
-
-		this.movingUnits = new LinkedList<IRoomUnit>();
-
-		this.nextUnitId = 1;
-	}
+	private int nextUnitId = 1;
 
 	public IEnumerable<IRoomUnit> Units => this.roomUnits.Values;
 
@@ -46,7 +34,7 @@ internal abstract class RoomUnitManager : IRoomUnitManager
 				IRoomUnit roomUnit = node.Value;
 				roomUnit.Tick();
 
-				this.room.SendAsync(new UserUpdateOutgoingPacket(
+				this.Room.SendAsync(new UserUpdateOutgoingPacket(
 				[
 					new RoomUnitUpdateData(roomUnit.Id, roomUnit.Position.X, roomUnit.Position.Y, roomUnit.Position.Z, roomUnit.Rotation.X, roomUnit.Rotation.Y, roomUnit.Moving ? $"mv {roomUnit.NextStepPosition.X},{roomUnit.NextStepPosition.Y},{roomUnit.NextStepPosition.Z.ToString(CultureInfo.InvariantCulture)}" : string.Empty)
 				]));
@@ -64,11 +52,13 @@ internal abstract class RoomUnitManager : IRoomUnitManager
 				}
 			}
 		}
+
+		this.Room.Info.UserCount = this.roomUnits.Count;
 	}
 
 	public IUserRoomUnit CreateUnit(IUser user)
 	{
-		RoomUnit unit = new(this, this.room, (User)user, this.nextUnitId++, new Point3D(this.room.Map.Layout.DoorLocation.X, this.room.Map.Layout.DoorLocation.Y, 0));
+		RoomUnit unit = new(this, this.Room, (User)user, this.nextUnitId++, new Point3D(this.Room.Map.Layout.DoorLocation.X, this.Room.Map.Layout.DoorLocation.Y, 0));
 
 		this.AddUnit(unit);
 
@@ -81,7 +71,7 @@ internal abstract class RoomUnitManager : IRoomUnitManager
 
 		if (unit is IUserRoomUnit userUnit)
 		{
-			this.room.SendAsync(new UsersOutgoingPacket(
+			this.Room.SendAsync(new UsersOutgoingPacket(
 			[
 				new RoomUnitData
 				{
@@ -105,7 +95,7 @@ internal abstract class RoomUnitManager : IRoomUnitManager
 				}
 			]));
 
-			if (this.room is PrivateRoom privateRoom && privateRoom.ItemManager.TryGetInteractionHandler(out IUnitEnterRoomTriggerInteractionHandler? handler))
+			if (this.Room is PrivateRoom privateRoom && privateRoom.ItemManager.TryGetInteractionHandler(out IUnitEnterRoomTriggerInteractionHandler? handler))
 			{
 				handler.OnEnterRoom(userUnit);
 			}
@@ -117,10 +107,10 @@ internal abstract class RoomUnitManager : IRoomUnitManager
 		this.roomUnits.Remove(unit.Id);
 		this.movingUnits.Remove(unit);
 
-		IRoomTile lastTile = this.room.Map.GetTile(unit.Moving ? unit.NextStepPosition.XY : unit.Position.XY);
+		IRoomTile lastTile = this.Room.Map.GetTile(unit.Moving ? unit.NextStepPosition.XY : unit.Position.XY);
 		lastTile.WalkOff(unit);
 
-		this.room.SendAsync(new UserRemoveOutgoingPacket(unit.Id));
+		this.Room.SendAsync(new UserRemoveOutgoingPacket(unit.Id));
 	}
 
 	internal void Move(RoomUnit unit)

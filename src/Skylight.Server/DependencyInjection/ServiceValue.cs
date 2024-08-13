@@ -3,7 +3,12 @@ using Skylight.API.DependencyInjection;
 
 namespace Skylight.Server.DependencyInjection;
 
-internal sealed class ServiceValue<T>(T value) : IServiceValue<T>
+internal abstract class ServiceValue
+{
+	internal abstract void Commit();
+}
+
+internal sealed class ServiceValue<T>(T value) : ServiceValue, IServiceValue<T>
 	where T : class
 {
 	private object value = value;
@@ -25,7 +30,7 @@ internal sealed class ServiceValue<T>(T value) : IServiceValue<T>
 		this.value = new Transaction(instance, oldVersion, (T)this.value, node);
 	}
 
-	internal void Commit()
+	internal override void Commit()
 	{
 		if (this.value is Transaction transaction)
 		{

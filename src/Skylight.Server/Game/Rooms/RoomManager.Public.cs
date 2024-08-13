@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Skylight.API.Collections.Cache;
 using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Rooms.Public;
-using Skylight.Domain.Rooms.Private;
 using Skylight.Domain.Rooms.Public;
 using Skylight.Infrastructure;
 using Skylight.Server.Game.Rooms.Public;
@@ -17,16 +16,14 @@ internal partial class RoomManager
 {
 	private sealed class LoadedPublicInstance(RoomManager roomManager, PublicRoomEntity publicRoom) : TicketTracked<IPublicRoomInstance>
 	{
+		private readonly ConcurrentDictionary<int, LoadedPublicRoom> worlds = new();
+
 		internal RoomManager RoomManager { get; } = roomManager;
 		internal PublicRoomEntity PublicRoom { get; } = publicRoom;
 
-		internal override IPublicRoomInstance Room { get; } = new PublicRoomInstance();
+		internal override IPublicRoomInstance Room { get; } = new PublicRoomInstance(publicRoom.Id);
 
-		private readonly ConcurrentDictionary<int, LoadedPublicRoom> worlds = new();
-
-		public bool GetWorldAsync(int worldId, [NotNullWhen(true)] out LoadedPublicRoom? loadedRoom) => this.worlds.TryGetValue(worldId, out loadedRoom);
-
-		public void RemoveUnloadedWorld(int worldId, LoadedPublicRoom loadedRoom) => this.worlds.TryRemove(KeyValuePair.Create(worldId, loadedRoom));
+		internal ICollection<LoadedPublicRoom> LoadedWorlds => this.worlds.Values;
 
 		internal async Task<ICacheValue<IPublicRoom>> LoadAsync(IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, PublicRoomWorldEntity world)
 		{
@@ -65,6 +62,10 @@ internal partial class RoomManager
 				this.RoomManager.loadedPublicInstances.TryRemove(KeyValuePair.Create(this.PublicRoom.Id, this));
 			}
 		}
+
+		public bool GetWorldAsync(int worldId, [NotNullWhen(true)] out LoadedPublicRoom? loadedRoom) => this.worlds.TryGetValue(worldId, out loadedRoom);
+
+		public void RemoveUnloadedWorld(int worldId, LoadedPublicRoom loadedRoom) => this.worlds.TryRemove(KeyValuePair.Create(worldId, loadedRoom));
 	}
 
 	private sealed class LoadedPublicRoom(LoadedPublicInstance publicInstance, int worldId) : TicketTracked<IPublicRoom>
@@ -156,17 +157,13 @@ internal partial class RoomManager
 
 					ObjectFactory roomFactory = ActivatorUtilities.CreateFactory(typeof(PublicRoom),
 					[
-						typeof(RoomData),
+						typeof(IPublicRoomInfo),
 						typeof(IRoomLayout)
 					]);
 
 					PublicRoom room = (PublicRoom)roomFactory(serviceProvider,
 					[
-						new RoomData(new PrivateRoomEntity
-						{
-							Id = instance.publicInstance.PublicRoom.Id,
-							Name = instance.publicInstance.PublicRoom.Name
-						}, null!, layout),
+						new PublicRoomInfo(instance.publicInstance.Room, world.WorldId, layout),
 						layout
 					]);
 

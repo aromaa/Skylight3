@@ -100,7 +100,7 @@ internal sealed partial class PlaceObjectPacketHandler<T>(IDbContextFactory<Skyl
 
 			int itemId = floorItem.Id;
 			int userId = roomUnit.User.Profile.Id;
-			int roomId = roomUnit.Room.Info.Id;
+			int roomId = privateRoom.Info.Id;
 
 			await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false))
 			{
@@ -203,7 +203,7 @@ internal sealed partial class PlaceObjectPacketHandler<T>(IDbContextFactory<Skyl
 
 				int itemId = wallItem.Id;
 				int userId = roomUnit.User.Profile.Id;
-				int roomId = roomUnit.Room.Info.Id;
+				int roomId = privateRoom.Info.Id;
 
 				await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false))
 				{

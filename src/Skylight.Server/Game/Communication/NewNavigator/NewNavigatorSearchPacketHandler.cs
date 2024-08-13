@@ -1,24 +1,27 @@
 ﻿using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Net.Communication.Attributes;
+using Skylight.API.Game.Navigator;
 using Skylight.API.Game.Rooms;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
-using Skylight.Domain.Rooms.Private;
 using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Data.Navigator;
 using Skylight.Protocol.Packets.Data.NewNavigator;
 using Skylight.Protocol.Packets.Incoming.NewNavigator;
 using Skylight.Protocol.Packets.Manager;
 using Skylight.Protocol.Packets.Outgoing.NewNavigator;
+using Skylight.Server.Extensions;
 
 namespace Skylight.Server.Game.Communication.NewNavigator;
 
 [PacketManagerRegister(typeof(AbstractGamePacketManager))]
-internal sealed class NewNavigatorSearchPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory, IRoomManager roomManager) : UserPacketHandler<T>
+internal sealed class NewNavigatorSearchPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory, INavigatorManager navigatorManager, IRoomManager roomManager) : UserPacketHandler<T>
 	where T : INewNavigatorSearchIncomingPacket
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
+	private readonly INavigatorManager navigatorManager = navigatorManager;
 	private readonly IRoomManager roomManager = roomManager;
 
 	internal override void Handle(IUser user, in T packet)
@@ -32,18 +35,20 @@ internal sealed class NewNavigatorSearchPacketHandler<T>(IDbContextFactory<Skyli
 		{
 			using SkylightContext dbContext = this.dbContextFactory.CreateDbContext();
 
-			foreach (PrivateRoomEntity room in dbContext.PrivateRooms.AsNoTracking()
-						 .Include(r => r.Owner)
-						 .Where(r => r.OwnerId == user.Profile.Id))
+			foreach (int roomId in dbContext.PrivateRooms
+				.Where(r => r.OwnerId == user.Profile.Id)
+				.Select(r => r.Id))
 			{
-				rooms.Add(new GuestRoomData(room.Id, room.Name, room.Owner!.Username, room.LayoutId, 0));
+				IPrivateRoomInfo room = this.navigatorManager.GetPrivateRoomInfoAsync(roomId).GetAwaiter().GetResult()!;
+
+				rooms.Add(room.BuildGuestRoomData());
 			}
 		}
 		else if (searchCode == "hotel_view")
 		{
-			foreach (IRoom room in this.roomManager.LoadedRooms.OrderByDescending(r => r.UnitManager.Units.Count()))
+			foreach (IPrivateRoom room in this.roomManager.LoadedPrivateRooms.OrderByDescending(r => r.Info.UserCount))
 			{
-				rooms.Add(new GuestRoomData(room.Info.Id, room.Info.Name, room.Info.Owner.Username, room.Info.Layout.Id, room.UnitManager.Units.Count()));
+				rooms.Add(room.Info.BuildGuestRoomData());
 			}
 		}
 

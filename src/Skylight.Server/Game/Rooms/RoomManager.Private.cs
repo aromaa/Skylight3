@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Skylight.API.Collections.Cache;
-using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Rooms.Private;
 using Skylight.Domain.Rooms.Layout;
@@ -19,7 +18,7 @@ internal partial class RoomManager
 		private readonly RoomManager roomManager = roomManager;
 
 		private object? value = new RoomLoadHandler();
-		private ICacheValue<IRoomInfo>? roomInfo;
+		private ICacheValue<IPrivateRoomInfo>? roomInfo;
 
 		internal override IPrivateRoom? Room
 		{
@@ -45,7 +44,7 @@ internal partial class RoomManager
 			}
 		}
 
-		internal Task LoadAsync(IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, ICacheValue<IRoomInfo> roomInfoValue)
+		internal Task LoadAsync(IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, ICacheValue<IPrivateRoomInfo> roomInfoValue)
 		{
 			if (this.value is RoomLoadHandler loadHandler)
 			{
@@ -95,7 +94,7 @@ internal partial class RoomManager
 
 			internal Task<IPrivateRoom> Task => this.taskCompletionSource.Task;
 
-			internal Task LoadAsync(LoadedPrivateRoom instance, IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, ICacheValue<IRoomInfo> roomInfoValue, CancellationToken cancellationToken = default)
+			internal Task LoadAsync(LoadedPrivateRoom instance, IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, ICacheValue<IPrivateRoomInfo> roomInfoValue, CancellationToken cancellationToken = default)
 			{
 				if (this.initialized != 0 || Interlocked.CompareExchange(ref this.initialized, 1, 0) != 0)
 				{
@@ -107,11 +106,11 @@ internal partial class RoomManager
 				return this.InternalLoadAsync(instance, serviceProvider, dbContextFactory, roomInfoValue, cancellationToken);
 			}
 
-			private async Task InternalLoadAsync(LoadedPrivateRoom instance, IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, ICacheValue<IRoomInfo> roomInfoValue, CancellationToken cancellationToken = default)
+			private async Task InternalLoadAsync(LoadedPrivateRoom instance, IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, ICacheValue<IPrivateRoomInfo> roomInfoValue, CancellationToken cancellationToken = default)
 			{
 				try
 				{
-					IRoomInfo roomInfo = roomInfoValue.Value;
+					IPrivateRoomInfo roomInfo = roomInfoValue.Value;
 
 					await using SkylightContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
@@ -120,7 +119,7 @@ internal partial class RoomManager
 
 					ObjectFactory roomFactory = ActivatorUtilities.CreateFactory(typeof(PrivateRoom),
 					[
-						typeof(RoomData),
+						typeof(IPrivateRoomInfo),
 						typeof(IRoomLayout)
 					]);
 

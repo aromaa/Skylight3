@@ -106,7 +106,7 @@ internal sealed partial class AddSpamWallPostItPacketHandler<T>(IDbContextFactor
 					return;
 				}
 
-				IStickyNoteInventoryItem? inventoryItem = await postItItem.TryConsumeAsync(roomUnit.Room.Info.Id).ConfigureAwait(false);
+				IStickyNoteInventoryItem? inventoryItem = await postItItem.TryConsumeAsync(privateRoom.Info.Id).ConfigureAwait(false);
 				if (inventoryItem is null)
 				{
 					return;
@@ -140,7 +140,7 @@ internal sealed partial class AddSpamWallPostItPacketHandler<T>(IDbContextFactor
 					{
 						int itemId = inventoryItem.Id;
 						int userId = roomUnit.User.Profile.Id;
-						int roomId = roomUnit.Room.Info.Id;
+						int roomId = privateRoom.Info.Id;
 
 						int count = await dbContext.WallItems
 							.Where(i => i.Id == itemId && i.UserId == userId && i.RoomId == roomId && i.LocationX == -1)

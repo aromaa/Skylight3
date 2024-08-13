@@ -9,7 +9,11 @@ internal partial class NavigatorManager
 {
 	public IEnumerable<INavigatorNode> Nodes => this.Current.Nodes;
 
-	public bool TryGetNode(int id, [NotNullWhen(true)] out INavigatorNode? node) => this.Current.TryGetNode(id, out node);
-	public bool TryGetNode(int nodeId, [NotNullWhen(true)] out IServiceValue<INavigatorNode>? node) => this.Current.TryGetNode(nodeId, out node);
+	public bool TryGetNode<T>(int id, [NotNullWhen(true)] out T? node)
+		where T : class, INavigatorNode => this.Current.TryGetNode(id, out node);
+
+	public bool TryGetNode<T>(int nodeId, [NotNullWhen(true)] out IServiceValue<T>? node)
+		where T : class, INavigatorNode => this.Current.TryGetNode(nodeId, out node);
+
 	public bool TryGetLayout(string id, [NotNullWhen(true)] out IRoomLayout? layout) => this.Current.TryGetLayout(id, out layout);
 }

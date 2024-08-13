@@ -2,4 +2,7 @@
 
 namespace Skylight.Server.Game.Rooms.Public;
 
-internal sealed class PublicRoomInstance : IPublicRoomInstance;
+internal sealed class PublicRoomInstance(int id) : IPublicRoomInstance
+{
+	public int Id { get; } = id;
+}

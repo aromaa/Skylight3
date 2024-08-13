@@ -1,5 +1,6 @@
 ﻿using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
+using Skylight.API.DependencyInjection;
 using Skylight.API.Game.Navigator;
 using Skylight.API.Game.Navigator.Nodes;
 using Skylight.API.Game.Rooms.Map;
@@ -20,7 +21,19 @@ internal sealed partial class NavigatorSnapshot : VersionedServiceSnapshot, INav
 
 	public IEnumerable<INavigatorNode> Nodes => this.cache.Nodes.Values;
 
-	public bool TryGetNode(int id, [NotNullWhen(true)] out INavigatorNode? node) => this.cache.Nodes.TryGetValue(id, out node);
+	public bool TryGetNode<T>(int id, [NotNullWhen(true)] out T? node)
+		where T : class, INavigatorNode
+	{
+		if (this.cache.Nodes.TryGetValue(id, out INavigatorNode? value) && value is T valueOfT)
+		{
+			node = valueOfT;
+			return true;
+		}
+
+		node = null;
+		return false;
+	}
+
 	public bool TryGetLayout(string id, [NotNullWhen(true)] out IRoomLayout? layout) => this.cache.Layouts.TryGetValue(id, out layout);
 
 	private readonly struct Cache(FrozenDictionary<string, IRoomLayout> layouts, FrozenDictionary<int, INavigatorNode> nodes)
@@ -29,8 +42,8 @@ internal sealed partial class NavigatorSnapshot : VersionedServiceSnapshot, INav
 		internal FrozenDictionary<int, INavigatorNode> Nodes { get; } = nodes;
 	}
 
-	private readonly struct Holders(FrozenDictionary<int, ServiceValue<INavigatorNode>> nodes)
+	private readonly struct Holders(FrozenDictionary<int, IServiceValue<INavigatorNode>> nodes)
 	{
-		internal FrozenDictionary<int, ServiceValue<INavigatorNode>> Nodes { get; } = nodes;
+		internal FrozenDictionary<int, IServiceValue<INavigatorNode>> Nodes { get; } = nodes;
 	}
 }

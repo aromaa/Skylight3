@@ -1,4 +1,5 @@
 ﻿using System.Collections.Frozen;
+using Skylight.API.DependencyInjection;
 using Skylight.API.Game.Navigator.Nodes;
 using Skylight.API.Game.Rooms.Map;
 using Skylight.Domain.Navigator;
@@ -100,12 +101,12 @@ internal partial class NavigatorSnapshot
 
 		private Holders BuildHolders(in Cache cache, VersionedLoadableServiceBase? instance = null, NavigatorSnapshot? current = null)
 		{
-			Dictionary<int, ServiceValue<INavigatorNode>> nodeHolders = [];
+			Dictionary<int, IServiceValue<INavigatorNode>> nodeHolders = [];
 			foreach ((int id, INavigatorNode node) in cache.Nodes)
 			{
 				if (instance is not null)
 				{
-					ServiceValue<INavigatorNode> holder = node switch
+					IServiceValue<INavigatorNode> holder = node switch
 					{
 						INavigatorCategoryNode category => ResolveNode(category, instance, current),
 						INavigatorPublicRoomNode publicRoom => ResolveNode(publicRoom, instance, current),
@@ -120,16 +121,16 @@ internal partial class NavigatorSnapshot
 
 			return new Holders(nodeHolders.ToFrozenDictionary());
 
-			static ServiceValue<INavigatorNode> ResolveNode<T>(T node, VersionedLoadableServiceBase instance, NavigatorSnapshot? current = null)
+			static IServiceValue<INavigatorNode> ResolveNode<T>(T node, VersionedLoadableServiceBase instance, NavigatorSnapshot? current = null)
 				where T : class, INavigatorNode
 			{
-				if (current is not null && current.TryGetNode(node.Id, out ServiceValue<INavigatorNode>? holder) && holder is ServiceValue<T> holderOfT)
+				if (current is not null && current.TryGetNode(node.Id, out IServiceValue<INavigatorNode>? holder) && holder is ServiceValue<T> holderOfT)
 				{
 					holderOfT.StartTransaction(instance, current.Version, node);
 				}
 				else
 				{
-					holder = new ServiceValue<INavigatorNode>(node);
+					holder = new ServiceValue<T>(node);
 				}
 
 				return holder;
@@ -161,7 +162,7 @@ internal partial class NavigatorSnapshot
 
 			public override void Dispose()
 			{
-				foreach (ServiceValue<INavigatorNode> holder in this.Current.holders.Nodes.Values)
+				foreach (ServiceValue holder in this.Current.holders.Nodes.Values)
 				{
 					holder.Commit();
 				}

@@ -7,17 +7,16 @@ namespace Skylight.Server.Game.Navigator;
 
 internal partial class NavigatorSnapshot
 {
-	internal bool TryGetNode(int nodeId, [NotNullWhen(true)] out IServiceValue<INavigatorNode>? node)
+	internal bool TryGetNode<T>(int nodeId, [NotNullWhen(true)] out IServiceValue<T>? node)
+		where T : class, INavigatorNode
 	{
-		if (this.holders.Nodes.TryGetValue(nodeId, out ServiceValue<INavigatorNode>? holder))
+		if (this.holders.Nodes.TryGetValue(nodeId, out IServiceValue<INavigatorNode>? holder) && holder is ServiceValue<T> holderOfT)
 		{
-			node = holder;
+			node = holderOfT;
 			return true;
 		}
 
 		node = null;
 		return false;
 	}
-
-	private bool TryGetNode(int nodeId, [NotNullWhen(true)] out ServiceValue<INavigatorNode>? node) => this.holders.Nodes.TryGetValue(nodeId, out node);
 }

@@ -103,7 +103,12 @@ internal sealed partial class GetRoomEntryDataPacketHandler<T> : UserPacketHandl
 
 			roomSession.User.SendAsync(new UsersOutgoingPacket(units));
 
-			roomSession.User.SendAsync(new RoomVisualizationSettingsOutgoingPacket(false, 0, 0));
+			if (room.Info is IPrivateRoomInfo privateRoomInfo)
+			{
+				IRoomCustomizationSettings customizationSettings = privateRoomInfo.Settings.CustomizationSettings;
+
+				roomSession.User.SendAsync(new RoomVisualizationSettingsOutgoingPacket(customizationSettings.HideWalls, customizationSettings.FloorThickness, customizationSettings.WallThickness));
+			}
 
 			roomSession.User.SendAsync(new RoomEntryInfoOutgoingPacket(room.Info.Id, true));
 

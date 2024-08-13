@@ -8,9 +8,7 @@ namespace Skylight.API.Game.Rooms;
 public interface IRoom
 {
 	public IRoomInfo Info { get; }
-
 	public IRoomMap Map { get; }
-
 	public IRoomUnitManager UnitManager { get; }
 
 	public int GameTime { get; }

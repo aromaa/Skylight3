@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Skylight.API.DependencyInjection;
@@ -68,10 +67,8 @@ public static class HostBuilderExtensions
 
 		builder.Services.AddSingleton<RedisConnector>(_ => new RedisConnector(redis["ConnectionString"] ?? "localhost"));
 
-		builder.Services.AddPooledDbContextFactory<SkylightContext>(options => options
+		builder.Services.AddPooledDbContextFactory<SkylightContext>(options => BaseSkylightContext.ConfigureNpgsqlDbContextOptions(options, database["ConnectionString"])
 			////.UseModel(SkylightContextModel.Instance)
-			.UseNpgsql(database["ConnectionString"])
-			.UseSnakeCaseNamingConvention()
 			.EnableThreadSafetyChecks(false));
 
 		builder.Services.AddSingleton<IServer, SkylightServer>();

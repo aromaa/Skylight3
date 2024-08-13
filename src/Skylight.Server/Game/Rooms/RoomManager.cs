@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Skylight.API.Collections.Cache;
 using Skylight.API.Game.Navigator;
@@ -40,6 +41,28 @@ internal sealed partial class RoomManager : IRoomManager
 	{
 		get
 		{
+			foreach (LoadedPublicInstance loadedInstance in this.loadedPublicInstances.Values)
+			{
+				foreach (LoadedPublicRoom loadedWorld in loadedInstance.LoadedWorlds)
+				{
+					if (loadedWorld.Room is { } room)
+					{
+						yield return room;
+					}
+				}
+			}
+
+			foreach (IPrivateRoom privateRoom in this.LoadedPrivateRooms)
+			{
+				yield return privateRoom;
+			}
+		}
+	}
+
+	public IEnumerable<IPrivateRoom> LoadedPrivateRooms
+	{
+		get
+		{
 			foreach (LoadedPrivateRoom loadedRoom in this.loadedPrivateRooms.Values)
 			{
 				if (loadedRoom.Room is { } room)
@@ -74,7 +97,7 @@ internal sealed partial class RoomManager : IRoomManager
 			this.loadedPrivateRooms.TryRemove(KeyValuePair.Create(id, loadedRoom));
 		}
 
-		ICacheValue<IRoomInfo>? roomInfoValue = await this.navigatorManager.GetRoomDataUnsafeAsync(id, cancellationToken).ConfigureAwait(false);
+		ICacheValue<IPrivateRoomInfo>? roomInfoValue = await this.navigatorManager.GetPrivateRoomInfoUnsafeAsync(id, cancellationToken).ConfigureAwait(false);
 		if (roomInfoValue is null)
 		{
 			return null;
@@ -210,6 +233,18 @@ internal sealed partial class RoomManager : IRoomManager
 				this.loadedPublicInstances.TryRemove(KeyValuePair.Create(instanceId, loadedInstance));
 			}
 		}
+	}
+
+	public bool TryGetPrivateRoom(int roomId, [NotNullWhen(true)] out IPrivateRoom? room)
+	{
+		if (this.loadedPrivateRooms.TryGetValue(roomId, out LoadedPrivateRoom? loadedRoom) && loadedRoom.Room is { } roomInstance)
+		{
+			room = roomInstance;
+			return true;
+		}
+
+		room = null;
+		return false;
 	}
 
 	private void QueueUnload(LoadedPrivateRoom loadedRoomData)

@@ -12,8 +12,7 @@ namespace Skylight.Server.Game.Rooms;
 
 internal abstract class Room : IRoom
 {
-	public IRoomInfo Info { get; }
-
+	public abstract IRoomInfo Info { get; }
 	public abstract IRoomMap Map { get; }
 	public abstract IRoomUnitManager UnitManager { get; }
 
@@ -29,10 +28,8 @@ internal abstract class Room : IRoom
 
 	private bool active = true;
 
-	protected Room(RoomData roomData, IRoomLayout roomLayout)
+	protected Room(IRoomLayout roomLayout)
 	{
-		this.Info = roomData;
-
 		this.tickingLock = new SpinLock(enableThreadOwnerTracking: false);
 
 		this.RoomTaskScheduler = new RoomTaskScheduler(this);
@@ -69,8 +66,6 @@ internal abstract class Room : IRoom
 	{
 		this.roomClients.TryRemove(user.Client.Socket);
 	}
-
-	public bool IsOwner(IUser user) => this.Info.Owner.Id == user.Profile.Id;
 
 	private void DoTicking()
 	{

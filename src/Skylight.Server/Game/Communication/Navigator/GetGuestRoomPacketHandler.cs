@@ -1,11 +1,12 @@
 ﻿using Net.Communication.Attributes;
 using Skylight.API.Game.Navigator;
-using Skylight.API.Game.Rooms;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
-using Skylight.Protocol.Packets.Data.Navigator;
+using Skylight.Protocol.Packets.Data.RoomSettings;
 using Skylight.Protocol.Packets.Incoming.Navigator;
 using Skylight.Protocol.Packets.Manager;
 using Skylight.Protocol.Packets.Outgoing.Navigator;
+using Skylight.Server.Extensions;
 
 namespace Skylight.Server.Game.Communication.Navigator;
 
@@ -24,13 +25,13 @@ internal sealed partial class GetGuestRoomPacketHandler<T>(INavigatorManager nav
 
 		user.Client.ScheduleTask(async client =>
 		{
-			IRoomInfo? room = await this.navigatorManager.GetRoomDataAsync(roomId).ConfigureAwait(false);
+			IPrivateRoomInfo? room = await this.navigatorManager.GetPrivateRoomInfoAsync(roomId).ConfigureAwait(false);
 			if (room is null)
 			{
 				return;
 			}
 
-			client.SendAsync(new GetGuestRoomResultOutgoingPacket(enterRoom, roomForward, new GuestRoomData(room.Id, room.Name, room.Owner.Username, room.Layout.Id, 0), false, false, false, false, (0, 0, 0), (0, 1, 1, 1, 50)));
+			client.SendAsync(new GetGuestRoomResultOutgoingPacket(enterRoom, roomForward, room.BuildGuestRoomData(), false, false, false, false, new RoomModerationSettingsData(1, 1, 1), new RoomChatSettingsData(0, 0, 0, 0, 0)));
 		});
 	}
 }

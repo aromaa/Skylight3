@@ -21,6 +21,7 @@ namespace Skylight.Server.Game.Rooms.Private;
 
 internal sealed class PrivateRoom : Room, IPrivateRoom
 {
+	public override IPrivateRoomInfo Info { get; }
 	public override IPrivateRoomMap Map { get; }
 	public override IRoomUnitManager UnitManager { get; }
 
@@ -28,9 +29,10 @@ internal sealed class PrivateRoom : Room, IPrivateRoom
 
 	private readonly double[,] tileHeights;
 
-	public PrivateRoom(RoomData roomData, IRoomLayout roomLayout, IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, IFloorRoomItemStrategy floorRoomItemStrategy, IWallRoomItemStrategy wallRoomItemStrategy, IUserManager userManager, IRoomItemInteractionManager itemInteractionManager, INavigatorManager navigatorManager)
-		: base(roomData, roomLayout)
+	public PrivateRoom(IPrivateRoomInfo info, IRoomLayout roomLayout, IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, IFloorRoomItemStrategy floorRoomItemStrategy, IWallRoomItemStrategy wallRoomItemStrategy, IUserManager userManager, IRoomItemInteractionManager itemInteractionManager, INavigatorManager navigatorManager)
+		: base(roomLayout)
 	{
+		this.Info = info;
 		this.Map = new PrivateRoomMap(this, roomLayout);
 
 		this.ItemManager = new RoomItemManager(this, roomLayout, dbContextFactory, userManager, furnitureManager, floorRoomItemStrategy, wallRoomItemStrategy, itemInteractionManager);
@@ -86,4 +88,6 @@ internal sealed class PrivateRoom : Room, IPrivateRoom
 			this.SendAsync(new HeightMapUpdateOutgoingPacket(heightMapUpdates));
 		}
 	}
+
+	public bool IsOwner(IUser user) => this.Info.Owner.Id == user.Profile.Id;
 }

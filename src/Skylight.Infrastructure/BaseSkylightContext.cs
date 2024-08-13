@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Skylight.Domain.Achievements;
 using Skylight.Domain.Badges;
 using Skylight.Domain.Catalog;
@@ -83,6 +84,9 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
+		modelBuilder.HasPostgresEnum<PrivateRoomEntryMode>();
+		modelBuilder.HasPostgresEnum<PrivateRoomTradeMode>();
+
 		modelBuilder.ApplyConfiguration(new AchievementEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new AchievementLevelEntityTypeConfiguration());
 
@@ -132,5 +136,22 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 		modelBuilder.ApplyConfiguration(new UserEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new UserSettingsEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new UserWardrobeEntityTypeConfiguration());
+	}
+
+	public static NpgsqlDataSource CreateNpgsqlDataSource(string connectionString)
+	{
+		NpgsqlDataSourceBuilder builder = new(connectionString);
+		builder.MapEnum<PrivateRoomEntryMode>();
+		builder.MapEnum<PrivateRoomTradeMode>();
+
+		return builder.Build();
+	}
+
+	public static DbContextOptionsBuilder ConfigureNpgsqlDbContextOptions(DbContextOptionsBuilder builder, string? connectionString)
+	{
+		builder.UseNpgsql(connectionString);
+		builder.UseSnakeCaseNamingConvention();
+
+		return builder;
 	}
 }
