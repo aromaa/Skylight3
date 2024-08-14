@@ -1,8 +1,5 @@
-﻿namespace Skylight.API.Game.Achievements;
+﻿using Skylight.API.DependencyInjection;
 
-public interface IAchievementSnapshot
-{
-	public IEnumerable<IAchievement> Achievements { get; }
+namespace Skylight.API.Game.Achievements;
 
-	public IEnumerable<KeyValuePair<string, int>> BadgePointLimits { get; }
-}
+public interface IAchievementSnapshot : IAchievements, IServiceSnapshot;

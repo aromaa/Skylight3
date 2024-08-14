@@ -3,6 +3,7 @@
 namespace Skylight.Server.DependencyInjection;
 
 internal abstract class LoadableServiceBase<T> : ILoadableService<T>
+	where T : IServiceSnapshot
 {
 	private readonly TaskCompletionSource<T> initialLoadTaskCompletionSource;
 

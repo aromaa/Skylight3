@@ -144,7 +144,7 @@ internal partial class FurniMaticManager
 				return null;
 			}
 
-			await using ICatalogTransaction transaction = await this.catalogTransactionFactory.CreateTransactionAsync(this.furnitureManager, dbContext.Database.GetDbConnection(), user, string.Empty, cancellationToken).ConfigureAwait(false);
+			await using ICatalogTransaction transaction = await this.catalogTransactionFactory.CreateTransactionAsync(this.furnitureManager.Current, dbContext.Database.GetDbConnection(), user, string.Empty, cancellationToken).ConfigureAwait(false);
 
 			await using (await dbContext.Database.UseTransactionAsync(transaction.Transaction, cancellationToken).ConfigureAwait(false))
 			{

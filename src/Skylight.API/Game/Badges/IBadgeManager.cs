@@ -2,6 +2,4 @@
 
 namespace Skylight.API.Game.Badges;
 
-public interface IBadgeManager : IBadgeSnapshot, ILoadableService<IBadgeSnapshot>
-{
-}
+public interface IBadgeManager : IBadges, ILoadableService<IBadgeSnapshot>;

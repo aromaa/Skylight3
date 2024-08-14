@@ -2,6 +2,4 @@
 
 namespace Skylight.API.Game.Achievements;
 
-public interface IAchievementManager : IAchievementSnapshot, ILoadableService<IAchievementSnapshot>
-{
-}
+public interface IAchievementManager : IAchievements, ILoadableService<IAchievementSnapshot>;

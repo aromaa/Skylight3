@@ -1,8 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using Skylight.API.DependencyInjection;
 
 namespace Skylight.API.Game.Badges;
 
-public interface IBadgeSnapshot
-{
-	public bool TryGetBadge(string badgeCode, [NotNullWhen(true)] out IBadge? badge);
-}
+public interface IBadgeSnapshot : IBadges, IServiceSnapshot;

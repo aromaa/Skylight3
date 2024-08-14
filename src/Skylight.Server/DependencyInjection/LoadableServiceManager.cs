@@ -1,12 +1,11 @@
-﻿using System.Collections.Concurrent;
-using Skylight.API.DependencyInjection;
+﻿using Skylight.API.DependencyInjection;
 
 namespace Skylight.Server.DependencyInjection;
 
 internal sealed class LoadableServiceManager : ILoadableServiceManager
 {
-	private readonly ConcurrentDictionary<ILoadableService, HashSet<ILoadableService>> services;
-	private readonly ConcurrentDictionary<Type, ILoadableService> servicesByType;
+	private readonly Dictionary<ILoadableService, HashSet<ILoadableService>> services;
+	private readonly Dictionary<Type, ILoadableService> servicesBySnapshotType;
 
 	private readonly TaskCompletionSource initialLoad;
 
@@ -21,14 +20,22 @@ internal sealed class LoadableServiceManager : ILoadableServiceManager
 
 	public LoadableServiceManager(IEnumerable<ILoadableService> services)
 	{
-		this.services = new ConcurrentDictionary<ILoadableService, HashSet<ILoadableService>>();
-		this.servicesByType = new ConcurrentDictionary<Type, ILoadableService>();
+		this.services = new Dictionary<ILoadableService, HashSet<ILoadableService>>();
+		this.servicesBySnapshotType = new Dictionary<Type, ILoadableService>();
 
 		this.initialLoad = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
 		foreach (ILoadableService service in services)
 		{
 			this.services[service] = [];
+
+			Type? genericServiceType = service.GetType().GetInterfaces().FirstOrDefault(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(ILoadableService<>));
+			if (genericServiceType is not null)
+			{
+				Type snapshotType = genericServiceType.GetGenericArguments()[0];
+
+				this.servicesBySnapshotType.Add(snapshotType, service);
+			}
 		}
 	}
 
@@ -123,17 +130,17 @@ internal sealed class LoadableServiceManager : ILoadableServiceManager
 
 	internal ILoadableService GetService(Type type)
 	{
-		return this.servicesByType.GetOrAdd(type, static (key, state) =>
+		foreach (ILoadableService service in this.services.Keys)
 		{
-			foreach (ILoadableService service in state.services.Keys)
+			if (type.IsInstanceOfType(service))
 			{
-				if (key.IsInstanceOfType(service))
-				{
-					return service;
-				}
+				return service;
 			}
+		}
 
-			throw new NotSupportedException(key.ToString());
-		}, this);
+		throw new NotSupportedException(type.ToString());
 	}
+
+	internal ILoadableService<T> GetService<T>()
+		where T : IServiceSnapshot => (ILoadableService<T>)this.servicesBySnapshotType[typeof(T)] ?? throw new NotSupportedException(typeof(T).ToString());
 }

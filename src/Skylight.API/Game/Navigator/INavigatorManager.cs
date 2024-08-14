@@ -6,7 +6,7 @@ using Skylight.API.Game.Rooms.Private;
 
 namespace Skylight.API.Game.Navigator;
 
-public interface INavigatorManager : INavigatorSnapshot, ILoadableService<INavigatorSnapshot>
+public interface INavigatorManager : INavigator, ILoadableService<INavigatorSnapshot>
 {
 	public bool TryGetNode<T>(int nodeId, [NotNullWhen(true)] out IServiceValue<T>? node)
 		where T : class, INavigatorNode;

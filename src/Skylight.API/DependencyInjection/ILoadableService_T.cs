@@ -1,6 +1,7 @@
 ﻿namespace Skylight.API.DependencyInjection;
 
 public interface ILoadableService<T> : ILoadableService
+	where T : IServiceSnapshot
 {
 	public T Current { get; }
 

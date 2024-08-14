@@ -2,6 +2,4 @@
 
 namespace Skylight.API.Game.Recycler.FurniMatic;
 
-public interface IFurniMaticManager : IFurniMaticSnapshot, ILoadableService<IFurniMaticSnapshot>
-{
-}
+public interface IFurniMaticManager : IFurniMatic, ILoadableService<IFurniMaticSnapshot>;

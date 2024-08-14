@@ -80,8 +80,9 @@ internal sealed class LoadableServiceContext : ILoadableServiceContext
 	}
 
 	public async Task<T> RequestDependencyAsync<T>(CancellationToken cancellationToken = default)
+		where T : IServiceSnapshot
 	{
-		ILoadableService service = this.loader.GetService(typeof(T));
+		ILoadableService<T> service = this.loader.GetService<T>();
 
 		Task? task;
 		if (LoadableServiceContext.currentCallerData.Value is { } caller)
@@ -92,7 +93,7 @@ internal sealed class LoadableServiceContext : ILoadableServiceContext
 			{
 				if (!this.loading.TryGetValue(service, out task))
 				{
-					return ((ILoadableService<T>)service).Current;
+					return service.Current;
 				}
 			}
 		}

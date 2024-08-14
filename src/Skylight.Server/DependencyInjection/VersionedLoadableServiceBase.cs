@@ -9,6 +9,7 @@ internal abstract class VersionedLoadableServiceBase
 
 internal abstract class VersionedLoadableServiceBase<TInterface, TImplementation> : VersionedLoadableServiceBase, ILoadableService<TInterface>
 	where TImplementation : VersionedServiceSnapshot, TInterface
+	where TInterface : IServiceSnapshot
 {
 	private readonly TaskCompletionSource<TInterface> initialLoadTaskCompletionSource;
 
