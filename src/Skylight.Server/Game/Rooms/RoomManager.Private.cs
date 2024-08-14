@@ -90,13 +90,13 @@ internal partial class RoomManager
 		{
 			private readonly TaskCompletionSource<IPrivateRoom> taskCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-			private volatile int initialized;
+			private volatile bool initialized;
 
 			internal Task<IPrivateRoom> Task => this.taskCompletionSource.Task;
 
 			internal Task LoadAsync(LoadedPrivateRoom instance, IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, ICacheValue<IPrivateRoomInfo> roomInfoValue, CancellationToken cancellationToken = default)
 			{
-				if (this.initialized != 0 || Interlocked.CompareExchange(ref this.initialized, 1, 0) != 0)
+				if (this.initialized || Interlocked.CompareExchange(ref this.initialized, true, false))
 				{
 					roomInfoValue.Dispose();
 

@@ -5,7 +5,6 @@ using Skylight.API.Game.Users;
 using Skylight.API.Game.Users.Rooms;
 using Skylight.Protocol.Packets.Outgoing.Room.Permissions;
 using Skylight.Protocol.Packets.Outgoing.Room.Session;
-using Skylight.Server.Extensions;
 
 namespace Skylight.Server.Game.Users.Rooms;
 
@@ -38,12 +37,12 @@ internal sealed partial class RoomSession : IRoomSession
 
 	private IRoomSession.SessionState ChangeState(IRoomSession.SessionState value)
 	{
-		return InterlockedExtensions.Exchange(ref this.state, value);
+		return Interlocked.Exchange(ref this.state, value);
 	}
 
 	public bool TryChangeState(IRoomSession.SessionState value, IRoomSession.SessionState current)
 	{
-		return InterlockedExtensions.CompareExchange(ref this.state, value, current) == current;
+		return Interlocked.CompareExchange(ref this.state, value, current) == current;
 	}
 
 	public void LoadRoom(ICacheValue<IRoom> roomValue)

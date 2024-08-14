@@ -130,13 +130,13 @@ internal partial class RoomManager
 		{
 			private readonly TaskCompletionSource<IPublicRoom> taskCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-			private volatile int initialized;
+			private volatile bool initialized;
 
 			internal Task<IPublicRoom> Task => this.taskCompletionSource.Task;
 
 			internal Task LoadAsync(LoadedPublicRoom instance, IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, PublicRoomWorldEntity world, CancellationToken cancellationToken = default)
 			{
-				if (this.initialized != 0 || Interlocked.CompareExchange(ref this.initialized, 1, 0) != 0)
+				if (this.initialized || Interlocked.CompareExchange(ref this.initialized, true, false))
 				{
 					instance.publicInstance.ReleaseTicket();
 

@@ -62,11 +62,11 @@ internal sealed class AsyncCache<TKey, TValue>
 
 	private sealed class PendingAsyncTask : TaskCompletionSource<TValue?>
 	{
-		private int initialized;
+		private volatile bool initialized;
 
 		internal Task<TValue?> LoadAsync(AsyncCacheEntry<object?> entry, TKey key, Func<TKey, Task<TValue?>> loader)
 		{
-			if (this.initialized != 0 || Interlocked.CompareExchange(ref this.initialized, 1, 0) == 1)
+			if (this.initialized || Interlocked.CompareExchange(ref this.initialized, true, false))
 			{
 				return this.Task;
 			}
