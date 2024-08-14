@@ -38,7 +38,7 @@ internal sealed partial class RecycleItemsPacketHandler<T>(IFurniMaticManager fu
 
 		bool scheduled = user.Client.ScheduleTask(async client =>
 		{
-			IFurniMaticPrize? prize = await this.furniMaticManager.RecycleAsync(client.User!, items).ConfigureAwait(false);
+			IFurniMaticPrize? prize = await snapshot.RecycleAsync(client.User!, items).ConfigureAwait(false);
 
 			//1 completed
 			//2 closed
