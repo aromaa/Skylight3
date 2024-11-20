@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<NoWarn>$(NoWarn),1573,1591,1712,8500</NoWarn>
+		<WarningsNotAsErrors>$(WarningsNotAsErrors),NU1901,NU1902,NU1903,NU1904</WarningsNotAsErrors>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<Features>strict</Features>
