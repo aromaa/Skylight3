@@ -1,6 +1,7 @@
 ﻿using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using CommunityToolkit.HighPerformance;
 using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Rooms.Units;
@@ -10,8 +11,17 @@ namespace Skylight.Server.Game.Rooms.Map;
 
 internal abstract class RoomMap : IRoomMap
 {
-	private static readonly Point2D[] directions =
-		[new Point2D(0, 1), new Point2D(1, 0), new Point2D(0, -1), new Point2D(-1, 0), new Point2D(1, 1), new Point2D(-1, -1), new Point2D(1, -1), new Point2D(-1, 1)];
+	private static readonly (Point2D, PathfinderEdge.EdgeDirection)[] directions =
+	[
+		(new Point2D(0, 1), PathfinderEdge.EdgeDirection.North),
+		(new Point2D(1, 0), PathfinderEdge.EdgeDirection.East),
+		(new Point2D(0, -1), PathfinderEdge.EdgeDirection.South),
+		(new Point2D(-1, 0), PathfinderEdge.EdgeDirection.West),
+		(new Point2D(1, 1), PathfinderEdge.EdgeDirection.NorthEast),
+		(new Point2D(1, -1), PathfinderEdge.EdgeDirection.SouthEast),
+		(new Point2D(-1, -1), PathfinderEdge.EdgeDirection.SouthWest),
+		(new Point2D(-1, 1), PathfinderEdge.EdgeDirection.NorthWest)
+	];
 
 	private static readonly int[] sums = RoomMap.SumsTo(100);
 
@@ -33,43 +43,39 @@ internal abstract class RoomMap : IRoomMap
 
 		IRoomLayout layout = this.Layout;
 
-		PointData[] bookkeepingArray = ArrayPool<PointData>.Shared.Rent(layout.Size.X * layout.Size.Y);
-		Array.Fill(bookkeepingArray, new PointData());
-
-		using GameMapData gameMap = new(bookkeepingArray, layout.Size.X, layout.Size.Y);
+		using PathfinderData pathfinderData = new(layout.Size.X, layout.Size.Y);
 
 		PriorityQueue<Point3D, int> points = new();
 		points.Enqueue(start, 0);
-		gameMap.Get(start.X, start.Y, start.Z) = (start, 0);
+		pathfinderData.Get(start.X, start.Y, start.Z) = new PathfinderEdge(0);
 
-		NeighborsBuffer nextPoints = default;
+		PathfinderData.NeighborsBuffer nextPoints = default;
 		while (points.TryDequeue(out Point3D current, out int priority))
 		{
-			ref readonly (Point3D From, int Weight) data = ref gameMap[current.X, current.Y, current.Z];
-
 			if (double.IsNaN(target.Z) ? current.XY == target.XY : current == target)
 			{
+				ref readonly PathfinderEdge data = ref pathfinderData[current.X, current.Y, current.Z];
+
 				Stack<Point2D> path = new();
 				path.Push(current.XY);
 
-				Point3D walkBack = data.From;
+				Point3D walkBack = data.Backtrace(current.XY);
 				while (walkBack != start)
 				{
 					path.Push(walkBack.XY);
 
-					walkBack = gameMap[walkBack.X, walkBack.Y, walkBack.Z].From;
+					PathfinderEdge walkBackEdge = pathfinderData[walkBack.X, walkBack.Y, walkBack.Z];
+					walkBack = walkBackEdge.Backtrace(walkBack.XY);
 				}
 
 				return path;
 			}
 
-			int currentWeight = data.Weight + priority;
-
 			for (int i = 0; i < this.GetNeighbors(current.XY, nextPoints); i++)
 			{
-				IRoomTile neighbor = nextPoints[i];
+				(IRoomTile neighborTile, PathfinderEdge.EdgeDirection neighborDirection) = nextPoints[i];
 
-				double? nextZ = neighbor.GetStepHeight(current.Z);
+				double? nextZ = neighborTile.GetStepHeight(current.Z);
 				if (nextZ is null)
 				{
 					continue;
@@ -81,38 +87,33 @@ internal abstract class RoomMap : IRoomMap
 					//continue;
 				}
 
-				Point2D neighborPosition = neighbor.Position.XY;
+				Point2D neighborPosition = neighborTile.Position.XY;
 
-				int distance = Point2D.DistanceSquared(current.XY, neighborPosition);
+				int distance = 1;
 				if (difference < -2)
 				{
-					distance += RoomMap.sums[Math.Min(Math.Abs((int)(difference / 0.1)), RoomMap.sums.Length - 1)];
+					distance = Point2D.DistanceSquared(current.XY, neighborPosition) * RoomMap.sums[Math.Min(Math.Abs((int)(difference / 0.1)), RoomMap.sums.Length - 1)];
 				}
 
-				ref (Point3D From, int Weight) pathData = ref gameMap.Get(neighborPosition.X, neighborPosition.Y, nextZ.Value);
+				int neighborWeight = priority + distance;
 
-				int neighborWeight = currentWeight + distance;
-				if (neighborWeight >= pathData.Weight)
+				ref PathfinderEdge pathData = ref pathfinderData.Get(neighborPosition.X, neighborPosition.Y, nextZ.Value);
+				if (pathData.TrySuggestCandidate(neighborWeight, neighborDirection, current.Z))
 				{
-					continue;
+					points.Enqueue(new Point3D(neighborPosition, nextZ.Value), neighborWeight);
 				}
-
-				pathData.From = current;
-				pathData.Weight = neighborWeight;
-
-				points.Enqueue(new Point3D(neighborPosition, nextZ.Value), priority + distance);
 			}
 		}
 
 		return [];
 	}
 
-	private int GetNeighbors(Point2D point, Span<IRoomTile> buffer)
+	private int GetNeighbors(Point2D point, Span<(IRoomTile Tile, PathfinderEdge.EdgeDirection Direction)> buffer)
 	{
 		int i = 0;
-		foreach (Point2D direction in RoomMap.directions)
+		foreach ((Point2D location, PathfinderEdge.EdgeDirection direction) in RoomMap.directions)
 		{
-			Point2D newLocation = point + direction;
+			Point2D newLocation = point + location;
 			if (!this.IsValidLocation(newLocation))
 			{
 				continue;
@@ -124,7 +125,7 @@ internal abstract class RoomMap : IRoomMap
 				continue;
 			}
 
-			buffer[i++] = tile;
+			buffer[i++] = (tile, direction);
 		}
 
 		return i;
@@ -145,177 +146,199 @@ internal abstract class RoomMap : IRoomMap
 		return values;
 	}
 
-	private ref struct GameMapData(PointData[] data, int height, int width)
+	private readonly ref struct PathfinderData
 	{
-		private readonly PointData[] dataArray = data;
-		private readonly Span2D<PointData> data = new(data, height, width);
+		private readonly PathfinderPoint[] pointsArray;
+		private readonly Span2D<PathfinderPoint> points;
 
-		private ArrayHolder arrays;
-		private List<(Point3D From, int Weight)[]>? arraysList;
-		private int arrayCount;
+		internal PathfinderData(int height, int width)
+		{
+			PathfinderPoint[] pointsArray = ArrayPool<PathfinderPoint>.Shared.Rent(height * width);
+			Array.Fill(pointsArray, new PathfinderPoint());
 
-		internal ref readonly (Point3D From, int Weight) this[int x, int y, double z]
+			this.pointsArray = pointsArray;
+			this.points = new Span2D<PathfinderPoint>(pointsArray, height, width);
+		}
+
+		internal ref readonly PathfinderEdge this[int x, int y, double z]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get
-			{
-				(Point3D From, int Weight)[] array = this.data[x, y].GetArray(z);
-
-				return ref new Span2D<(Point3D From, int Weight)>(array, this.data.Height, this.data.Width)[x, y];
-			}
+			get => ref this.points[x, y][z];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal ref (Point3D From, int Weight) Get(int x, int y, double z)
-		{
-			(Point3D From, int Weight)[] array = this.data[x, y].GetOrCreateArray(z, ref this);
-
-			return ref new Span2D<(Point3D From, int Weight)>(array, this.data.Height, this.data.Width)[x, y];
-		}
-
-		[UnscopedRef]
-		private Span<(Point3D From, int Weight)[]> Arrays => this.arrays;
-
-		internal (Point3D From, int Weight)[] GetNextArray(int index)
-		{
-			if (index < this.arrayCount)
-			{
-				return this.arraysList is null
-					? this.arrays[index]
-					: this.arraysList[index];
-			}
-
-			(Point3D From, int Weight)[] array = ArrayPool<(Point3D From, int Weight)>.Shared.Rent((int)this.data.Length);
-
-			Array.Fill(array, (default, int.MaxValue));
-
-			if (this.arraysList is null)
-			{
-				if (index < this.Arrays.Length)
-				{
-					return this.arrays[this.arrayCount++] = array;
-				}
-				else
-				{
-					this.arraysList = [.. this.Arrays]; //Don't use the inline array directly https://github.com/dotnet/roslyn/issues/70708
-					this.arraysList.Add(array);
-				}
-			}
-			else
-			{
-				this.arraysList.Add(array);
-			}
-
-			this.arrayCount++;
-
-			return array;
-		}
+		internal ref PathfinderEdge Get(int x, int y, double z) => ref this.points[x, y].Get(z);
 
 		public void Dispose()
 		{
-			ArrayPool<PointData>.Shared.Return(this.dataArray);
+			ArrayPool<PathfinderPoint>.Shared.Return(this.pointsArray);
+		}
 
-			if (this.arraysList is null)
-			{
-				for (int i = 0; i < this.arrayCount; i++)
-				{
-					ArrayPool<(Point3D From, int Weight)>.Shared.Return(this.arrays[i]);
-				}
-			}
-			else
-			{
-				foreach ((Point3D From, int Weight)[] array in this.arraysList)
-				{
-					ArrayPool<(Point3D From, int Weight)>.Shared.Return(array);
-				}
-			}
+		[InlineArray(8)]
+		internal struct NeighborsBuffer
+		{
+			private (IRoomTile Tile, PathfinderEdge.EdgeDirection Direction) data;
 		}
 	}
 
-	private struct PointData
+	private struct PathfinderPoint
 	{
-		internal Dictionary<double, (Point3D From, int Weight)[]>? Overflow { get; set; }
+		private Dictionary<double, PathfinderEdge>? overflowLayers;
 
 		private int index;
+		private LayerEdgeIndexHolder indexes;
+		private LayerEdgeHolder layers;
 
-		private IndexHolder indexes;
-		private ArrayHolder arrays;
-
-		public PointData()
+		public PathfinderPoint()
 		{
 			this.Indexes.Fill(double.NaN);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal (Point3D From, int Weight)[] GetArray(double value)
+		internal ref readonly PathfinderEdge this[double z]
 		{
-			return this.Overflow is null
-				? this.arrays[this.Indexes.IndexOf(value)]
-				: this.Overflow[value];
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal (Point3D From, int Weight)[] GetOrCreateArray(double value, ref GameMapData gameMap)
-		{
-			if (this.Overflow is null)
+			[UnscopedRef]
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get
 			{
-				int index = this.Indexes.IndexOf(value);
-				if (index != -1)
+				if (this.overflowLayers is null)
 				{
-					return this.arrays[index];
+					return ref this.layers[this.Indexes.IndexOf(z)];
 				}
 
-				(Point3D From, int Weight)[] array = gameMap.GetNextArray(this.index);
+				return ref CollectionsMarshal.GetValueRefOrNullRef(this.overflowLayers, z);
+			}
+		}
+
+		[UnscopedRef]
+		internal ref PathfinderEdge Get(double z)
+		{
+			if (this.overflowLayers is null)
+			{
+				int index = this.Indexes.IndexOf(z);
+				if (index != -1)
+				{
+					return ref this.layers[index];
+				}
 
 				if (this.index < this.Indexes.Length)
 				{
-					(this.indexes[this.index], this.arrays[this.index], this.index) = (value, array, this.index + 1);
+					index = this.index++;
+
+					this.indexes[index] = z;
+					this.layers[index] = new PathfinderEdge();
+
+					return ref this.layers[index];
 				}
 				else
 				{
-					Dictionary<double, (Point3D From, int Weight)[]> dictionary = new()
+					Dictionary<double, PathfinderEdge> dictionary = new();
+					for (int i = 0; i < this.Indexes.Length; i++)
 					{
-						[value] = array
-					};
-
-					for (int i = 0; i < 5; i++)
-					{
-						dictionary[this.indexes[i]] = this.arrays[i];
+						dictionary[this.indexes[i]] = this.layers[i];
 					}
 
-					(this.Overflow, this.index) = (dictionary, this.index + 1);
+					dictionary[z] = new PathfinderEdge();
+
+					this.overflowLayers = dictionary;
+
+					return ref CollectionsMarshal.GetValueRefOrNullRef(dictionary, z);
 				}
-
-				return array;
 			}
 
-			if (this.Overflow.TryGetValue(value, out (Point3D From, int Weight)[]? arrays))
+			ref PathfinderEdge edge = ref CollectionsMarshal.GetValueRefOrAddDefault(this.overflowLayers, z, out bool exists);
+			if (!exists)
 			{
-				return arrays;
+				edge = new PathfinderEdge();
 			}
 
-			return this.Overflow[value] = gameMap.GetNextArray(this.index++);
+			return ref edge;
+		}
+
+		[InlineArray(4)]
+		private struct LayerEdgeIndexHolder
+		{
+			private double layer;
+		}
+
+		[InlineArray(4)]
+		private struct LayerEdgeHolder
+		{
+			private PathfinderEdge edge;
 		}
 
 		[UnscopedRef]
 		internal Span<double> Indexes => this.indexes;
 	}
 
-	[InlineArray(5)]
-	private struct IndexHolder
+	internal struct PathfinderEdge(int weight)
 	{
-		private double z;
-	}
+		private int weight = weight;
 
-	[InlineArray(5)]
-	private struct ArrayHolder
-	{
-		private (Point3D From, int Weight)[] array;
-	}
+		private EdgeDirection direction = EdgeDirection.None;
+		private HeightsHolder heights;
 
-	[InlineArray(8)]
-	private struct NeighborsBuffer
-	{
-		private IRoomTile tile;
+		public PathfinderEdge()
+			: this(int.MaxValue)
+		{
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal bool TrySuggestCandidate(int weight, EdgeDirection direction, double z)
+		{
+			if (weight > this.weight)
+			{
+				return false;
+			}
+			else if (weight == this.weight)
+			{
+				this.direction |= direction;
+				this.heights[int.TrailingZeroCount((int)direction)] = z;
+
+				return false;
+			}
+
+			this.weight = weight;
+			this.direction = direction;
+			this.heights[int.TrailingZeroCount((int)direction)] = z;
+
+			return true;
+		}
+
+		internal readonly Point3D Backtrace(Point2D point)
+		{
+			return int.TrailingZeroCount((int)this.direction) switch
+			{
+				0 => new Point3D(point.X, point.Y - 1, this.heights[0]), //North
+				1 => new Point3D(point.X - 1, point.Y, this.heights[1]), //East
+				2 => new Point3D(point.X, point.Y + 1, this.heights[2]), //South
+				3 => new Point3D(point.X + 1, point.Y, this.heights[3]), //West
+				4 => new Point3D(point.X - 1, point.Y - 1, this.heights[4]), //NorthEast
+				5 => new Point3D(point.X - 1, point.Y + 1, this.heights[5]), //SouthEast
+				6 => new Point3D(point.X + 1, point.Y + 1, this.heights[6]), //SouthWest
+				7 => new Point3D(point.X + 1, point.Y - 1, this.heights[7]), //NorthWest
+
+				_ => throw new NotSupportedException()
+			};
+		}
+
+		[Flags]
+		internal enum EdgeDirection
+		{
+			None = 0,
+			North = 1 << 0,
+			East = 1 << 1,
+			South = 1 << 2,
+			West = 1 << 3,
+			NorthEast = 1 << 4,
+			SouthEast = 1 << 5,
+			SouthWest = 1 << 6,
+			NorthWest = 1 << 7,
+		}
+
+		[InlineArray(8)]
+		private struct HeightsHolder
+		{
+			private double z;
+		}
 	}
 }
