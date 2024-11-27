@@ -2,10 +2,18 @@
 using CommunityToolkit.HighPerformance;
 using Net.Collections;
 using Skylight.API.Game.Rooms;
+using Skylight.API.Game.Rooms.Items.Floor;
+using Skylight.API.Game.Rooms.Items.Wall;
 using Skylight.API.Game.Rooms.Map;
+using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
+using Skylight.Protocol.Packets.Data.Room.Engine;
+using Skylight.Protocol.Packets.Data.Room.Object.Data.Wall;
 using Skylight.Protocol.Packets.Outgoing;
+using Skylight.Protocol.Packets.Outgoing.Room.Engine;
+using Skylight.Protocol.Packets.Outgoing.Room.Layout;
+using Skylight.Server.Extensions;
 using Skylight.Server.Game.Rooms.Scheduler;
 
 namespace Skylight.Server.Game.Rooms;
@@ -51,7 +59,6 @@ internal abstract class Room : IRoom
 	internal int UserCount => this.roomClients.Count;
 
 	public abstract Task LoadAsync(CancellationToken cancellationToken);
-
 	public void Start()
 	{
 		this.thread.Start();
@@ -60,6 +67,78 @@ internal abstract class Room : IRoom
 	public void Enter(IUser user)
 	{
 		this.roomClients.TryAdd(user.Client.Socket);
+
+		//TODO: Abstract this better
+
+		user.SendAsync(new RoomEntryTileOutgoingPacket(this.Map.Layout.DoorLocation.X, this.Map.Layout.DoorLocation.Y, this.Map.Layout.DoorDirection));
+		user.SendAsync(new HeightMapOutgoingPacket
+		{
+			Width = this.Map.Layout.Size.X,
+			HeightMap = Enumerable.Repeat(new TileHeightMap(1, false, true), this.Map.Layout.Size.X * this.Map.Layout.Size.Y).ToArray()
+		});
+		user.SendAsync(new FloorHeightMapOutgoingPacket
+		{
+			Scale = false,
+			FixedWallsHeight = -1,
+			HeightMap = this.Map.Layout.HeightMap
+		});
+
+		List<PublicRoomObjectData> publicRoomObjects = [];
+		List<ObjectData> objects = [];
+		List<ItemData> items = [];
+		if (this is IPrivateRoom privateRoom)
+		{
+			foreach (IFloorRoomItem roomItem in privateRoom.ItemManager.FloorItems)
+			{
+				objects.Add(new ObjectData(roomItem.Id, roomItem.Furniture.Id, roomItem.Position.X, roomItem.Position.Y, roomItem.Position.Z, roomItem.Direction, roomItem.Height, 0, roomItem.GetItemData()));
+			}
+
+			foreach (IWallRoomItem roomItem in privateRoom.ItemManager.WallItems)
+			{
+				items.Add(new ItemData(roomItem.Id, roomItem.Furniture.Id, new WallPosition(roomItem.Location.X, roomItem.Location.Y, roomItem.Position.X, roomItem.Position.Y), roomItem.GetItemData()));
+			}
+		}
+
+		//TODO: Public items
+		user.SendAsync(new PublicRoomObjectsOutgoingPacket(publicRoomObjects));
+		user.SendAsync(new ObjectsOutgoingPacket(objects, Array.Empty<(int, string)>()));
+		user.SendAsync(new ItemsOutgoingPacket(items, Array.Empty<(int, string)>()));
+
+		List<RoomUnitData> units = [];
+		foreach (IUserRoomUnit unit in this.UnitManager.Units)
+		{
+			units.Add(new RoomUnitData
+			{
+				IdentifierId = unit.User.Profile.Id,
+				Name = unit.User.Profile.Username,
+				Motto = unit.User.Profile.Motto,
+				Figure = unit.User.Profile.Figure,
+				RoomUnitId = unit.Id,
+				X = unit.Position.X,
+				Y = unit.Position.Y,
+				Z = unit.Position.Z,
+				Direction = unit.Rotation.X,
+				Type = 1,
+				Gender = unit.User.Profile.Gender,
+				GroupId = 0,
+				GroupStatus = 0,
+				GroupName = string.Empty,
+				SwimSuit = string.Empty,
+				AchievementScore = 666,
+				IsModerator = true
+			});
+		}
+
+		user.SendAsync(new UsersOutgoingPacket(units));
+
+		if (this.Info is IPrivateRoomInfo privateRoomInfo)
+		{
+			IRoomCustomizationSettings customizationSettings = privateRoomInfo.Settings.CustomizationSettings;
+
+			user.SendAsync(new RoomVisualizationSettingsOutgoingPacket(customizationSettings.HideWalls, customizationSettings.FloorThickness, customizationSettings.WallThickness));
+		}
+
+		user.SendAsync(new RoomEntryInfoOutgoingPacket(this.Info.Id, true));
 	}
 
 	public void Exit(IUser user)

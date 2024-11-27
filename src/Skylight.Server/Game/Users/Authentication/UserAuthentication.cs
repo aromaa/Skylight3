@@ -3,6 +3,7 @@ using Skylight.API.Game.Badges;
 using Skylight.API.Game.Clients;
 using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Inventory.Items;
+using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Users;
 using Skylight.API.Game.Users.Authentication;
 using Skylight.Domain.Users;
@@ -12,7 +13,7 @@ using StackExchange.Redis;
 
 namespace Skylight.Server.Game.Users.Authentication;
 
-internal sealed class UserAuthentication(RedisConnector redis, IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager, IBadgeManager badgeManager, IFurnitureManager furnitureManager, IFurnitureInventoryItemStrategy furnitureInventoryItemFactory)
+internal sealed class UserAuthentication(RedisConnector redis, IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager, IRoomManager roomManager, IBadgeManager badgeManager, IFurnitureManager furnitureManager, IFurnitureInventoryItemStrategy furnitureInventoryItemFactory)
 	: IUserAuthentication
 {
 	private static readonly RedisKey redisSsoTicketKeyPrefix = new("sso-ticket:");
@@ -23,6 +24,7 @@ internal sealed class UserAuthentication(RedisConnector redis, IDbContextFactory
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
 	private readonly IUserManager userManager = userManager;
+	private readonly IRoomManager roomManager = roomManager;
 
 	private readonly LoadContext loadContext = new(badgeManager, furnitureManager, furnitureInventoryItemFactory);
 
@@ -77,7 +79,7 @@ internal sealed class UserAuthentication(RedisConnector redis, IDbContextFactory
 		await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
 		UserSettingsEntity? userSettings = await dbContext.UserSettings.FirstOrDefaultAsync(s => s.UserId == profile.Id, cancellationToken).ConfigureAwait(false);
-		User user = new(client, profile, new UserSettings(userSettings));
+		User user = new(this.roomManager, client, profile, new UserSettings(userSettings));
 
 		await user.LoadAsync(dbContext, this.loadContext, cancellationToken).ConfigureAwait(false);
 
