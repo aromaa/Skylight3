@@ -7,14 +7,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CommunityToolkit.HighPerformance" Version="8.2.2" />
-		<PackageReference Include="FlexLabs.EntityFrameworkCore.Upsert" Version="8.0.0" />
+		<PackageReference Include="CommunityToolkit.HighPerformance" Version="8.3.2" />
+		<PackageReference Include="FlexLabs.EntityFrameworkCore.Upsert" Version="8.1.0" />
 		<PackageReference Condition="'$(Configuration)' != 'Debug'" Include="FunctionalInterfaces" Version="1.0.0-alpha.19" />
-		<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
-		<PackageReference Include="StackExchange.Redis" Version="2.7.20" />
-		<PackageReference Include="System.Text.Json" Version="8.0.4" />
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.0" />
+		<PackageReference Include="StackExchange.Redis" Version="2.8.16" />
+		<PackageReference Include="System.Text.Json" Version="9.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>

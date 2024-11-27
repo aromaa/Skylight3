@@ -53,7 +53,7 @@ internal sealed class FloorRoomItemStrategy : IFloorRoomItemStrategy
 
 	private ObjectFactory Get(Type type)
 	{
-		foreach (Type targetType in type.GetInterfaces().Reverse())
+		foreach (Type targetType in Enumerable.Reverse(type.GetInterfaces()))
 		{
 			if (this.builders.TryGetValue(targetType, out ObjectFactory? objectFactory))
 			{
