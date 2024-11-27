@@ -105,7 +105,7 @@ internal sealed partial class NavigatorManager : VersionedLoadableServiceBase<IN
 		return this.roomData.GetAsync(id);
 	}
 
-	public ValueTask<ICacheValue<IPrivateRoomInfo>?> GetPrivateRoomInfoUnsafeAsync(int roomId, CancellationToken cancellationToken = default)
+	public ValueTask<ICacheReference<IPrivateRoomInfo>?> GetPrivateRoomInfoUnsafeAsync(int roomId, CancellationToken cancellationToken = default)
 	{
 		return this.roomData.GetValueAsync(roomId)!;
 	}

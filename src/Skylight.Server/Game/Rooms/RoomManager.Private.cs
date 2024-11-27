@@ -18,7 +18,7 @@ internal partial class RoomManager
 		private readonly RoomManager roomManager = roomManager;
 
 		private object? value = new RoomLoadHandler();
-		private ICacheValue<IPrivateRoomInfo>? roomInfo;
+		private ICacheReference<IPrivateRoomInfo>? roomInfo;
 
 		internal override IPrivateRoom? Room
 		{
@@ -44,7 +44,7 @@ internal partial class RoomManager
 			}
 		}
 
-		internal Task LoadAsync(IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, ICacheValue<IPrivateRoomInfo> roomInfoValue)
+		internal Task LoadAsync(IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, ICacheReference<IPrivateRoomInfo> roomInfoValue)
 		{
 			if (this.value is RoomLoadHandler loadHandler)
 			{
@@ -94,7 +94,7 @@ internal partial class RoomManager
 
 			internal Task<IPrivateRoom> Task => this.taskCompletionSource.Task;
 
-			internal Task LoadAsync(LoadedPrivateRoom instance, IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, ICacheValue<IPrivateRoomInfo> roomInfoValue, CancellationToken cancellationToken = default)
+			internal Task LoadAsync(LoadedPrivateRoom instance, IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, ICacheReference<IPrivateRoomInfo> roomInfoValue, CancellationToken cancellationToken = default)
 			{
 				if (this.initialized || Interlocked.CompareExchange(ref this.initialized, true, false))
 				{
@@ -106,7 +106,7 @@ internal partial class RoomManager
 				return this.InternalLoadAsync(instance, serviceProvider, dbContextFactory, roomInfoValue, cancellationToken);
 			}
 
-			private async Task InternalLoadAsync(LoadedPrivateRoom instance, IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, ICacheValue<IPrivateRoomInfo> roomInfoValue, CancellationToken cancellationToken = default)
+			private async Task InternalLoadAsync(LoadedPrivateRoom instance, IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, ICacheReference<IPrivateRoomInfo> roomInfoValue, CancellationToken cancellationToken = default)
 			{
 				try
 				{

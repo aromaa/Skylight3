@@ -19,7 +19,7 @@ public interface IRoomSession
 
 	public bool TryChangeState(SessionState value, SessionState current);
 
-	public void LoadRoom(ICacheValue<IRoom> roomValue);
+	public void LoadRoom(ICacheReference<IRoom> roomValue);
 	public void EnterRoom(IUserRoomUnit unit);
 
 	public bool Close();

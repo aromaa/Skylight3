@@ -73,7 +73,7 @@ internal sealed partial class RoomManager : IRoomManager
 		}
 	}
 
-	public async ValueTask<ICacheValue<IPrivateRoom>?> GetPrivateRoomAsync(int id, CancellationToken cancellationToken)
+	public async ValueTask<ICacheReference<IPrivateRoom>?> GetPrivateRoomAsync(int id, CancellationToken cancellationToken)
 	{
 		if (this.loadedPrivateRooms.TryGetValue(id, out LoadedPrivateRoom? loadedRoom))
 		{
@@ -97,7 +97,7 @@ internal sealed partial class RoomManager : IRoomManager
 			this.loadedPrivateRooms.TryRemove(KeyValuePair.Create(id, loadedRoom));
 		}
 
-		ICacheValue<IPrivateRoomInfo>? roomInfoValue = await this.navigatorManager.GetPrivateRoomInfoUnsafeAsync(id, cancellationToken).ConfigureAwait(false);
+		ICacheReference<IPrivateRoomInfo>? roomInfoValue = await this.navigatorManager.GetPrivateRoomInfoUnsafeAsync(id, cancellationToken).ConfigureAwait(false);
 		if (roomInfoValue is null)
 		{
 			return null;
@@ -129,7 +129,7 @@ internal sealed partial class RoomManager : IRoomManager
 		}
 	}
 
-	public async ValueTask<ICacheValue<IPublicRoomInstance>?> GetPublicRoomAsync(int instanceId, CancellationToken cancellationToken = default)
+	public async ValueTask<ICacheReference<IPublicRoomInstance>?> GetPublicRoomAsync(int instanceId, CancellationToken cancellationToken = default)
 	{
 		if (this.loadedPublicInstances.TryGetValue(instanceId, out LoadedPublicInstance? loadedInstance))
 		{
@@ -160,7 +160,7 @@ internal sealed partial class RoomManager : IRoomManager
 		}
 	}
 
-	public async ValueTask<ICacheValue<IPublicRoom>?> GetPublicRoomAsync(int instanceId, int worldId, CancellationToken cancellationToken = default)
+	public async ValueTask<ICacheReference<IPublicRoom>?> GetPublicRoomAsync(int instanceId, int worldId, CancellationToken cancellationToken = default)
 	{
 		if (this.loadedPublicInstances.TryGetValue(instanceId, out LoadedPublicInstance? loadedInstance))
 		{
@@ -280,7 +280,7 @@ internal sealed partial class RoomManager : IRoomManager
 		}
 	}
 
-	private sealed class RoomTicket<TRoom, TInstance>(TInstance loadedRoom) : ICacheValue<TRoom>
+	private sealed class RoomTicket<TRoom, TInstance>(TInstance loadedRoom) : ICacheReference<TRoom>
 		where TInstance : TicketTracked<TRoom>
 	{
 		private TInstance? loadedRoom = loadedRoom;
@@ -300,6 +300,14 @@ internal sealed partial class RoomManager : IRoomManager
 
 				return this.loadedRoom.Room!;
 			}
+		}
+
+		public ICacheReference<TRoom> Retain()
+		{
+			ObjectDisposedException.ThrowIf(this.loadedRoom is null, this);
+			ObjectDisposedException.ThrowIf(!this.loadedRoom.TryAcquireTicket(), this);
+
+			return new RoomTicket<TRoom, TInstance>(this.loadedRoom);
 		}
 
 		public void Dispose()

@@ -10,10 +10,10 @@ public interface IRoomManager
 	public IEnumerable<IRoom> LoadedRooms { get; }
 	public IEnumerable<IPrivateRoom> LoadedPrivateRooms { get; }
 
-	public ValueTask<ICacheValue<IPrivateRoom>?> GetPrivateRoomAsync(int roomId, CancellationToken cancellationToken = default);
+	public ValueTask<ICacheReference<IPrivateRoom>?> GetPrivateRoomAsync(int roomId, CancellationToken cancellationToken = default);
 
-	public ValueTask<ICacheValue<IPublicRoomInstance>?> GetPublicRoomAsync(int instanceId, CancellationToken cancellationToken = default);
-	public ValueTask<ICacheValue<IPublicRoom>?> GetPublicRoomAsync(int instanceId, int worldId, CancellationToken cancellationToken = default);
+	public ValueTask<ICacheReference<IPublicRoomInstance>?> GetPublicRoomAsync(int instanceId, CancellationToken cancellationToken = default);
+	public ValueTask<ICacheReference<IPublicRoom>?> GetPublicRoomAsync(int instanceId, int worldId, CancellationToken cancellationToken = default);
 
 	public bool TryGetPrivateRoom(int roomId, [NotNullWhen(true)] out IPrivateRoom? room);
 }

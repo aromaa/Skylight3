@@ -3,7 +3,7 @@ using Skylight.API.Collections.Cache;
 
 namespace Skylight.Server.Collections.Cache;
 
-internal sealed class AsyncCacheEntryReference<T> : ICacheValue<T>
+internal sealed class AsyncCacheEntryReference<T> : ICacheReference<T>
 	where T : class?
 {
 	private AsyncCacheEntry<T>? entry;
@@ -31,6 +31,13 @@ internal sealed class AsyncCacheEntryReference<T> : ICacheValue<T>
 	}
 
 	public T Value => this.Entry.Value;
+
+	public ICacheReference<T> Retain()
+	{
+		ObjectDisposedException.ThrowIf(this.entry is null, this.entry);
+
+		return this.entry.GetRef();
+	}
 
 	public void Dispose()
 	{

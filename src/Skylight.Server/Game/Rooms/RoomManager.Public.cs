@@ -25,7 +25,7 @@ internal partial class RoomManager
 
 		internal ICollection<LoadedPublicRoom> LoadedWorlds => this.worlds.Values;
 
-		internal async Task<ICacheValue<IPublicRoom>> LoadAsync(IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, PublicRoomWorldEntity world)
+		internal async Task<ICacheReference<IPublicRoom>> LoadAsync(IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, PublicRoomWorldEntity world)
 		{
 			while (true)
 			{

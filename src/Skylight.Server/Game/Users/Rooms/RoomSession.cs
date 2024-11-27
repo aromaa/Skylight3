@@ -11,7 +11,7 @@ namespace Skylight.Server.Game.Users.Rooms;
 internal sealed partial class RoomSession : IRoomSession
 {
 	private IRoomSession.SessionState state;
-	private ICacheValue<IRoom>? room;
+	private ICacheReference<IRoom>? room;
 
 	public IUser User { get; }
 
@@ -45,7 +45,7 @@ internal sealed partial class RoomSession : IRoomSession
 		return Interlocked.CompareExchange(ref this.state, value, current) == current;
 	}
 
-	public void LoadRoom(ICacheValue<IRoom> roomValue)
+	public void LoadRoom(ICacheReference<IRoom> roomValue)
 	{
 		if (this.Room is not null)
 		{
@@ -57,7 +57,7 @@ internal sealed partial class RoomSession : IRoomSession
 			return;
 		}
 
-		this.room = roomValue;
+		this.room = roomValue.Retain();
 
 		IRoom room = roomValue.Value;
 

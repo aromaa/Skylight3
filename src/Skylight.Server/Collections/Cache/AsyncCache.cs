@@ -32,7 +32,7 @@ internal sealed class AsyncCache<TKey, TValue>
 		return new ValueTask<TValue?>(Unsafe.As<PendingAsyncTask>(value).LoadAsync(entry, key, this.loader));
 	}
 
-	internal ValueTask<ICacheValue<TValue>?> GetValueAsync(TKey key)
+	internal ValueTask<ICacheReference<TValue>?> GetValueAsync(TKey key)
 	{
 		AsyncCacheEntry<object?> entry = this.cache.GetOrAdd(key, static _ => new AsyncCacheEntry<object?>(new PendingAsyncTask()));
 
@@ -41,18 +41,18 @@ internal sealed class AsyncCache<TKey, TValue>
 		{
 			if (value.GetType() != typeof(PendingAsyncTask))
 			{
-				return ValueTask.FromResult((ICacheValue<TValue>)entry.GetRef<TValue>())!;
+				return ValueTask.FromResult((ICacheReference<TValue>)entry.GetRef<TValue>())!;
 			}
 		}
 		else if (value is null)
 		{
-			return ValueTask.FromResult<ICacheValue<TValue>?>(null);
+			return ValueTask.FromResult<ICacheReference<TValue>?>(null);
 		}
 
 		//TODO: Optimize
-		return new ValueTask<ICacheValue<TValue>?>(Unsafe.As<PendingAsyncTask>(value).LoadAsync(entry, key, this.loader).ContinueWith(Unwrap, entry));
+		return new ValueTask<ICacheReference<TValue>?>(Unsafe.As<PendingAsyncTask>(value).LoadAsync(entry, key, this.loader).ContinueWith(Unwrap, entry));
 
-		static ICacheValue<TValue>? Unwrap(Task<TValue?> task, object? state)
+		static ICacheReference<TValue>? Unwrap(Task<TValue?> task, object? state)
 		{
 			return task.Result is null
 				? null

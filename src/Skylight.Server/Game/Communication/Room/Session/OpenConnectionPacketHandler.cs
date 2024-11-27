@@ -32,7 +32,7 @@ internal sealed class OpenConnectionPacketHandler<T>(IRoomManager roomManager) :
 		{
 			client.SendAsync(new OpenConnectionOutgoingPacket(session.InstanceId));
 
-			ICacheValue<IRoom>? room = session.InstanceType switch
+			using ICacheReference<IRoom>? room = session.InstanceType switch
 			{
 				0 => await this.roomManager.GetPrivateRoomAsync(session.InstanceId).ConfigureAwait(false),
 				1 => await this.roomManager.GetPublicRoomAsync(session.InstanceId, session.WorldId).ConfigureAwait(false),

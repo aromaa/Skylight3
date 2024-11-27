@@ -32,7 +32,7 @@ internal sealed partial class OpenFlatConnectionPacketHandler<T>(IRoomManager ro
 		{
 			client.SendAsync(new OpenConnectionOutgoingPacket(session.InstanceId));
 
-			ICacheValue<IRoom>? room = await this.roomManager.GetPrivateRoomAsync(session.InstanceId).ConfigureAwait(false);
+			using ICacheReference<IRoom>? room = await this.roomManager.GetPrivateRoomAsync(session.InstanceId).ConfigureAwait(false);
 			if (room is null)
 			{
 				if (session.Close())
