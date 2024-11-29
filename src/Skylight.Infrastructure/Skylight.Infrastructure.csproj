@@ -2,10 +2,13 @@
 
 	<PropertyGroup>
 		<TargetFramework>net9.0</TargetFramework>
-		<EFOptimizeContext>true</EFOptimizeContext>
 		<EFScaffoldModelStage>build</EFScaffoldModelStage>
 		<EFPrecompileQueriesStage>none</EFPrecompileQueriesStage>
 		<DbContextName>Skylight.Infrastructure.SkylightContext</DbContextName>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(BuildingInsideVisualStudio)' == 'true'">
+		<EFOptimizeContext>true</EFOptimizeContext>
 	</PropertyGroup>
 
 	<ItemGroup>
