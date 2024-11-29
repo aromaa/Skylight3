@@ -42,7 +42,6 @@ using Skylight.Server.Net.Listener;
 using Skylight.Server.Net.Listener.Connection;
 using Skylight.Server.Net.Listener.Ip;
 using Skylight.Server.Net.Listener.XmlSocket;
-using Skylight.Server.Redis;
 
 namespace Skylight.Server.Extensions;
 
@@ -51,8 +50,6 @@ public static class HostBuilderExtensions
 	//TODO: Actual application builder, now for simplicity
 	public static IServiceCollection ConfigureSkylightServer(this IServiceCollection builder, IConfiguration configuration)
 	{
-		IConfigurationSection redis = configuration.GetSection("Redis");
-
 		builder.AddHostedService<ServerHostService>();
 
 		builder.Configure<FurniMaticSettings>(configuration.GetSection("FurniMatic"));
@@ -60,8 +57,6 @@ public static class HostBuilderExtensions
 		builder.Configure<RoomSettings>(configuration.GetSection("Room"));
 
 		builder.AddSingleton(_ => TimeProvider.System);
-
-		builder.AddSingleton<RedisConnector>(_ => new RedisConnector(redis["ConnectionString"] ?? "localhost"));
 
 		builder.AddSingleton<IServer, SkylightServer>();
 

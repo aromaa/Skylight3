@@ -2,7 +2,7 @@
 
 namespace Skylight.Server.Redis;
 
-internal sealed class RedisConnector(string connectionString)
+public sealed class RedisConnector(string connectionString)
 {
 	private readonly string connectionString = connectionString;
 

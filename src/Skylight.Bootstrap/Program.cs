@@ -13,6 +13,7 @@ using Skylight.Infrastructure;
 using Skylight.Plugin.WebSockets;
 using Skylight.Server.Extensions;
 using Skylight.Server.Host;
+using Skylight.Server.Redis;
 
 long now = Stopwatch.GetTimestamp();
 
@@ -23,12 +24,17 @@ builder.ConfigureContainer(new LayeredServiceProviderFactory(), layeredBuilder =
 {
 	layeredBuilder.Configure(ServiceLayer.Bootstrap, bootstrapLayer =>
 	{
+		IConfigurationSection redis = builder.Configuration.GetSection("Redis");
 		IConfigurationSection database = builder.Configuration.GetSection("Database");
+
+		bootstrapLayer.AddSingleton<RedisConnector>(_ => new RedisConnector(redis["ConnectionString"] ?? "localhost"));
 
 		bootstrapLayer.AddPooledDbContextFactory<SkylightContext>(options => BaseSkylightContext.ConfigureNpgsqlDbContextOptions(options, database["ConnectionString"])
 			.EnableThreadSafetyChecks(false));
 	}, provider =>
 	{
+		provider.GetRequiredService<RedisConnector>().GetDatabaseAsync().Preserve();
+
 		builder.Configuration.Sources.Insert(0, new ServerConfigurationSource(provider.GetRequiredService<IDbContextFactory<SkylightContext>>()));
 
 		AddDebugProtocols(builder);
