@@ -2,7 +2,9 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Skylight.API.Collections.Cache;
+using Skylight.API.DependencyInjection;
 using Skylight.API.Game.Navigator;
 using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Private;
@@ -12,7 +14,7 @@ using Skylight.Infrastructure;
 
 namespace Skylight.Server.Game.Rooms;
 
-internal sealed partial class RoomManager : IRoomManager
+internal sealed partial class RoomManager : IRoomManager, ILoadableService
 {
 	private readonly IServiceProvider serviceProvider;
 
@@ -26,13 +28,19 @@ internal sealed partial class RoomManager : IRoomManager
 	private readonly OrderedDictionary<long, LoadedPrivateRoom> unloadQueue = [];
 	private readonly Lock unloadQueueLock = new();
 
-	public RoomManager(IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, INavigatorManager navigatorManager)
+	private readonly RoomSettings roomSettings;
+
+	private readonly ConcurrentDictionary<int, ICacheReference<IPrivateRoom>> forceLoadedRooms = [];
+
+	public RoomManager(IServiceProvider serviceProvider, IDbContextFactory<SkylightContext> dbContextFactory, INavigatorManager navigatorManager, IOptions<RoomSettings> roomSettings)
 	{
 		this.serviceProvider = serviceProvider;
 
 		this.dbContextFactory = dbContextFactory;
 
 		this.navigatorManager = navigatorManager;
+
+		this.roomSettings = roomSettings.Value;
 
 		_ = this.ProcessUnloadQueueAsync();
 	}
@@ -71,6 +79,34 @@ internal sealed partial class RoomManager : IRoomManager
 				}
 			}
 		}
+	}
+
+	public async Task LoadAsync(ILoadableServiceContext context, CancellationToken cancellationToken = default)
+	{
+		await context.RequestDependencyAsync<INavigatorSnapshot>(cancellationToken).ConfigureAwait(false);
+
+		context.Commit(() =>
+		{
+			foreach (int roomId in this.roomSettings.ForceLoadPrivateRooms)
+			{
+				this.GetPrivateRoomAsync(roomId, cancellationToken).AsTask().ContinueWith(t =>
+				{
+					if (!t.IsCompletedSuccessfully || t.Result is null)
+					{
+						return t.Result;
+					}
+
+					this.forceLoadedRooms.AddOrUpdate(roomId, static (_, newValue) => newValue, static (_, oldValue, newValue) =>
+					{
+						oldValue.Dispose();
+
+						return newValue;
+					}, t.Result);
+
+					return t.Result;
+				}, cancellationToken);
+			}
+		});
 	}
 
 	public async ValueTask<ICacheReference<IPrivateRoom>?> GetPrivateRoomAsync(int id, CancellationToken cancellationToken)

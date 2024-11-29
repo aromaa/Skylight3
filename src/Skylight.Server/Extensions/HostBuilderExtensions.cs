@@ -57,6 +57,7 @@ public static class HostBuilderExtensions
 
 		builder.Configure<FurniMaticSettings>(configuration.GetSection("FurniMatic"));
 		builder.Configure<NetworkSettings>(configuration.GetSection("Network"));
+		builder.Configure<RoomSettings>(configuration.GetSection("Room"));
 
 		builder.AddSingleton(_ => TimeProvider.System);
 
@@ -93,7 +94,7 @@ public static class HostBuilderExtensions
 
 		builder.AddSingleton<IFurnitureInventoryItemStrategy, FurnitureInventoryItemStrategy>();
 
-		builder.AddSingleton<IRoomManager, RoomManager>();
+		builder.AddLoadableSingleton<IRoomManager, RoomManager>();
 		builder.AddSingleton<IRoomItemInteractionManager, RoomItemInteractionManager>();
 		builder.AddLoadableSingleton<INavigatorManager, NavigatorManager>();
 
@@ -108,8 +109,8 @@ public static class HostBuilderExtensions
 	}
 
 	public static IServiceCollection AddLoadableSingleton<TService, TImplementation>(this IServiceCollection services)
-		where TService : class, ILoadableService
-		where TImplementation : class, TService
+		where TService : class
+		where TImplementation : class, TService, ILoadableService
 
 	{
 		services.AddSingleton<TService, TImplementation>();
