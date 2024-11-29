@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Skylight.API.DependencyInjection;
 using Skylight.API.Game.Achievements;
 using Skylight.API.Game.Badges;
@@ -20,7 +19,6 @@ using Skylight.API.Net.Connection;
 using Skylight.API.Net.EndPoint;
 using Skylight.API.Net.Listener;
 using Skylight.API.Server;
-using Skylight.Infrastructure;
 using Skylight.Server.DependencyInjection;
 using Skylight.Server.Game.Achievements;
 using Skylight.Server.Game.Badges;
@@ -51,67 +49,60 @@ namespace Skylight.Server.Extensions;
 public static class HostBuilderExtensions
 {
 	//TODO: Actual application builder, now for simplicity
-	public static IHostApplicationBuilder ConfigureSkylightServer(this IHostApplicationBuilder builder)
+	public static IServiceCollection ConfigureSkylightServer(this IServiceCollection builder, IConfiguration configuration)
 	{
-		IConfigurationSection database = builder.Configuration.GetSection("Database");
-		IConfigurationSection redis = builder.Configuration.GetSection("Redis");
+		IConfigurationSection redis = configuration.GetSection("Redis");
 
-		builder.Configuration.Add(new ServerConfigurationSource(database["ConnectionString"]));
+		builder.AddHostedService<ServerHostService>();
 
-		builder.Services.AddHostedService<ServerHostService>();
+		builder.Configure<FurniMaticSettings>(configuration.GetSection("FurniMatic"));
+		builder.Configure<NetworkSettings>(configuration.GetSection("Network"));
 
-		builder.Services.Configure<FurniMaticSettings>(builder.Configuration.GetSection("FurniMatic"));
-		builder.Services.Configure<NetworkSettings>(builder.Configuration.GetSection("Network"));
+		builder.AddSingleton(_ => TimeProvider.System);
 
-		builder.Services.AddSingleton(_ => TimeProvider.System);
+		builder.AddSingleton<RedisConnector>(_ => new RedisConnector(redis["ConnectionString"] ?? "localhost"));
 
-		builder.Services.AddSingleton<RedisConnector>(_ => new RedisConnector(redis["ConnectionString"] ?? "localhost"));
+		builder.AddSingleton<IServer, SkylightServer>();
 
-		builder.Services.AddPooledDbContextFactory<SkylightContext>(options => BaseSkylightContext.ConfigureNpgsqlDbContextOptions(options, database["ConnectionString"])
-			////.UseModel(SkylightContextModel.Instance)
-			.EnableThreadSafetyChecks(false));
+		builder.AddSingleton<INetworkEndPointStrategy, NetworkEndPointStrategy>();
+		builder.AddSingleton<INetworkEndPointParser, IpNetworkEndPointParser>();
+		builder.AddSingleton<INetworkEndPointParser, UriNetworkEndPointParser>();
 
-		builder.Services.AddSingleton<IServer, SkylightServer>();
+		builder.AddSingleton<INetworkListenerStrategy, NetworkListenerStrategy>();
+		builder.AddSingleton<INetworkListenerFactory, XmlSocketNetworkListenerFactory>();
+		builder.AddSingleton<INetworkListenerFactory, TcpNetworkListenerFactory>();
 
-		builder.Services.AddSingleton<INetworkEndPointStrategy, NetworkEndPointStrategy>();
-		builder.Services.AddSingleton<INetworkEndPointParser, IpNetworkEndPointParser>();
-		builder.Services.AddSingleton<INetworkEndPointParser, UriNetworkEndPointParser>();
+		builder.AddSingleton<INetworkConnectionHandler, NetworkConnectionHandler>();
 
-		builder.Services.AddSingleton<INetworkListenerStrategy, NetworkListenerStrategy>();
-		builder.Services.AddSingleton<INetworkListenerFactory, XmlSocketNetworkListenerFactory>();
-		builder.Services.AddSingleton<INetworkListenerFactory, TcpNetworkListenerFactory>();
+		builder.AddSingleton<ILoadableServiceManager, LoadableServiceManager>();
 
-		builder.Services.AddSingleton<INetworkConnectionHandler, NetworkConnectionHandler>();
+		builder.AddSingleton<IUserManager, UserManager>();
+		builder.AddSingleton<IUserAuthentication, UserAuthentication>();
 
-		builder.Services.AddSingleton<ILoadableServiceManager, LoadableServiceManager>();
+		builder.AddSingleton<IClientManager, ClientManager>();
+		builder.AddSingleton<PacketManagerCache>();
+		builder.AddSingleton<NetworkManager>();
 
-		builder.Services.AddSingleton<IUserManager, UserManager>();
-		builder.Services.AddSingleton<IUserAuthentication, UserAuthentication>();
+		builder.AddLoadableSingleton<IBadgeManager, BadgeManager>();
+		builder.AddLoadableSingleton<IAchievementManager, AchievementManager>();
 
-		builder.Services.AddSingleton<IClientManager, ClientManager>();
-		builder.Services.AddSingleton<PacketManagerCache>();
-		builder.Services.AddSingleton<NetworkManager>();
+		builder.AddLoadableSingleton<IFurnitureManager, FurnitureManager>();
+		builder.AddLoadableSingleton<ICatalogManager, CatalogManager>();
+		builder.AddSingleton<ICatalogTransactionFactory, CatalogTransactionFactory>();
+		builder.AddLoadableSingleton<IFurniMaticManager, FurniMaticManager>();
 
-		builder.Services.AddLoadableSingleton<IBadgeManager, BadgeManager>();
-		builder.Services.AddLoadableSingleton<IAchievementManager, AchievementManager>();
+		builder.AddSingleton<IFurnitureInventoryItemStrategy, FurnitureInventoryItemStrategy>();
 
-		builder.Services.AddLoadableSingleton<IFurnitureManager, FurnitureManager>();
-		builder.Services.AddLoadableSingleton<ICatalogManager, CatalogManager>();
-		builder.Services.AddSingleton<ICatalogTransactionFactory, CatalogTransactionFactory>();
-		builder.Services.AddLoadableSingleton<IFurniMaticManager, FurniMaticManager>();
+		builder.AddSingleton<IRoomManager, RoomManager>();
+		builder.AddSingleton<IRoomItemInteractionManager, RoomItemInteractionManager>();
+		builder.AddLoadableSingleton<INavigatorManager, NavigatorManager>();
 
-		builder.Services.AddSingleton<IFurnitureInventoryItemStrategy, FurnitureInventoryItemStrategy>();
+		builder.AddSingleton<IFloorRoomItemStrategy, FloorRoomItemStrategy>();
+		builder.AddSingleton<IWallRoomItemStrategy, WallRoomItemStrategy>();
+		builder.AddSingleton(typeof(IFloorRoomItemStrategy<,>), typeof(FloorRoomItemStrategy<,>));
+		builder.AddSingleton(typeof(IWallRoomItemStrategy<,>), typeof(WallRoomItemStrategy<,>));
 
-		builder.Services.AddSingleton<IRoomManager, RoomManager>();
-		builder.Services.AddSingleton<IRoomItemInteractionManager, RoomItemInteractionManager>();
-		builder.Services.AddLoadableSingleton<INavigatorManager, NavigatorManager>();
-
-		builder.Services.AddSingleton<IFloorRoomItemStrategy, FloorRoomItemStrategy>();
-		builder.Services.AddSingleton<IWallRoomItemStrategy, WallRoomItemStrategy>();
-		builder.Services.AddSingleton(typeof(IFloorRoomItemStrategy<,>), typeof(FloorRoomItemStrategy<,>));
-		builder.Services.AddSingleton(typeof(IWallRoomItemStrategy<,>), typeof(WallRoomItemStrategy<,>));
-
-		builder.Services.AddSingleton(typeof(Lazy<>), typeof(LazyService<>));
+		builder.AddSingleton(typeof(Lazy<>), typeof(LazyService<>));
 
 		return builder;
 	}

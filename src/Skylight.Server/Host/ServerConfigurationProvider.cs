@@ -1,38 +1,22 @@
-﻿using Microsoft.Extensions.Configuration;
-using Npgsql;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Skylight.Infrastructure;
 
 namespace Skylight.Server.Host;
 
 internal sealed class ServerConfigurationProvider : ConfigurationProvider
 {
-	private readonly string? connectionString;
+	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
 
-	internal ServerConfigurationProvider(string? connectionString)
+	internal ServerConfigurationProvider(IDbContextFactory<SkylightContext> dbContextFactory)
 	{
-		this.connectionString = connectionString;
+		this.dbContextFactory = dbContextFactory;
 	}
 
 	public override void Load()
 	{
-		NpgsqlSlimDataSourceBuilder dataSourceBuilder = new(this.connectionString)
-		{
-			ConnectionStringBuilder =
-			{
-				Pooling = false,
-				Enlist = false
-			}
-		};
+		using SkylightContext dbContext = this.dbContextFactory.CreateDbContext();
 
-		using NpgsqlDataSource dataSource = dataSourceBuilder.Build();
-		using NpgsqlCommand command = dataSource.CreateCommand("SELECT id, value FROM settings");
-		using NpgsqlDataReader reader = command.ExecuteReader();
-
-		Dictionary<string, string?> data = new(StringComparer.OrdinalIgnoreCase);
-		while (reader.Read())
-		{
-			data.Add(reader.GetString(0), reader.GetString(1));
-		}
-
-		this.Data = data;
+		this.Data = dbContext.Settings.ToDictionary(s => s.Id, s => s.Value, StringComparer.OrdinalIgnoreCase);
 	}
 }

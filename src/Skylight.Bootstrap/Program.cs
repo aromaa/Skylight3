@@ -1,23 +1,44 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Skylight.API.Net.Listener;
 using Skylight.Bootstrap.Attributes;
+using Skylight.Bootstrap.DependencyInjection;
+using Skylight.Infrastructure;
 using Skylight.Plugin.WebSockets;
 using Skylight.Server.Extensions;
+using Skylight.Server.Host;
 
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
-builder.ConfigureSkylightServer();
+builder.ConfigureContainer(new LayeredServiceProviderFactory(), layeredBuilder =>
+{
+	layeredBuilder.Configure(ServiceLayer.Bootstrap, bootstrapLayer =>
+	{
+		IConfigurationSection database = builder.Configuration.GetSection("Database");
 
-//TODO: Add proper plugin system
-builder.Services.AddSingleton<INetworkListenerFactory, WebSocketNetworkListenerFactory>();
+		bootstrapLayer.AddPooledDbContextFactory<SkylightContext>(options => BaseSkylightContext.ConfigureNpgsqlDbContextOptions(options, database["ConnectionString"])
+			.EnableThreadSafetyChecks(false));
+	}, provider =>
+	{
+		builder.Configuration.Sources.Insert(0, new ServerConfigurationSource(provider.GetRequiredService<IDbContextFactory<SkylightContext>>()));
 
-AddDebugProtocols(builder);
+		AddDebugProtocols(builder);
+	});
+
+	layeredBuilder.Configure(ServiceLayer.Platform, platformLayer =>
+	{
+		platformLayer.ConfigureSkylightServer(builder.Configuration);
+
+		//TODO: Add proper plugin system
+		platformLayer.AddSingleton<INetworkListenerFactory, WebSocketNetworkListenerFactory>();
+	});
+});
 
 IHost host = builder.Build();
 
