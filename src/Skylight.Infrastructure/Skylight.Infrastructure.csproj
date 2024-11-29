@@ -3,6 +3,8 @@
 	<PropertyGroup>
 		<TargetFramework>net9.0</TargetFramework>
 		<EFOptimizeContext>true</EFOptimizeContext>
+		<EFScaffoldModelStage>build</EFScaffoldModelStage>
+		<EFPrecompileQueriesStage>none</EFPrecompileQueriesStage>
 		<DbContextName>Skylight.Infrastructure.SkylightContext</DbContextName>
 	</PropertyGroup>
 
@@ -14,7 +16,7 @@
 		  <PrivateAssets>all</PrivateAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.0" />
-		<!-- <PackageReference Include="Microsoft.EntityFrameworkCore.Tasks" Version="9.0.0-preview.3.24172.4" /> -->
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tasks" Version="9.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="9.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.0" />
