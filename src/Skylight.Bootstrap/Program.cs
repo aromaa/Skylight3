@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Skylight.API.Net.Listener;
 using Skylight.Bootstrap.Attributes;
 using Skylight.Bootstrap.DependencyInjection;
@@ -12,6 +13,8 @@ using Skylight.Infrastructure;
 using Skylight.Plugin.WebSockets;
 using Skylight.Server.Extensions;
 using Skylight.Server.Host;
+
+long now = Stopwatch.GetTimestamp();
 
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
@@ -42,6 +45,8 @@ builder.ConfigureContainer(new LayeredServiceProviderFactory(), layeredBuilder =
 
 IHost host = builder.Build();
 
+ILogger logger = (ILogger)host.Services.GetRequiredService(typeof(ILogger<>).MakeGenericType(typeof(Program)));
+
 try
 {
 	try
@@ -52,6 +57,8 @@ try
 	{
 		return;
 	}
+
+	logger.LogInformation("Server started in {elapsedTime:##.###}s!", Stopwatch.GetElapsedTime(now).TotalSeconds);
 
 	await host.WaitForShutdownAsync().ConfigureAwait(false);
 }
