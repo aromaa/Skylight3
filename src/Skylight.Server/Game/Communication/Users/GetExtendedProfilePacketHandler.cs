@@ -7,7 +7,7 @@ using Skylight.Protocol.Packets.Outgoing.Users;
 
 namespace Skylight.Server.Game.Communication.Users;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed partial class GetExtendedProfilePacketHandler<T>(IUserManager userManager) : UserPacketHandler<T>
 	where T : IGetExtendedProfileIncomingPacket
 {

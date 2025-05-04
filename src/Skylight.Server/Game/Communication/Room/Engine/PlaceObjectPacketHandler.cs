@@ -18,7 +18,7 @@ using Skylight.Server.Extensions;
 
 namespace Skylight.Server.Game.Communication.Room.Engine;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed partial class PlaceObjectPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory, IFloorRoomItemStrategy floorRoomItemStrategy, IWallRoomItemStrategy wallRoomRoomItemStrategy)
 	: UserPacketHandler<T>
 	where T : IPlaceObjectIncomingPacket

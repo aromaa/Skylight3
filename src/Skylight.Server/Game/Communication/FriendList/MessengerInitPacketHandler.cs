@@ -7,7 +7,7 @@ using Skylight.Protocol.Packets.Outgoing.FriendList;
 
 namespace Skylight.Server.Game.Communication.FriendList;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class MessengerInitPacketHandler<T> : UserPacketHandler<T>
 	where T : IMessengerInitIncomingPacket
 {

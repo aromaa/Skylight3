@@ -7,7 +7,7 @@ using Skylight.Protocol.Packets.Outgoing.Navigator;
 
 namespace Skylight.Server.Game.Communication.Navigator;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class GetUserEventCatsPacketHandler<T> : UserPacketHandler<T>
 	where T : IGetUserEventCatsIncomingPacket
 {

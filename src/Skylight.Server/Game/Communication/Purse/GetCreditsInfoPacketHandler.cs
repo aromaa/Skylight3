@@ -6,7 +6,7 @@ using Skylight.Protocol.Packets.Outgoing.Purse;
 
 namespace Skylight.Server.Game.Communication.Purse;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class GetCreditsInfoPacketHandler<T> : UserPacketHandler<T>
 	where T : IGetCreditsInfoIncomingPacket
 {

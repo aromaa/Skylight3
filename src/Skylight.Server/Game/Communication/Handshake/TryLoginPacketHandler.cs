@@ -10,7 +10,7 @@ using Skylight.Server.Net;
 
 namespace Skylight.Server.Game.Communication.Handshake;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class TryLoginPacketHandler<T>(IUserAuthentication userAuthentication, IClientManager clientManager, Lazy<ILoadableServiceManager> loadableServiceManager, IOptions<NetworkSettings> networkSettings)
 	: ClientPacketHandler<T>
 	where T : ITryLoginIncomingPacket

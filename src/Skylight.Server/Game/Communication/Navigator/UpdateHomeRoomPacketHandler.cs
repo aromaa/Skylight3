@@ -9,7 +9,7 @@ using Skylight.Protocol.Packets.Outgoing.Navigator;
 
 namespace Skylight.Server.Game.Communication.Navigator;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed partial class UpdateHomeRoomPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory) : UserPacketHandler<T>
 	where T : IUpdateHomeRoomIncomingPacket
 {

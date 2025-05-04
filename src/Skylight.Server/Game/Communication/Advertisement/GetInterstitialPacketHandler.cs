@@ -6,7 +6,7 @@ using Skylight.Protocol.Packets.Outgoing.Advertisement;
 
 namespace Skylight.Server.Game.Communication.Advertisement;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class GetInterstitialPacketHandler<T> : UserPacketHandler<T>
 	where T : IGetInterstitialIncomingPacket
 {

@@ -6,7 +6,7 @@ using Skylight.Protocol.Packets.Manager;
 
 namespace Skylight.Server.Game.Communication.Room.Session;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class OpenConnectionPacketHandler<T> : UserPacketHandler<T>
 	where T : IOpenConnectionIncomingPacket
 {

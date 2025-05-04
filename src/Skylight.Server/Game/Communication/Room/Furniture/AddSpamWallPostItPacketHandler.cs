@@ -20,7 +20,7 @@ using Skylight.Server.Extensions;
 
 namespace Skylight.Server.Game.Communication.Room.Furniture;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed partial class AddSpamWallPostItPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory, IWallRoomItemStrategy<IStickyNoteRoomItem, IStickyNoteFurniture> wallRoomItemStrategy)
 	: UserPacketHandler<T>
 	where T : IAddSpamWallPostItIncomingPacket

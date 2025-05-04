@@ -5,7 +5,7 @@ using Skylight.Protocol.Packets.Manager;
 
 namespace Skylight.Server.Game.Communication.Preferences;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class SetNewNavigatorWindowPreferencesPacketHandler<T> : UserPacketHandler<T>
 	where T : ISetNewNavigatorWindowPreferencesIncomingPacket
 {

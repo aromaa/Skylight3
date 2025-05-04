@@ -7,7 +7,7 @@ using Skylight.Protocol.Packets.Outgoing.Handshake;
 
 namespace Skylight.Server.Game.Communication.Handshake;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class UniqueIDPacketHandler<T> : ClientPacketHandler<T>
 	where T : IUniqueIDIncomingPacket
 {

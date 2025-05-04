@@ -5,7 +5,7 @@ using Skylight.Protocol.Packets.Manager;
 
 namespace Skylight.Server.Game.Communication.Users;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class GetUserGroupBadgesPacketHandler<T> : UserPacketHandler<T>
 	where T : IGetUserGroupBadgesIncomingPacket
 {

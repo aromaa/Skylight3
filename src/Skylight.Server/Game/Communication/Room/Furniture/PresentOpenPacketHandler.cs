@@ -11,7 +11,7 @@ using Skylight.Protocol.Packets.Outgoing.Room.Furniture;
 
 namespace Skylight.Server.Game.Communication.Room.Furniture;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed partial class PresentOpenPacketHandler<T>(IFurniMaticManager furniMaticManager) : UserPacketHandler<T>
 	where T : IPresentOpenIncomingPacket
 {

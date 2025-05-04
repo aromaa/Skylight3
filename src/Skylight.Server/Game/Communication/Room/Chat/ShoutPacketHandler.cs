@@ -6,7 +6,7 @@ using Skylight.Protocol.Packets.Manager;
 
 namespace Skylight.Server.Game.Communication.Room.Chat;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class ShoutPacketHandler<T> : UserPacketHandler<T>
 	where T : IShoutIncomingPacket
 {

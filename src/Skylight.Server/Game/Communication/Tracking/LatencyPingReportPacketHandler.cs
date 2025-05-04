@@ -5,7 +5,7 @@ using Skylight.Protocol.Packets.Manager;
 
 namespace Skylight.Server.Game.Communication.Tracking;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class LatencyPingReportPacketHandler<T> : UserPacketHandler<T>
 	where T : ILatencyPingReportIncomingPacket
 {

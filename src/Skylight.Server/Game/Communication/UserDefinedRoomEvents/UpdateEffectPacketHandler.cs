@@ -11,7 +11,7 @@ using Skylight.Protocol.Packets.Outgoing.UserDefinedRoomEvents;
 
 namespace Skylight.Server.Game.Communication.UserDefinedRoomEvents;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class UpdateEffectPacketHandler<T> : UserPacketHandler<T>
 	where T : IUpdateActionIncomingPacket
 {

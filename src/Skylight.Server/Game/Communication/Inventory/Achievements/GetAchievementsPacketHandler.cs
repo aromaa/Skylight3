@@ -8,7 +8,7 @@ using Skylight.Protocol.Packets.Outgoing.Inventory.Achievements;
 
 namespace Skylight.Server.Game.Communication.Inventory.Achievements;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed partial class GetAchievementsPacketHandler<T>(IAchievementManager achievementManager) : UserPacketHandler<T>
 	where T : IGetAchievementsIncomingPacket
 {

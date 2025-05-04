@@ -19,7 +19,7 @@ using Skylight.Server.Extensions;
 
 namespace Skylight.Server.Game.Communication.Room.Furniture;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed partial class PlacePostItPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory, IWallRoomItemStrategy wallRoomItemStrategy)
 	: UserPacketHandler<T>
 	where T : IPlacePostItIncomingPacket

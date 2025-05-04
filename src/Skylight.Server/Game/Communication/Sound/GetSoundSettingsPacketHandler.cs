@@ -6,7 +6,7 @@ using Skylight.Protocol.Packets.Outgoing.Preferences;
 
 namespace Skylight.Server.Game.Communication.Sound;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class GetSoundSettingsPacketHandler<T> : UserPacketHandler<T>
 	where T : IGetSoundSettingsIncomingPacket
 {

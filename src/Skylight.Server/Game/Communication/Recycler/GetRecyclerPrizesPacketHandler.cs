@@ -12,7 +12,7 @@ using Skylight.Protocol.Packets.Outgoing.Recycler;
 
 namespace Skylight.Server.Game.Communication.Recycler;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class GetRecyclerPrizesPacketHandler<T>(IFurniMaticManager furniMaticManager) : UserPacketHandler<T>
 	where T : IGetRecyclerPrizesIncomingPacket
 {

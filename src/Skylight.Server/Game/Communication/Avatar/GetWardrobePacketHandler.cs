@@ -9,7 +9,7 @@ using Skylight.Protocol.Packets.Outgoing.Avatar;
 
 namespace Skylight.Server.Game.Communication.Avatar;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class GetWardrobePacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory) : UserPacketHandler<T>
 	where T : IGetWardrobeIncomingPacket
 {

@@ -9,7 +9,7 @@ using Skylight.Protocol.Packets.Outgoing.Room.Engine;
 
 namespace Skylight.Server.Game.Communication.Register;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class UpdateFigureDataPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory) : UserPacketHandler<T>
 	where T : IUpdateFigureDataIncomingPacket
 {

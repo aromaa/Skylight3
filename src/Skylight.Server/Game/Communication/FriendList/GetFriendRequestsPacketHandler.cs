@@ -7,7 +7,7 @@ using Skylight.Protocol.Packets.Outgoing.FriendList;
 
 namespace Skylight.Server.Game.Communication.FriendList;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class GetFriendRequestsPacketHandler<T> : UserPacketHandler<T>
 	where T : IGetFriendRequestsIncomingPacket
 {

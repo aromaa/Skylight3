@@ -10,7 +10,7 @@ using Skylight.Server.Net.Handlers;
 
 namespace Skylight.Server.Game.Communication.Handshake;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class InitDiffieHandshakePacketHandler<T> : ClientPacketHandler<T>
 	where T : IInitDiffieHandshakeIncomingPacket
 {

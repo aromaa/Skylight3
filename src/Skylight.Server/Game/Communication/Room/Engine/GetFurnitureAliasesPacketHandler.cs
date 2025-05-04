@@ -6,7 +6,7 @@ using Skylight.Protocol.Packets.Outgoing.Room.Engine;
 
 namespace Skylight.Server.Game.Communication.Room.Engine;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class GetFurnitureAliasesPacketHandler<T> : UserPacketHandler<T>
 	where T : IGetFurnitureAliasesIncomingPacket
 {

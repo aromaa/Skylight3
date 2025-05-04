@@ -7,7 +7,7 @@ using Skylight.Protocol.Packets.Outgoing.Game.Lobby;
 
 namespace Skylight.Server.Game.Communication.Game.Lobby;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class GetGameListPacketHandler<T> : UserPacketHandler<T>
 	where T : IGetGameListIncomingPacket
 {

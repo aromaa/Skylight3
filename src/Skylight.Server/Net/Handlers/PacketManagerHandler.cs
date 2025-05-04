@@ -1,16 +1,16 @@
 ﻿using Net.Buffers;
 using Net.Communication.Incoming.Consumer;
+using Net.Communication.Manager;
 using Net.Communication.Outgoing;
 using Net.Sockets.Pipeline.Handler;
 using Net.Sockets.Pipeline.Handler.Incoming;
 using Net.Sockets.Pipeline.Handler.Outgoing;
-using Skylight.Protocol.Packets.Manager;
 
 namespace Skylight.Server.Net.Handlers;
 
 internal abstract class PacketManagerHandler : IncomingBytesHandler, IOutgoingObjectHandler
 {
-	private protected abstract AbstractGamePacketManager PacketManager { get; }
+	private protected abstract PacketManager<uint> PacketManager { get; }
 
 	private protected void Read(IPipelineHandlerContext context, uint header, ref PacketReader reader)
 	{

@@ -10,7 +10,7 @@ using Skylight.Server.Extensions;
 
 namespace Skylight.Server.Game.Communication.Catalog;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class GetCatalogPagePacketHandler<T>(ICatalogManager catalogManager) : UserPacketHandler<T>
 	where T : IGetCatalogPageIncomingPacket
 {

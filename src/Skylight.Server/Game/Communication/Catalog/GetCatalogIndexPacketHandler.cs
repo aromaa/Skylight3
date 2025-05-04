@@ -9,7 +9,7 @@ using Skylight.Protocol.Packets.Outgoing.Catalog;
 
 namespace Skylight.Server.Game.Communication.Catalog;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed partial class GetCatalogIndexPacketHandler<T>(ICatalogManager catalogManager) : UserPacketHandler<T>
 	where T : IGetCatalogIndexIncomingPacket
 {

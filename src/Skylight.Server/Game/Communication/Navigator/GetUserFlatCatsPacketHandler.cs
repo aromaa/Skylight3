@@ -9,7 +9,7 @@ using Skylight.Protocol.Packets.Outgoing.Navigator;
 
 namespace Skylight.Server.Game.Communication.Navigator;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class GetUserFlatCatsPacketHandler<T>(INavigatorManager navigatorManager) : UserPacketHandler<T>
 	where T : IGetUserFlatCatsIncomingPacket
 {

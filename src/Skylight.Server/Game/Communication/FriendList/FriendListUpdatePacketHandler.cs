@@ -5,7 +5,7 @@ using Skylight.Protocol.Packets.Manager;
 
 namespace Skylight.Server.Game.Communication.FriendList;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class FriendListUpdatePacketHandler<T> : UserPacketHandler<T>
 	where T : IFriendListUpdateIncomingPacket
 {

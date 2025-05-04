@@ -22,7 +22,7 @@ using Skylight.Server.Game.Rooms.Private;
 
 namespace Skylight.Server.Game.Communication.RoomSettings;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class SaveRoomSettingsPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory, INavigatorManager navigatorManager, IRoomManager roomManager) : UserPacketHandler<T>
 	where T : ISaveRoomSettingsIncomingPacket
 {

@@ -10,7 +10,7 @@ using Skylight.Server.Extensions;
 
 namespace Skylight.Server.Game.Communication.RoomSettings;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class GetRoomSettingsPacketHandler<T>(INavigatorManager navigatorManager) : UserPacketHandler<T>
 	where T : IGetRoomSettingsIncomingPacket
 {

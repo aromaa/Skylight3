@@ -12,7 +12,7 @@ using Skylight.Server.Extensions;
 
 namespace Skylight.Server.Game.Communication.Navigator;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class MyRoomsSearchPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory, INavigatorManager navigatorManager) : UserPacketHandler<T>
 	where T : IMyRoomsSearchIncomingPacket
 {

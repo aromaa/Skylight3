@@ -6,7 +6,7 @@ using Skylight.Protocol.Packets.Manager;
 
 namespace Skylight.Server.Game.Communication.Room.Avatar;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed partial class LookToPacketHandler<T> : UserPacketHandler<T>
 	where T : ILookToIncomingPacket
 {

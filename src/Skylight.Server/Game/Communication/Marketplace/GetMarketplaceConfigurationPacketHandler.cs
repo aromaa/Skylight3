@@ -6,7 +6,7 @@ using Skylight.Protocol.Packets.Outgoing.Marketplace;
 
 namespace Skylight.Server.Game.Communication.Marketplace;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class GetMarketplaceConfigurationPacketHandler<T> : UserPacketHandler<T>
 	where T : IGetMarketplaceConfigurationIncomingPacket
 {

@@ -8,7 +8,7 @@ using Skylight.Server.Extensions;
 
 namespace Skylight.Server.Game.Communication.Catalog;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class GetProductOfferPacketHandler<T>(ICatalogManager catalogManager) : UserPacketHandler<T>
 	where T : IGetProductOfferIncomingPacket
 {

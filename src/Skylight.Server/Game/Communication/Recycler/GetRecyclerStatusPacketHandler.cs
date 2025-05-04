@@ -6,7 +6,7 @@ using Skylight.Protocol.Packets.Outgoing.Recycler;
 
 namespace Skylight.Server.Game.Communication.Recycler;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class GetRecyclerStatusPacketHandler<T> : UserPacketHandler<T>
 	where T : IGetRecyclerStatusIncomingPacket
 {

@@ -10,7 +10,7 @@ using Skylight.Server.Extensions;
 
 namespace Skylight.Server.Game.Communication.Navigator;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed partial class GetGuestRoomPacketHandler<T>(INavigatorManager navigatorManager) : UserPacketHandler<T>
 	where T : IGetGuestRoomIncomingPacket
 {

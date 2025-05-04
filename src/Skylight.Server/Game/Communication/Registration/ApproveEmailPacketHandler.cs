@@ -6,7 +6,7 @@ using Skylight.Protocol.Packets.Outgoing.Registration;
 
 namespace Skylight.Server.Game.Communication.Registration;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class ApproveEmailPacketHandler<T> : ClientPacketHandler<T>
 	where T : IApproveEmailIncomingPacket
 {

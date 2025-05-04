@@ -7,7 +7,7 @@ using Skylight.Protocol.Packets.Outgoing.Competition;
 
 namespace Skylight.Server.Game.Communication.Competition;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class GetCurrentTimingCodePacketHandler<T> : UserPacketHandler<T>
 	where T : IGetCurrentTimingCodeIncomingPacket
 {

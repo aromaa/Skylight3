@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Net.Sockets.Listener;
 using Skylight.API.Net.Connection;
 using Skylight.API.Net.Listener;
-using Skylight.Protocol.Packets.Manager;
 using Skylight.Server.Extensions;
 using Skylight.Server.Net.Communication;
 
@@ -22,7 +21,7 @@ internal sealed class TcpNetworkListener(IServiceProvider serviceProvider, ILogg
 
 	public void Start(NetworkListenerConfiguration configuration)
 	{
-		if (!this.packetManagerCache.TryCreatePacketManager(configuration.Revision!, out Func<AbstractGamePacketManager>? packetManagerGetter))
+		if (!this.packetManagerCache.TryCreatePacketManager(configuration.Revision!, out _))
 		{
 			this.logger.LogWarning($"Did not find a packet manager for revision {configuration.Revision}.");
 

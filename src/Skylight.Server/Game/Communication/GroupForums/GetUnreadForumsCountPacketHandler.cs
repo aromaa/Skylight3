@@ -5,7 +5,7 @@ using Skylight.Protocol.Packets.Manager;
 
 namespace Skylight.Server.Game.Communication.GroupForums;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class GetUnreadForumsCountPacketHandler<T> : UserPacketHandler<T>
 	where T : IGetUnreadForumsCountIncomingPacket
 {

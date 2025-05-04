@@ -14,7 +14,7 @@ using Skylight.Protocol.Packets.Outgoing.Sound;
 
 namespace Skylight.Server.Game.Communication.Sound;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed partial class EditSongPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory) : UserPacketHandler<T>
 	where T : IEditSongIncomingPacket
 {

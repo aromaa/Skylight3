@@ -11,7 +11,7 @@ using Skylight.Server.Extensions;
 
 namespace Skylight.Server.Game.Communication.Inventory.Furni;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class RequestFurniInventoryPacketHandler<T> : UserPacketHandler<T>
 	where T : IRequestFurniInventoryIncomingPacket
 {

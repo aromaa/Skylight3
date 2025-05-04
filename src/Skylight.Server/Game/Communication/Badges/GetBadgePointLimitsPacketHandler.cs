@@ -9,7 +9,7 @@ using Skylight.Protocol.Packets.Outgoing.Inventory.Badges;
 
 namespace Skylight.Server.Game.Communication.Badges;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed partial class GetBadgePointLimitsPacketHandler<T>(IAchievementManager achievementManager) : UserPacketHandler<T>
 	where T : IGetBadgePointLimitsIncomingPacket
 {

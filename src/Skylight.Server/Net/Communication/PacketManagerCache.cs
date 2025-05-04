@@ -159,7 +159,7 @@ internal sealed partial class PacketManagerCache
 		}
 	}
 
-	internal bool TryCreatePacketManager(string version, [NotNullWhen(true)] out Func<AbstractGamePacketManager>? packetManagerGetter)
+	internal bool TryCreatePacketManager(string version, [NotNullWhen(true)] out Func<IGamePacketManager>? packetManagerGetter)
 	{
 		if (this.protocols.TryGetValue(version, out ProtocolData? protocol))
 		{
@@ -173,7 +173,7 @@ internal sealed partial class PacketManagerCache
 		return false;
 	}
 
-	[PacketManagerGenerator(typeof(AbstractGamePacketManager))]
+	[PacketManagerGenerator(typeof(IGamePacketManager))]
 	private static partial PacketManagerData<uint> GetPacketManagerData();
 
 	private sealed class ProtocolData
@@ -181,9 +181,9 @@ internal sealed partial class PacketManagerCache
 		internal string Revision { get; }
 
 		private Assembly assembly;
-		private Lazy<AbstractGamePacketManager> packetManager;
+		private Lazy<IGamePacketManager> packetManager;
 
-		internal Func<AbstractGamePacketManager> PacketManagerGetter { get; }
+		internal Func<IGamePacketManager> PacketManagerGetter { get; }
 
 		internal PhysicalFileProvider? PhysicalFileProvider { get; set; }
 
@@ -206,7 +206,7 @@ internal sealed partial class PacketManagerCache
 		internal void Update(IServiceProvider serviceProvider, Assembly assembly, PacketManagerData<uint> packetManagerData)
 		{
 			this.assembly = assembly;
-			this.packetManager = new Lazy<AbstractGamePacketManager>(() => assembly.GetCustomAttribute<GameProtocolManagerAttribute>()!.CreatePacketManager(serviceProvider, packetManagerData));
+			this.packetManager = new Lazy<IGamePacketManager>(() => assembly.GetCustomAttribute<GameProtocolManagerAttribute>()!.CreatePacketManager(serviceProvider, packetManagerData));
 		}
 	}
 

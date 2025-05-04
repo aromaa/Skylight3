@@ -15,7 +15,7 @@ using Skylight.Server.Extensions;
 
 namespace Skylight.Server.Game.Communication.NewNavigator;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class NewNavigatorSearchPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory, INavigatorManager navigatorManager, IRoomManager roomManager) : UserPacketHandler<T>
 	where T : INewNavigatorSearchIncomingPacket
 {

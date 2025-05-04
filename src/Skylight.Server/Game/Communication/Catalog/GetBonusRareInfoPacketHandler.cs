@@ -5,7 +5,7 @@ using Skylight.Protocol.Packets.Manager;
 
 namespace Skylight.Server.Game.Communication.Catalog;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class GetBonusRareInfoPacketHandler<T> : UserPacketHandler<T>
 	where T : IGetBonusRareInfoIncomingPacket
 {

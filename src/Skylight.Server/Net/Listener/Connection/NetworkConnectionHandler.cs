@@ -26,7 +26,7 @@ internal sealed class NetworkConnectionHandler(IServiceProvider serviceProvider,
 
 	public void Accept(ISocket socket, Encoding encoding, string revision, string? cryptoPrime = null, string? cryptoGenerator = null, string? cryptoKey = null, string? cryptoPremix = null)
 	{
-		if (!this.packetManagerCache.TryCreatePacketManager(revision, out Func<AbstractGamePacketManager>? packetManagerGetter))
+		if (!this.packetManagerCache.TryCreatePacketManager(revision, out Func<IGamePacketManager>? packetManagerGetter))
 		{
 			this.logger.LogWarning($"Did not find a packet manager for revision {revision}.");
 
@@ -45,7 +45,7 @@ internal sealed class NetworkConnectionHandler(IServiceProvider serviceProvider,
 
 		socket.Pipeline.AddHandlerFirst(new LeftOverHandler());
 
-		AbstractGamePacketManager packetManager = packetManagerGetter();
+		IGamePacketManager packetManager = packetManagerGetter();
 		if (packetManager.Modern)
 		{
 			socket.Pipeline.AddHandlerFirst(new HotSwapPacketHandler(packetManagerGetter));
@@ -53,7 +53,7 @@ internal sealed class NetworkConnectionHandler(IServiceProvider serviceProvider,
 		}
 		else
 		{
-			socket.Pipeline.AddHandlerFirst(new Base64PacketHeaderHandler(this.serviceProvider.GetRequiredService<ILogger<Base64PacketHeaderHandler>>(), packetManager, BigInteger.Parse(cryptoPrime ?? "0"), BigInteger.Parse(cryptoGenerator ?? "0"), cryptoKey!, cryptoPremix!));
+			socket.Pipeline.AddHandlerFirst(new Base64PacketHeaderHandler(this.serviceProvider.GetRequiredService<ILogger<Base64PacketHeaderHandler>>(), packetManagerGetter, BigInteger.Parse(cryptoPrime ?? "0"), BigInteger.Parse(cryptoGenerator ?? "0"), cryptoKey!, cryptoPremix!));
 
 			Task.Run(async () =>
 			{

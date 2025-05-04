@@ -7,7 +7,7 @@ using Skylight.Protocol.Packets.Outgoing.NewNavigator;
 
 namespace Skylight.Server.Game.Communication.NewNavigator;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class NewNavigatorInitPacketHandler<T> : UserPacketHandler<T>
 	where T : INewNavigatorInitIncomingPacket
 {

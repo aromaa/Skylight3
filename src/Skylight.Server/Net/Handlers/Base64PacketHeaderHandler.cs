@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
 using Net.Buffers;
 using Net.Communication.Incoming.Consumer;
+using Net.Communication.Manager;
 using Net.Communication.Outgoing;
 using Net.Sockets.Pipeline.Handler;
 using Net.Sockets.Pipeline.Handler.Incoming;
@@ -20,7 +21,7 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 {
 	private readonly ILogger<Base64PacketHeaderHandler> logger;
 
-	private readonly AbstractGamePacketManager packetManager;
+	private readonly Func<PacketManager<uint>> packetManager;
 
 	private uint currentPacketLength;
 
@@ -39,10 +40,10 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 	internal string CryptoKey { get; }
 	internal string CryptoPremix { get; }
 
-	internal Base64PacketHeaderHandler(ILogger<Base64PacketHeaderHandler> logger, AbstractGamePacketManager packetManager, BigInteger cryptoPrime, BigInteger cryptoGenerator, string cryptoKey, string cryptoPremix)
+	internal Base64PacketHeaderHandler(ILogger<Base64PacketHeaderHandler> logger, Func<IGamePacketManager> packetManager, BigInteger cryptoPrime, BigInteger cryptoGenerator, string cryptoKey, string cryptoPremix)
 	{
 		this.logger = logger;
-		this.packetManager = packetManager;
+		this.packetManager = () => (PacketManager<uint>)packetManager();
 
 		this.CryptoPrime = cryptoPrime;
 		this.CryptoGenerator = cryptoGenerator;
@@ -115,7 +116,7 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 
 		uint header = reader.ReadBase64UInt32(2);
 
-		if (this.packetManager.TryGetConsumer(header, out IIncomingPacketConsumer? consumer))
+		if (this.packetManager().TryGetConsumer(header, out IIncomingPacketConsumer? consumer))
 		{
 			this.logger.LogDebug("Incoming: " + consumer.GetType().GetGenericArguments()[0]);
 
@@ -136,7 +137,7 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 
 	public void Handle<T>(IPipelineHandlerContext context, ref PacketWriter writer, in T packet)
 	{
-		if (this.packetManager.TryGetComposer<T>(out IOutgoingPacketComposer? composer, out uint header))
+		if (this.packetManager().TryGetComposer<T>(out IOutgoingPacketComposer? composer, out uint header))
 		{
 			this.logger.LogDebug("Outgoing: " + typeof(T));
 

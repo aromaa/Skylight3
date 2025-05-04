@@ -7,7 +7,7 @@ using Skylight.Protocol.Packets.Outgoing.Inventory.Badges;
 
 namespace Skylight.Server.Game.Communication.Inventory.Badges;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class GetBadgesPacketHandler<T> : UserPacketHandler<T>
 	where T : IGetBadgesIncomingPacket
 {

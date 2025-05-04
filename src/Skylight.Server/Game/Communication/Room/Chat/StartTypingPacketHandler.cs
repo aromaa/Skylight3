@@ -6,7 +6,7 @@ using Skylight.Protocol.Packets.Outgoing.Room.Chat;
 
 namespace Skylight.Server.Game.Communication.Room.Chat;
 
-[PacketManagerRegister(typeof(AbstractGamePacketManager))]
+[PacketManagerRegister(typeof(IGamePacketManager))]
 internal sealed class StartTypingPacketHandler<T> : UserPacketHandler<T>
 	where T : IStartTypingIncomingPacket
 {
