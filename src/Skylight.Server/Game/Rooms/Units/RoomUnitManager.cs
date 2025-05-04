@@ -36,7 +36,7 @@ internal abstract class RoomUnitManager : IRoomUnitManager
 
 				this.Room.SendAsync(new UserUpdateOutgoingPacket(
 				[
-					new RoomUnitUpdateData(roomUnit.Id, ((IUserRoomUnit) roomUnit).User.Profile.Username, roomUnit.Position.X, roomUnit.Position.Y, roomUnit.Position.Z, roomUnit.Rotation.X, roomUnit.Rotation.Y, roomUnit.Moving ? $"mv {roomUnit.NextStepPosition.X},{roomUnit.NextStepPosition.Y},{roomUnit.NextStepPosition.Z.ToString(CultureInfo.InvariantCulture)}" : string.Empty)
+					new RoomUnitUpdateData(roomUnit.Id, ((IUserRoomUnit)roomUnit).User.Profile.Username, roomUnit.Position.X, roomUnit.Position.Y, roomUnit.Position.Z, roomUnit.Rotation.X, roomUnit.Rotation.Y, roomUnit.Moving ? $"mv {roomUnit.NextStepPosition.X},{roomUnit.NextStepPosition.Y},{roomUnit.NextStepPosition.Z.ToString(CultureInfo.InvariantCulture)}" : string.Empty)
 				]));
 
 				if (!roomUnit.Moving)
