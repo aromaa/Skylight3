@@ -36,7 +36,7 @@ internal abstract class RoomUnitManager : IRoomUnitManager
 
 				this.Room.SendAsync(new UserUpdateOutgoingPacket(
 				[
-					new RoomUnitUpdateData(roomUnit.Id, roomUnit.Position.X, roomUnit.Position.Y, roomUnit.Position.Z, roomUnit.Rotation.X, roomUnit.Rotation.Y, roomUnit.Moving ? $"mv {roomUnit.NextStepPosition.X},{roomUnit.NextStepPosition.Y},{roomUnit.NextStepPosition.Z.ToString(CultureInfo.InvariantCulture)}" : string.Empty)
+					new RoomUnitUpdateData(roomUnit.Id, ((IUserRoomUnit) roomUnit).User.Profile.Username, roomUnit.Position.X, roomUnit.Position.Y, roomUnit.Position.Z, roomUnit.Rotation.X, roomUnit.Rotation.Y, roomUnit.Moving ? $"mv {roomUnit.NextStepPosition.X},{roomUnit.NextStepPosition.Y},{roomUnit.NextStepPosition.Z.ToString(CultureInfo.InvariantCulture)}" : string.Empty)
 				]));
 
 				if (!roomUnit.Moving)
@@ -110,7 +110,7 @@ internal abstract class RoomUnitManager : IRoomUnitManager
 		IRoomTile lastTile = this.Room.Map.GetTile(unit.Moving ? unit.NextStepPosition.XY : unit.Position.XY);
 		lastTile.WalkOff(unit);
 
-		this.Room.SendAsync(new UserRemoveOutgoingPacket(unit.Id));
+		this.Room.SendAsync(new UserRemoveOutgoingPacket(unit.Id, ((IUserRoomUnit)unit).User.Profile.Username));
 	}
 
 	internal void Move(RoomUnit unit)

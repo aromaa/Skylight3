@@ -26,7 +26,7 @@ internal sealed partial class PacketManagerCache
 
 	private readonly Dictionary<string, ProtocolData> protocols;
 
-	private PacketManagerData<uint> packetManagerData;
+	private PacketManagerData packetManagerData;
 
 	public PacketManagerCache(IServiceProvider serviceProvider, ILogger<PacketManagerCache> logger, IOptions<NetworkSettings> networkOptions)
 	{
@@ -174,7 +174,7 @@ internal sealed partial class PacketManagerCache
 	}
 
 	[PacketManagerGenerator(typeof(IGamePacketManager))]
-	private static partial PacketManagerData<uint> GetPacketManagerData();
+	private static partial PacketManagerData GetPacketManagerData();
 
 	private sealed class ProtocolData
 	{
@@ -187,7 +187,7 @@ internal sealed partial class PacketManagerCache
 
 		internal PhysicalFileProvider? PhysicalFileProvider { get; set; }
 
-		internal ProtocolData(IServiceProvider serviceProvider, PacketManagerData<uint> packetManagerData, string revision, Assembly assembly)
+		internal ProtocolData(IServiceProvider serviceProvider, PacketManagerData packetManagerData, string revision, Assembly assembly)
 		{
 			this.Revision = revision;
 
@@ -197,13 +197,13 @@ internal sealed partial class PacketManagerCache
 		}
 
 		[MemberNotNull(nameof(ProtocolData.packetManager))]
-		internal void Update(IServiceProvider serviceProvider, PacketManagerData<uint> packetManagerData)
+		internal void Update(IServiceProvider serviceProvider, PacketManagerData packetManagerData)
 		{
 			this.Update(serviceProvider, this.assembly, packetManagerData);
 		}
 
 		[MemberNotNull(nameof(ProtocolData.packetManager), nameof(ProtocolData.assembly))]
-		internal void Update(IServiceProvider serviceProvider, Assembly assembly, PacketManagerData<uint> packetManagerData)
+		internal void Update(IServiceProvider serviceProvider, Assembly assembly, PacketManagerData packetManagerData)
 		{
 			this.assembly = assembly;
 			this.packetManager = new Lazy<IGamePacketManager>(() => assembly.GetCustomAttribute<GameProtocolManagerAttribute>()!.CreatePacketManager(serviceProvider, packetManagerData));

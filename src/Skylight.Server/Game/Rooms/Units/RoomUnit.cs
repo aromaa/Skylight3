@@ -35,7 +35,7 @@ internal sealed class RoomUnit : IUserRoomUnit
 
 			this.Room.SendAsync(new UserUpdateOutgoingPacket(
 			[
-				new RoomUnitUpdateData(this.Id, this.Position.X, this.Position.Y, this.Position.Z, this.Rotation.X, this.Rotation.Y, string.Empty)
+				new RoomUnitUpdateData(this.Id, this.User.Profile.Username, this.Position.X, this.Position.Y, this.Position.Z, this.Rotation.X, this.Rotation.Y, string.Empty)
 			]));
 		}
 	}
@@ -169,7 +169,7 @@ internal sealed class RoomUnit : IUserRoomUnit
 
 			this.Room.SendAsync(new UserUpdateOutgoingPacket(
 			[
-				new RoomUnitUpdateData(this.Id, this.Position.X, this.Position.Y, this.Position.Z, this.Rotation.X, this.Rotation.Y, string.Empty)
+				new RoomUnitUpdateData(this.Id, this.User.Profile.Username, this.Position.X, this.Position.Y, this.Position.Z, this.Rotation.X, this.Rotation.Y, string.Empty)
 			]));
 		}
 	}
@@ -181,7 +181,7 @@ internal sealed class RoomUnit : IUserRoomUnit
 			return;
 		}
 
-		this.Room.SendAsync(new ChatOutgoingPacket(this.Id, message, 0, styleId, trackingId, Array.Empty<(string, string, bool)>()));
+		this.Room.SendAsync(new ChatOutgoingPacket(this.Id, this.User.Profile.Username, message, 0, styleId, trackingId, Array.Empty<(string, string, bool)>()));
 	}
 
 	public void Shout(string message, int styleId = 0, int trackingId = -1)
@@ -191,7 +191,7 @@ internal sealed class RoomUnit : IUserRoomUnit
 			return;
 		}
 
-		this.Room.SendAsync(new ShoutOutgoingPacket(this.Id, message, 0, styleId, trackingId, Array.Empty<(string, string, bool)>()));
+		this.Room.SendAsync(new ShoutOutgoingPacket(this.Id, this.User.Profile.Username, message, 0, styleId, trackingId, Array.Empty<(string, string, bool)>()));
 	}
 
 	private bool TriggerOnSayWired(string message, int styleId = 0, int trackingId = -1)
@@ -206,7 +206,7 @@ internal sealed class RoomUnit : IUserRoomUnit
 			return false;
 		}
 
-		this.User.SendAsync(new WhisperOutgoingPacket(this.Id, message, 0, styleId, trackingId, Array.Empty<(string, string, bool)>()));
+		this.User.SendAsync(new WhisperOutgoingPacket(this.Id, this.User.Profile.Username, message, 0, styleId, trackingId, Array.Empty<(string, string, bool)>()));
 
 		return true;
 	}

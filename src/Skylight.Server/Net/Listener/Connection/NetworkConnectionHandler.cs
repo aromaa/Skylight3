@@ -53,7 +53,14 @@ internal sealed class NetworkConnectionHandler(IServiceProvider serviceProvider,
 		}
 		else
 		{
-			socket.Pipeline.AddHandlerFirst(new Base64PacketHeaderHandler(this.serviceProvider.GetRequiredService<ILogger<Base64PacketHeaderHandler>>(), packetManagerGetter, BigInteger.Parse(cryptoPrime ?? "0"), BigInteger.Parse(cryptoGenerator ?? "0"), cryptoKey!, cryptoPremix!));
+			if (packetManager.Fuse)
+			{
+				socket.Pipeline.AddHandlerFirst(new FusePacketHeaderHandler(packetManagerGetter));
+			}
+			else
+			{
+				socket.Pipeline.AddHandlerFirst(new Base64PacketHeaderHandler(this.serviceProvider.GetRequiredService<ILogger<Base64PacketHeaderHandler>>(), packetManagerGetter, BigInteger.Parse(cryptoPrime ?? "0"), BigInteger.Parse(cryptoGenerator ?? "0"), cryptoKey!, cryptoPremix!));
+			}
 
 			Task.Run(async () =>
 			{
