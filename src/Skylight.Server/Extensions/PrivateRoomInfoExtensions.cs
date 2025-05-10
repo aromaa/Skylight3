@@ -10,7 +10,7 @@ internal static class PrivateRoomInfoExtensions
 	{
 		(IUserInfo owner, IRoomSettings settings) = info.Details;
 
-		return new GuestRoomData(info.Id, owner.Id, owner.Username, info.Layout.Id, settings.Name, settings.Description, settings.Category.Value.Id, settings.Tags, settings.EntryMode.ToProtocol(),
+		return new GuestRoomData(info.Id, "localhost", 29998, owner.Id, owner.Username, info.Layout.Id, settings.Name, settings.Description, settings.Category.Value.Id, settings.Tags, settings.EntryMode.ToProtocol(),
 			info.UserCount, settings.UsersMax, settings.TradeMode.ToProtocol(), 0, 0);
 	}
 }

@@ -10,6 +10,7 @@ using Net.Sockets.Pipeline.Handler;
 using Net.Sockets.Pipeline.Handler.Incoming;
 using Net.Sockets.Pipeline.Handler.Outgoing;
 using Skylight.Protocol.Packets.Manager;
+using Skylight.Protocol.Packets.Outgoing;
 
 namespace Skylight.Server.Net.Handlers;
 
@@ -86,6 +87,11 @@ internal sealed class FusePacketHeaderHandler : IncomingBytesHandler, IOutgoingO
 		if (this.packetManagerGetter().TryGetComposer<T>(out IOutgoingPacketComposer? composer, out string header))
 		{
 			writer.WriteBytes(Encoding.ASCII.GetBytes(header));
+			if (composer is IGameOutgoingPacketComposer<T> gameComposer)
+			{
+				gameComposer.AppendHeader(ref writer, packet);
+			}
+
 			writer.WriteByte((byte)'\r');
 
 			composer.Compose(ref writer, packet);

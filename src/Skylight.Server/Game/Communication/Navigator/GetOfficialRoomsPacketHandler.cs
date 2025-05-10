@@ -37,7 +37,7 @@ internal sealed class GetOfficialRoomsPacketHandler<T>(INavigatorManager navigat
 				}
 				else if (childNode is INavigatorPublicRoomNode publicRoom)
 				{
-					nodes.Add(new NavigatorPublicRoomNode(publicRoom.Id, publicRoom.Parent?.Id ?? 0, publicRoom.Caption, 0, 0, publicRoom.Name, publicRoom.InstanceId, publicRoom.WorldId, string.Join(',', publicRoom.Casts)));
+					nodes.Add(new NavigatorPublicRoomNode(publicRoom.Id, publicRoom.Parent?.Id ?? 0, publicRoom.Caption, 0, 0, publicRoom.Name, publicRoom.InstanceId, publicRoom.WorldId, string.Empty, 0, string.Join(',', publicRoom.Casts)));
 				}
 				else
 				{
@@ -47,7 +47,7 @@ internal sealed class GetOfficialRoomsPacketHandler<T>(INavigatorManager navigat
 		}
 		else if (node is INavigatorPublicRoomNode publicRoom)
 		{
-			nodes.Add(new NavigatorPublicRoomNode(publicRoom.Id, publicRoom.Parent?.Id ?? 0, publicRoom.Caption, 0, 0, publicRoom.Name, publicRoom.InstanceId, publicRoom.WorldId, string.Join(',', publicRoom.Casts)));
+			nodes.Add(new NavigatorPublicRoomNode(publicRoom.Id, publicRoom.Parent?.Id ?? 0, publicRoom.Caption, 0, 0, publicRoom.Name, publicRoom.InstanceId, publicRoom.WorldId, string.Empty, 0, string.Join(',', publicRoom.Casts)));
 		}
 		else
 		{

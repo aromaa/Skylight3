@@ -100,7 +100,7 @@ internal abstract class Room : IRoom
 		}
 
 		//TODO: Public items
-		user.SendAsync(new PublicRoomObjectsOutgoingPacket(publicRoomObjects));
+		user.SendAsync(new PublicRoomObjectsOutgoingPacket(this.Map.Layout.Id, publicRoomObjects));
 		user.SendAsync(new ObjectsOutgoingPacket(objects, Array.Empty<(int, string)>()));
 		user.SendAsync(new ItemsOutgoingPacket(items, Array.Empty<(int, string)>()));
 
