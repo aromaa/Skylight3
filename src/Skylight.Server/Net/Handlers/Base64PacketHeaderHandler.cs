@@ -218,9 +218,9 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 		}
 	}
 
-	internal void SetSecretKey(int secretKey)
+	internal void SetSecretKey()
 	{
-		this.incomingHeaderDecoder = this.incomingMessageDecoder = new RC4Hex(secretKey, this.CryptoKey);
+		this.incomingHeaderDecoder = this.incomingMessageDecoder = new RC4Hex(this.CryptoKey);
 	}
 
 	internal void SetToken(BigInteger integer)

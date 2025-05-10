@@ -19,7 +19,7 @@ internal sealed class GenerateKeyPacketHandler<T> : ClientPacketHandler<T>
 		{
 			if (context.Handler is Base64PacketHeaderHandler handler)
 			{
-				handler.SetSecretKey(20);
+				handler.SetSecretKey();
 
 				break;
 			}

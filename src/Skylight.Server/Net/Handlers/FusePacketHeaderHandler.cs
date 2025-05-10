@@ -9,40 +9,67 @@ using Net.Communication.Outgoing;
 using Net.Sockets.Pipeline.Handler;
 using Net.Sockets.Pipeline.Handler.Incoming;
 using Net.Sockets.Pipeline.Handler.Outgoing;
+using Skylight.Protocol.Extensions;
 using Skylight.Protocol.Packets.Manager;
 using Skylight.Protocol.Packets.Outgoing;
+using Skylight.Server.Net.Crypto;
 
 namespace Skylight.Server.Net.Handlers;
 
-internal sealed class FusePacketHeaderHandler : IncomingBytesHandler, IOutgoingObjectHandler
+internal sealed class FusePacketHeaderHandler<TLength> : IncomingBytesHandler, IOutgoingObjectHandler
 {
 	private uint currentPacketLength;
 
 	private Func<PacketManager<string>> packetManagerGetter;
 
-	internal FusePacketHeaderHandler(Func<IGamePacketManager> packetManagerGetter)
+	private RC4? incomingMessageDecoder;
+	private string cryptoKey;
+
+	internal FusePacketHeaderHandler(Func<IGamePacketManager> packetManagerGetter, string cryptoKey)
 	{
 		this.packetManagerGetter = () => (PacketManager<string>)packetManagerGetter();
+		this.cryptoKey = cryptoKey;
 	}
 
 	protected override void Decode(IPipelineHandlerContext context, ref PacketReader reader)
 	{
 		if (this.currentPacketLength == 0)
 		{
-			Span<byte> lengthBytes = stackalloc byte[4];
-			if (!reader.TryReadBytes(lengthBytes))
+			if (typeof(TLength) == typeof(string))
 			{
-				return;
-			}
+				Span<byte> lengthBytes = stackalloc byte[4];
+				if (!reader.TryReadBytes(lengthBytes))
+				{
+					return;
+				}
 
-			if (Utf8Parser.TryParse(lengthBytes, out uint length, out _))
+				if (Utf8Parser.TryParse(lengthBytes, out uint length, out _))
+				{
+					this.currentPacketLength = length;
+				}
+				else
+				{
+					context.Socket.Disconnect("Invalid length");
+					return;
+				}
+			}
+			else if (typeof(TLength) == typeof(int))
 			{
-				this.currentPacketLength = length;
+				if (this.currentPacketLength == 0)
+				{
+					if (reader.Remaining < 5)
+					{
+						return;
+					}
+
+					reader.Skip(2);
+
+					this.currentPacketLength = reader.ReadBase128UInt32(3);
+				}
 			}
 			else
 			{
-				context.Socket.Disconnect("Invalid length");
-				return;
+				throw new NotSupportedException();
 			}
 		}
 
@@ -53,6 +80,14 @@ internal sealed class FusePacketHeaderHandler : IncomingBytesHandler, IOutgoingO
 
 		PacketReader readerSliced = reader.Slice(this.currentPacketLength);
 
+		RC4? messageDecoder = this.incomingMessageDecoder;
+		if (messageDecoder is not null)
+		{
+			readerSliced = messageDecoder.Read(ref readerSliced);
+		}
+
+		Console.WriteLine(Encoding.ASCII.GetString(readerSliced.UnreadSequence));
+
 		if (!readerSliced.GetReaderRef().TryReadTo(out ReadOnlySequence<byte> headerBytes, (byte)' '))
 		{
 			headerBytes = readerSliced.ReadBytes(readerSliced.Remaining);
@@ -62,7 +97,14 @@ internal sealed class FusePacketHeaderHandler : IncomingBytesHandler, IOutgoingO
 
 		this.Read(context, header, ref readerSliced);
 
+		messageDecoder?.AdvanceReader(readerSliced.UnreadSequence.End);
+
 		this.currentPacketLength = 0;
+	}
+
+	internal void SetSecretKey()
+	{
+		this.incomingMessageDecoder = new RC4Hex(this.cryptoKey);
 	}
 
 	private void Read(IPipelineHandlerContext context, string header, ref PacketReader reader)

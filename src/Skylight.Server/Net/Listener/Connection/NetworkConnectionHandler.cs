@@ -2,6 +2,7 @@
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Net.Communication.Manager;
 using Net.Metadata;
 using Net.Sockets;
 using Skylight.API.Game.Clients;
@@ -55,7 +56,15 @@ internal sealed class NetworkConnectionHandler(IServiceProvider serviceProvider,
 		{
 			if (packetManager.Fuse)
 			{
-				socket.Pipeline.AddHandlerFirst(new FusePacketHeaderHandler(packetManagerGetter));
+				//TODO: Release 5 is quite special in many ways...
+				if (((PacketManager<string>)packetManagerGetter()).TryGetComposer(typeof(AuthenticationOKOutgoingPacket), out _, out _))
+				{
+					socket.Pipeline.AddHandlerFirst(new FusePacketHeaderHandler<int>(packetManagerGetter, cryptoKey!));
+				}
+				else
+				{
+					socket.Pipeline.AddHandlerFirst(new FusePacketHeaderHandler<string>(packetManagerGetter, cryptoKey!));
+				}
 			}
 			else
 			{

@@ -7,8 +7,8 @@ namespace Skylight.Server.Net.Crypto;
 
 internal sealed class RC4Hex : RC4
 {
-	internal RC4Hex(int key, string cryptoKey)
-		: base(RC4Hex.BuildTable(key, cryptoKey))
+	internal RC4Hex(string cryptoKey)
+		: base(RC4Hex.BuildTable(cryptoKey))
 	{
 	}
 
@@ -68,26 +68,15 @@ internal sealed class RC4Hex : RC4
 
 	internal override void Write(ReadOnlySpan<byte> data, ref PacketWriter writer) => throw new NotImplementedException();
 
-	private static byte[] BuildTable(int key, string cryptoKey)
+	private static byte[] BuildTable(string cryptoKey)
 	{
-		byte[] keyBytes = Convert.FromBase64String(cryptoKey);
-
-		int m = 2;
-		int prevKey = 0;
-		byte[] modKey = new byte[key];
-		for (int i = 0, j = 0; i < key; i++, j++)
-		{
-			m *= -1;
-			int keySkip = (prevKey % 19) - (i % 7);
-			modKey[i] = keyBytes[Math.Abs((i * m * keySkip) + keySkip)];
-			prevKey = modKey[i];
-		}
-
 		byte[] table = new byte[byte.MaxValue + 1];
 		for (int i = 0; i <= byte.MaxValue; i++)
 		{
 			table[i] = (byte)i;
 		}
+
+		byte[] modKey = Convert.FromBase64String(cryptoKey);
 
 		for (int q = 0, j = 0; q <= byte.MaxValue; q++)
 		{
