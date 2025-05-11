@@ -244,4 +244,6 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 
 		return token % 5;
 	}
+
+	internal bool CheckVersionBased => !this.packetManager().TryGetComposer<SessionParametersOutgoingPacket>(out _, out _);
 }
