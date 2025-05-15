@@ -78,8 +78,9 @@ internal sealed class UserAuthentication(RedisConnector redis, IDbContextFactory
 
 		await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
+		UserCurrencies userCurrencies = UserCurrencies.FromDatabase(profile.Id, dbContext, cancellationToken);
 		UserSettingsEntity? userSettings = await dbContext.UserSettings.FirstOrDefaultAsync(s => s.UserId == profile.Id, cancellationToken).ConfigureAwait(false);
-		User user = new(this.roomManager, client, profile, new UserSettings(userSettings));
+		User user = new(this.roomManager, client, profile, userCurrencies, new UserSettings(userSettings));
 
 		await user.LoadAsync(dbContext, this.loadContext, cancellationToken).ConfigureAwait(false);
 

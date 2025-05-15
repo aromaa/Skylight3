@@ -22,11 +22,12 @@ internal sealed class User : IUser
 
 	public IClient Client { get; }
 	public IUserProfile Profile { get; }
+	public IUserCurrencies Currencies { get; }
 	public IUserSettings Settings { get; }
 
 	private RoomSession? roomSession;
 
-	public User(IRoomManager roomManager, IClient client, IUserProfile profile, IUserSettings settings)
+	public User(IRoomManager roomManager, IClient client, IUserProfile profile, IUserCurrencies currencies, IUserSettings settings)
 	{
 		this.roomManager = roomManager;
 
@@ -34,6 +35,7 @@ internal sealed class User : IUser
 
 		this.Client = client;
 		this.Profile = profile;
+		this.Currencies = currencies;
 		this.Settings = settings;
 	}
 

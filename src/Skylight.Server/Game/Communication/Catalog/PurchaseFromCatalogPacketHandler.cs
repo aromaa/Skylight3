@@ -6,6 +6,7 @@ using Skylight.Protocol.Packets.Data.Catalog;
 using Skylight.Protocol.Packets.Incoming.Catalog;
 using Skylight.Protocol.Packets.Manager;
 using Skylight.Protocol.Packets.Outgoing.Catalog;
+using Skylight.Protocol.Packets.Outgoing.Purse;
 
 namespace Skylight.Server.Game.Communication.Catalog;
 
@@ -44,9 +45,17 @@ internal sealed partial class PurchaseFromCatalogPacketHandler<T>(ICatalogManage
 		string extraData = user.Client.Encoding.GetString(packet.ExtraData);
 		int amount = packet.Amount;
 
-		bool scheduled = user.Client.ScheduleTask(client =>
+		bool scheduled = user.Client.ScheduleTask(async client =>
 		{
-			return catalog.PurchaseOfferAsync(client.User!, offer, extraData, amount);
+			try
+			{
+				await catalog.PurchaseOfferAsync(client.User!, offer, extraData, amount).ConfigureAwait(false);
+				user.SendAsync(new CreditBalanceOutgoingPacket((int)user.Currencies.GetBalance(CurrencyKeys.Credits)));
+			}
+			catch
+			{
+				user.SendAsync(new PurchaseErrorOutgoingPacket(PurchaseErrorReason.Generic));
+			}
 		});
 
 		if (!scheduled)

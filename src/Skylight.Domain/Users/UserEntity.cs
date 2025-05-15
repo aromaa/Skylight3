@@ -15,6 +15,7 @@ public class UserEntity
 
 	public DateTime LastOnline { get; set; }
 
+	public ICollection<UserCurrenciesEntity> Currencies { get; set; } = new List<UserCurrenciesEntity>();
 	public UserSettingsEntity? Settings { get; set; }
 
 	public List<FloorItemEntity>? FloorItems { get; set; }

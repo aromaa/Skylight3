@@ -13,6 +13,7 @@ public interface IUser : IPacketSender
 	public IClient Client { get; }
 	public IUserSettings Settings { get; }
 	public IUserProfile Profile { get; }
+	public IUserCurrencies Currencies { get; }
 	public IInventory Inventory { get; }
 	public IRoomSession? RoomSession { get; }
 
