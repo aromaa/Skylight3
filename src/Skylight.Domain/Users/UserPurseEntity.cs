@@ -1,6 +1,6 @@
 namespace Skylight.Domain.Users;
 
-public class UserCurrenciesEntity
+public class UserPurseEntity
 {
 	public int UserId { get; set; }
 	public UserEntity? User { get; set; }

@@ -1,9 +1,9 @@
-namespace Skylight.API.Game.Users;
+namespace Skylight.API.Game.Purse;
 
 public static class CurrencyKeys
 {
 	public const string Credits = "skylight:credits";
 	public const string Silver = "skylight:silver";
 
-	public static readonly IReadOnlyList<string> All = [CurrencyKeys.Credits, CurrencyKeys.Silver];
+	public const string Default = CurrencyKeys.Credits;
 }

@@ -1,6 +1,5 @@
 ﻿using System.Collections.Immutable;
 using Skylight.API.Game.Catalog.Products;
-using Skylight.API.Game.Users;
 
 namespace Skylight.API.Game.Catalog;
 
@@ -21,8 +20,6 @@ public interface ICatalogOffer
 	public bool HasOffer { get; }
 
 	public ImmutableArray<ICatalogProduct> Products { get; }
-
-	public bool CanPurchase(IUser user) => true;
 
 	public ValueTask PurchaseAsync(ICatalogTransaction transaction, CancellationToken cancellationToken = default);
 }

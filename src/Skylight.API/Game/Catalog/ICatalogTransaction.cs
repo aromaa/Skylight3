@@ -10,7 +10,7 @@ namespace Skylight.API.Game.Catalog;
 public interface ICatalogTransaction : IAsyncDisposable, IDisposable
 {
 	public DbTransaction Transaction { get; }
-	public IUser User { get; }
+	public IUserInfo User { get; }
 
 	public string ExtraData { get; }
 
@@ -19,7 +19,9 @@ public interface ICatalogTransaction : IAsyncDisposable, IDisposable
 	public void AddFloorItem(IFloorFurniture furniture, JsonDocument? extraData);
 	public void AddWallItem(IWallFurniture furniture, JsonDocument? extraData);
 
-	public void DeductCurrency(string currency, int amount);
+	int GetCurrencyBalance(string currencyKey);
+	void AddCurrency(string currencyKey, int amount);
+	void DeductCurrency(string currencyKey, int amount);
 
 	public Task CompleteAsync(CancellationToken cancellationToken = default);
 }

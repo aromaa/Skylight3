@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Net.Communication.Attributes;
 using Skylight.API.Game.Catalog;
+using Skylight.API.Game.Purse;
 using Skylight.API.Game.Users;
 using Skylight.Protocol.Packets.Data.Catalog;
 using Skylight.Protocol.Packets.Incoming.Catalog;
@@ -35,12 +36,6 @@ internal sealed partial class PurchaseFromCatalogPacketHandler<T>(ICatalogManage
 
 			return;
 		}
-		else if (!offer.CanPurchase(user))
-		{
-			user.SendAsync(new PurchaseNotAllowedOutgoingPacket(PurchaseNotAllowedReason.NoClubMembership));
-
-			return;
-		}
 
 		string extraData = user.Client.Encoding.GetString(packet.ExtraData);
 		int amount = packet.Amount;
@@ -50,7 +45,12 @@ internal sealed partial class PurchaseFromCatalogPacketHandler<T>(ICatalogManage
 			try
 			{
 				await catalog.PurchaseOfferAsync(client.User!, offer, extraData, amount).ConfigureAwait(false);
-				user.SendAsync(new CreditBalanceOutgoingPacket((int)user.Currencies.GetBalance(CurrencyKeys.Credits)));
+				int newBalance = client.User!.Purse.GetBalance(CurrencyKeys.Credits);
+				client.SendAsync(new CreditBalanceOutgoingPacket(newBalance));
+			}
+			catch (InvalidOperationException)
+			{
+				client.SendAsync(new PurchaseNotAllowedOutgoingPacket(PurchaseNotAllowedReason.Generic));
 			}
 			catch
 			{

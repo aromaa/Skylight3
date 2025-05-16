@@ -1,7 +1,7 @@
 ﻿using System.Collections.Immutable;
 using Skylight.API.Game.Catalog;
 using Skylight.API.Game.Catalog.Products;
-using Skylight.API.Game.Users;
+using Skylight.API.Game.Purse;
 
 namespace Skylight.Server.Game.Catalog;
 
@@ -47,7 +47,7 @@ internal sealed class CatalogOffer : ICatalogOffer
 		this.Products = products;
 	}
 
-	public bool CanPurchase(IUser user) => user.Currencies.GetBalance(CurrencyKeys.Credits) >= this.CostCredits;
+	public bool CanPurchase(ICatalogTransaction transaction) => transaction.GetCurrencyBalance(CurrencyKeys.Credits) >= this.CostCredits;
 
 	public async ValueTask PurchaseAsync(
 		ICatalogTransaction transaction,
@@ -58,7 +58,7 @@ internal sealed class CatalogOffer : ICatalogOffer
 			throw new InvalidOperationException("Offer cost must be non-negative.");
 		}
 
-		if (!this.CanPurchase(transaction.User))
+		if (!this.CanPurchase(transaction))
 		{
 			throw new InvalidOperationException("Insufficient credits for this purchase.");
 		}

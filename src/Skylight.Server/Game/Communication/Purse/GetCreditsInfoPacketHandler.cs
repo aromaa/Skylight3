@@ -1,4 +1,5 @@
 ﻿using Net.Communication.Attributes;
+using Skylight.API.Game.Purse;
 using Skylight.API.Game.Users;
 using Skylight.Protocol.Packets.Incoming.Purse;
 using Skylight.Protocol.Packets.Manager;
@@ -12,7 +13,7 @@ internal sealed class GetCreditsInfoPacketHandler<T> : UserPacketHandler<T>
 {
 	internal override void Handle(IUser user, in T packet)
 	{
-		int creditsBalance = user.Currencies.GetBalance(CurrencyKeys.Credits);
+		int creditsBalance = user.Purse.GetBalance(CurrencyKeys.Credits);
 		user.SendAsync(new CreditBalanceOutgoingPacket((int)creditsBalance));
 	}
 }

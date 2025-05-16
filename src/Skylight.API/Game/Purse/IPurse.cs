@@ -1,6 +1,6 @@
-namespace Skylight.API.Game.Users;
+namespace Skylight.API.Game.Purse;
 
-public interface IUserCurrencies
+public interface IPurse
 {
 	int GetBalance(string currencyKey);
 	void UpdateBalance(string currencyKey, int newBalance);

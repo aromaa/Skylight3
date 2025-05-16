@@ -4,22 +4,22 @@ using Skylight.Domain.Users;
 
 namespace Skylight.Infrastructure.EntityConfigurations.Users;
 
-internal sealed class UserCurrenciesEntityTypeConfiguration
-	: IEntityTypeConfiguration<UserCurrenciesEntity>
+internal sealed class UserPurseEntityTypeConfiguration
+	: IEntityTypeConfiguration<UserPurseEntity>
 {
-	public void Configure(EntityTypeBuilder<UserCurrenciesEntity> builder)
+	public void Configure(EntityTypeBuilder<UserPurseEntity> builder)
 	{
-		builder.ToTable(name: "user_currencies", tableBuilder => tableBuilder
-				.HasCheckConstraint(name: "ck_user_currencies_balance_non_negative", sql: "\"balance\" >= 0"));
+		builder.ToTable(name: "user_purse", tableBuilder => tableBuilder
+				.HasCheckConstraint(name: "ck_user_purse_balance_non_negative", sql: "\"balance\" >= 0"));
 
 		builder.HasKey(e => new { e.UserId, e.Currency })
-			.HasName("pk_user_currencies");
+			.HasName("pk_user_purse");
 
 		builder.HasOne(e => e.User)
-			.WithMany(u => u.Currencies)
+			.WithMany(u => u.Purse)
 			.HasForeignKey(e => e.UserId)
 			.OnDelete(DeleteBehavior.Cascade)
-			.HasConstraintName("fk_user_currencies_user");
+			.HasConstraintName("fk_user_purse_user");
 
 		builder.Property(e => e.Currency)
 			.IsRequired()
