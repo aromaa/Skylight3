@@ -1,6 +1,7 @@
 ﻿using System.Data.Common;
 using System.Diagnostics;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Skylight.API.Game.Badges;
 using Skylight.API.Game.Catalog;
@@ -11,6 +12,7 @@ using Skylight.API.Game.Inventory.Items;
 using Skylight.API.Game.Users;
 using Skylight.Domain.Badges;
 using Skylight.Domain.Items;
+using Skylight.Domain.Users;
 using Skylight.Infrastructure;
 using Skylight.Server.Extensions;
 using Skylight.Server.Game.Inventory.Items.Badges;
@@ -25,7 +27,8 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 	private readonly SkylightContext dbContext;
 	private readonly IDbContextTransaction transaction;
 
-	private readonly IUser user;
+	private readonly IUser sessionUser;
+	public IUserInfo User => this.sessionUser.Profile;
 
 	public string ExtraData { get; }
 
@@ -33,6 +36,8 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 
 	private List<FloorItemEntity>? floorItems;
 	private List<WallItemEntity>? wallItems;
+
+	private readonly Dictionary<string, int> currencyChanges = new();
 
 	internal CatalogTransaction(IFurnitureSnapshot furnitures, IFurnitureInventoryItemStrategy furnitureInventoryItemStrategy, SkylightContext dbContext, IDbContextTransaction transaction, IUser user, string extraData)
 	{
@@ -42,7 +47,7 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 		this.dbContext = dbContext;
 		this.transaction = transaction;
 
-		this.user = user;
+		this.sessionUser = user;
 
 		this.ExtraData = extraData;
 	}
@@ -51,14 +56,14 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 
 	public void AddBadge(IBadge badge)
 	{
-		if (this.user.Inventory.HasBadge(badge.Code))
+		if (this.sessionUser.Inventory.HasBadge(badge.Code))
 		{
 			return;
 		}
 
 		UserBadgeEntity entity = new()
 		{
-			UserId = this.user.Profile.Id,
+			UserId = this.sessionUser.Profile.Id,
 			BadgeCode = badge.Code
 		};
 
@@ -74,7 +79,7 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 		FloorItemEntity entity = new()
 		{
 			FurnitureId = furniture.Id,
-			UserId = this.user.Profile.Id
+			UserId = this.sessionUser.Profile.Id
 		};
 
 		if (extraData is not null)
@@ -97,7 +102,7 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 		WallItemEntity entity = new()
 		{
 			FurnitureId = furniture.Id,
-			UserId = this.user.Profile.Id
+			UserId = this.sessionUser.Profile.Id
 		};
 
 		if (extraData is not null)
@@ -113,10 +118,80 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 		this.dbContext.Add(entity);
 	}
 
-	public async Task CompleteAsync(CancellationToken cancellationToken)
+	public int GetCurrencyBalance(string currencyKey)
 	{
-		await this.dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-		await this.transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+		return this.sessionUser.Purse.GetBalance(currencyKey);
+	}
+
+	public void AddCurrency(string currencyKey, int amount)
+	{
+		int current = this.sessionUser.Purse.GetBalance(currencyKey);
+		int updated = current + amount;
+
+		this.sessionUser.Purse.UpdateBalance(currencyKey, updated);
+		this.currencyChanges[currencyKey] = updated;
+	}
+
+	public void DeductCurrency(string currencyKey, int amount)
+	{
+		int current = this.sessionUser.Purse.GetBalance(currencyKey);
+		if (current < amount)
+		{
+			throw new InvalidOperationException("Not enough balance to complete the purchase");
+		}
+
+		int updated = current - amount;
+		this.sessionUser.Purse.UpdateBalance(currencyKey, updated);
+		this.currencyChanges[currencyKey] = updated;
+	}
+
+	public async Task CompleteAsync(CancellationToken cancellationToken = default)
+	{
+		int userId = this.User.Id;
+
+		Dictionary<string, UserPurseEntity> existing = await this.dbContext.UserPurse
+			.Where(uc => uc.UserId == userId && this.currencyChanges.Keys.Contains(uc.Currency))
+			.ToDictionaryAsync(uc => uc.Currency, uc => uc, cancellationToken)
+			.ConfigureAwait(false);
+
+		List<UserPurseEntity> toAdd = [];
+		foreach ((string key, int newBal) in this.currencyChanges)
+		{
+			if (existing.TryGetValue(key, out UserPurseEntity? row))
+			{
+				row.Balance = newBal;
+			}
+			else
+			{
+				toAdd.Add(new UserPurseEntity
+				{
+					UserId = userId,
+					Currency = key,
+					Balance = newBal
+				});
+			}
+		}
+
+		if (toAdd.Count > 0)
+		{
+			await this.dbContext.UserPurse
+				.AddRangeAsync(toAdd, cancellationToken)
+				.ConfigureAwait(false);
+		}
+
+		try
+		{
+			await this.dbContext.SaveChangesAsync(cancellationToken)
+				.ConfigureAwait(false);
+			await this.transaction.CommitAsync(cancellationToken)
+				.ConfigureAwait(false);
+		}
+		catch
+		{
+			await this.transaction.RollbackAsync(cancellationToken)
+				.ConfigureAwait(false);
+			throw;
+		}
 	}
 
 	public void Dispose() => this.DisposeAsync().Wait();
@@ -131,7 +206,7 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 		{
 			foreach (IBadge badge in this.badges)
 			{
-				items.Add(new BadgeInventoryItem(badge, this.user.Profile));
+				items.Add(new BadgeInventoryItem(badge, this.sessionUser.Profile));
 			}
 		}
 
@@ -141,7 +216,7 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 			{
 				this.furnitures.TryGetFloorFurniture(item.FurnitureId, out IFloorFurniture? furniture);
 
-				items.Add(this.furnitureInventoryItemStrategy.CreateFurnitureItem(item.Id, this.user.Profile, furniture!, item.Data?.ExtraData));
+				items.Add(this.furnitureInventoryItemStrategy.CreateFurnitureItem(item.Id, this.sessionUser.Profile, furniture!, item.Data?.ExtraData));
 			}
 		}
 
@@ -151,10 +226,10 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 			{
 				this.furnitures.TryGetWallFurniture(item.FurnitureId, out IWallFurniture? furniture);
 
-				items.Add(this.furnitureInventoryItemStrategy.CreateFurnitureItem(item.Id, this.user.Profile, furniture!, item.Data?.ExtraData));
+				items.Add(this.furnitureInventoryItemStrategy.CreateFurnitureItem(item.Id, this.sessionUser.Profile, furniture!, item.Data?.ExtraData));
 			}
 		}
 
-		this.user.Inventory.AddUnseenItems(items);
+		this.sessionUser.Inventory.AddUnseenItems(items);
 	}
 }

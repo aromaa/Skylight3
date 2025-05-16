@@ -80,6 +80,7 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 
 	public DbSet<UserEntity> Users { get; init; } = null!;
 
+	public DbSet<UserPurseEntity> UserPurse { get; init; } = null!;
 	public DbSet<UserSettingsEntity> UserSettings { get; init; } = null!;
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -134,6 +135,7 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 		modelBuilder.ApplyConfiguration(new SettingsEntityTypeConfiguration());
 
 		modelBuilder.ApplyConfiguration(new UserEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new UserPurseEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new UserSettingsEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new UserWardrobeEntityTypeConfiguration());
 	}
