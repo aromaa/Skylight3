@@ -20,5 +20,4 @@ public static class CurrencyRegistry
 
 	public static bool Unregister(string currencyKey)
 		=> CurrencyRegistry.keys.TryRemove(currencyKey, out _);
-	}
-
+}
