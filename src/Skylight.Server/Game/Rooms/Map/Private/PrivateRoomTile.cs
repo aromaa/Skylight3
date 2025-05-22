@@ -32,7 +32,7 @@ internal sealed class PrivateRoomTile : RoomTile, IPrivateRoomTile
 	public override double? GetStepHeight(double z) => this.GetStepHeight(z, 2, 2);
 	internal override double? GetStepHeight(double z, double range, double emptySpace)
 	{
-		switch (this.heightMap.FindGabGreedy(z + range, emptySpace, static item => item.Furniture.Type == FloorFurnitureType.Walkable, out double value))
+		switch (this.heightMap.FindGabGreedy(z + range, emptySpace, static item => item.Furniture.Kind == FloorFurnitureKind.Walkable, out double value))
 		{
 			case IntervalTree<double, IFloorRoomItem>.SearchResult.Success:
 				return value;

@@ -4,7 +4,7 @@ using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Furniture.Floor;
 
-internal sealed class VariableHeightFurniture(int id, FloorFurnitureType type, Point2D dimensions, ImmutableArray<double> heights, int stateCount) : MultiStateFloorFurniture(id, type, dimensions, stateCount), IVariableHeightFurniture
+internal sealed class VariableHeightFurniture(int id, FloorFurnitureKind kind, Point2D dimensions, ImmutableArray<double> heights, int stateCount) : MultiStateFloorFurniture(id, kind, dimensions, stateCount), IVariableHeightFurniture
 {
 	public ImmutableArray<double> Heights { get; } = heights;
 

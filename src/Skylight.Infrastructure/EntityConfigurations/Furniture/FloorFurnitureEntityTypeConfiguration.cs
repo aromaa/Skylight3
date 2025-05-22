@@ -10,7 +10,7 @@ internal sealed class FloorFurnitureEntityTypeConfiguration : IEntityTypeConfigu
 	{
 		builder.ToTable("furniture_floor");
 
-		builder.Property(f => f.Type)
+		builder.Property(f => f.Kind)
 			.HasDefaultValue("walkable");
 
 		builder.Property(f => f.ClassName)

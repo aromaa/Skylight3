@@ -3,7 +3,7 @@ using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Furniture.Floor;
 
-internal sealed class SoundMachineFurniture(int id, FloorFurnitureType type, Point2D dimensions, double height) : FixedHeightStatefulFloorFurniture(id, type, dimensions, height), ISoundMachineFurniture
+internal sealed class SoundMachineFurniture(int id, FloorFurnitureKind kind, Point2D dimensions, double height) : FixedHeightStatefulFloorFurniture(id, kind, dimensions, height), ISoundMachineFurniture
 {
 	public int SoundSetSlotCount => 4;
 }

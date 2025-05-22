@@ -53,13 +53,13 @@ internal partial class FurnitureManager
 
 				foreach (FloorFurnitureEntity entity in this.floorFurnitures.Values)
 				{
-					FloorFurnitureType type = entity.Type switch
+					FloorFurnitureKind kind = entity.Kind switch
 					{
-						"walkable" => FloorFurnitureType.Walkable,
-						"seat" => FloorFurnitureType.Seat,
-						"bed" => FloorFurnitureType.Bed,
+						"walkable" => FloorFurnitureKind.Walkable,
+						"seat" => FloorFurnitureKind.Seat,
+						"bed" => FloorFurnitureKind.Bed,
 
-						_ => FloorFurnitureType.Obstacle
+						_ => FloorFurnitureKind.Obstacle
 					};
 
 					Point2D dimensions = new(entity.Width, entity.Length);
@@ -67,32 +67,32 @@ internal partial class FurnitureManager
 					FloorFurniture item = entity.InteractionType switch
 					{
 						//Todo: Factory
-						"sticky_note_pole" => new StickyNotePoleFurniture(entity.Id, type, dimensions, entity.Height[0]),
-						"furnimatic_gift" => new FurniMaticGiftFurniture(entity.Id, type, dimensions, entity.Height[0]),
-						"sound_machine" => new SoundMachineFurniture(entity.Id, type, dimensions, entity.Height[0]),
-						"sound_set" => CreateSoundSet(entity, type, dimensions),
-						"roller" => new RollerFurniture(entity.Id, type, dimensions, entity.Height[0]),
-						"basic" => new BasicFloorFurniture(entity.Id, type, dimensions, entity.Height[0], int.Parse(entity.InteractionData)),
-						"wired_on_say" => new UnitSayTriggerFurniture(entity.Id, type, dimensions, entity.Height[0]),
-						"wired_show_message" => new ShowMessageEffectFurniture(entity.Id, type, dimensions, entity.Height[0]),
-						"wired_unit_enter_room" => new UnitEnterRoomTriggerFurniture(entity.Id, type, dimensions, entity.Height[0]),
-						"wired_unit_use_item" => new UnitUseItemTriggerFurniture(entity.Id, type, dimensions, entity.Height[0]),
-						"wired_cycle_item_state" => new CycleItemStateEffectFurniture(entity.Id, type, dimensions, entity.Height[0]),
-						"wired_teleport_unit" => new TeleportUnitEffectFurniture(entity.Id, type, dimensions, entity.Height[0]),
-						"wired_unit_walk_on" => new UnitWalkOnTriggerFurniture(entity.Id, type, dimensions, entity.Height[0]),
-						"wired_unit_walk_off" => new UnitWalkOffTriggerFurniture(entity.Id, type, dimensions, entity.Height[0]),
-						"variable_height" => new VariableHeightFurniture(entity.Id, type, dimensions, [.. entity.Height], int.Parse(entity.InteractionData)),
+						"sticky_note_pole" => new StickyNotePoleFurniture(entity.Id, kind, dimensions, entity.Height[0]),
+						"furnimatic_gift" => new FurniMaticGiftFurniture(entity.Id, kind, dimensions, entity.Height[0]),
+						"sound_machine" => new SoundMachineFurniture(entity.Id, kind, dimensions, entity.Height[0]),
+						"sound_set" => CreateSoundSet(entity, kind, dimensions),
+						"roller" => new RollerFurniture(entity.Id, kind, dimensions, entity.Height[0]),
+						"basic" => new BasicFloorFurniture(entity.Id, kind, dimensions, entity.Height[0], int.Parse(entity.InteractionData)),
+						"wired_on_say" => new UnitSayTriggerFurniture(entity.Id, kind, dimensions, entity.Height[0]),
+						"wired_show_message" => new ShowMessageEffectFurniture(entity.Id, kind, dimensions, entity.Height[0]),
+						"wired_unit_enter_room" => new UnitEnterRoomTriggerFurniture(entity.Id, kind, dimensions, entity.Height[0]),
+						"wired_unit_use_item" => new UnitUseItemTriggerFurniture(entity.Id, kind, dimensions, entity.Height[0]),
+						"wired_cycle_item_state" => new CycleItemStateEffectFurniture(entity.Id, kind, dimensions, entity.Height[0]),
+						"wired_teleport_unit" => new TeleportUnitEffectFurniture(entity.Id, kind, dimensions, entity.Height[0]),
+						"wired_unit_walk_on" => new UnitWalkOnTriggerFurniture(entity.Id, kind, dimensions, entity.Height[0]),
+						"wired_unit_walk_off" => new UnitWalkOffTriggerFurniture(entity.Id, kind, dimensions, entity.Height[0]),
+						"variable_height" => new VariableHeightFurniture(entity.Id, kind, dimensions, [.. entity.Height], int.Parse(entity.InteractionData)),
 
-						_ => new StaticFloorFurniture(entity.Id, type, dimensions, entity.Height[0])
+						_ => new StaticFloorFurniture(entity.Id, kind, dimensions, entity.Height[0])
 					};
 
 					floorFurnitures.Add(item.Id, item);
 
-					static SoundSetFurniture CreateSoundSet(FloorFurnitureEntity entity, FloorFurnitureType type, Point2D dimensions)
+					static SoundSetFurniture CreateSoundSet(FloorFurnitureEntity entity, FloorFurnitureKind kind, Point2D dimensions)
 					{
 						int soundSetId = int.Parse(entity.ClassName.AsSpan(entity.ClassName.LastIndexOf('_') + 1));
 
-						return new SoundSetFurniture(entity.Id, type, dimensions, entity.Height[0], soundSetId, Enumerable.Range((soundSetId * 9) - 8, 9).ToFrozenSet());
+						return new SoundSetFurniture(entity.Id, kind, dimensions, entity.Height[0], soundSetId, Enumerable.Range((soundSetId * 9) - 8, 9).ToFrozenSet());
 					}
 				}
 

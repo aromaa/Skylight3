@@ -4,4 +4,4 @@ using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Furniture.Floor.Wired.Effects;
 
-internal sealed class ShowMessageEffectFurniture(int id, FloorFurnitureType type, Point2D dimensions, double height) : WiredEffectFurniture(id, type, dimensions, height), IShowMessageEffectFurniture;
+internal sealed class ShowMessageEffectFurniture(int id, FloorFurnitureKind kind, Point2D dimensions, double height) : WiredEffectFurniture(id, kind, dimensions, height), IShowMessageEffectFurniture;

@@ -45,7 +45,7 @@ public class RoomTileTests
 			foreach ((double z, double height) in slices)
 			{
 				Mock<IFloorRoomItem> itemMock = new();
-				itemMock.SetupGet(i => i.Furniture.Type).Returns(FloorFurnitureType.Walkable);
+				itemMock.SetupGet(i => i.Furniture.Kind).Returns(FloorFurnitureKind.Walkable);
 				itemMock.SetupGet(i => i.Position).Returns(new Point3D(location, z));
 				itemMock.SetupGet(i => i.Height).Returns(height);
 

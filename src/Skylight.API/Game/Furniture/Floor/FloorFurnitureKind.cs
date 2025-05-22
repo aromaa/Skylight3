@@ -1,6 +1,6 @@
 ﻿namespace Skylight.API.Game.Furniture.Floor;
 
-public enum FloorFurnitureType
+public enum FloorFurnitureKind
 {
 	Obstacle,
 	Walkable,

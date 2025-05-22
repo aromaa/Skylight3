@@ -3,4 +3,4 @@ using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Furniture.Floor;
 
-internal abstract class StatefulFloorFurniture(int id, FloorFurnitureType type, Point2D dimensions) : FloorFurniture(id, type, dimensions), IStatefulFloorFurniture;
+internal abstract class StatefulFloorFurniture(int id, FloorFurnitureKind kind, Point2D dimensions) : FloorFurniture(id, kind, dimensions), IStatefulFloorFurniture;
