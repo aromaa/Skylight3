@@ -7,14 +7,14 @@ namespace Skylight.Server.Game.Furniture.Floor;
 
 internal abstract class FloorFurniture : AbstractFurniture, IFloorFurniture
 {
-	public FloorFurnitureKind Kind { get; }
+	public IFloorFurnitureKind Kind { get; }
 
 	public Point2D Dimensions { get; }
 	public ImmutableArray<Point2D> EffectiveTiles { get; }
 
 	public abstract double DefaultHeight { get; }
 
-	internal FloorFurniture(int id, FloorFurnitureKind kind, Point2D dimensions)
+	internal FloorFurniture(int id, IFloorFurnitureKind kind, Point2D dimensions)
 		: base(id)
 	{
 		this.Kind = kind;

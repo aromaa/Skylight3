@@ -4,4 +4,4 @@ using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Furniture.Floor.Wired.Triggers;
 
-internal sealed class UnitWalkOnTriggerFurniture(int id, FloorFurnitureKind kind, Point2D dimensions, double height) : WiredTriggerFurniture(id, kind, dimensions, height), IUnitWalkOnTriggerFurniture;
+internal sealed class UnitWalkOnTriggerFurniture(int id, IFloorFurnitureKind kind, Point2D dimensions, double height) : WiredTriggerFurniture(id, kind, dimensions, height), IUnitWalkOnTriggerFurniture;

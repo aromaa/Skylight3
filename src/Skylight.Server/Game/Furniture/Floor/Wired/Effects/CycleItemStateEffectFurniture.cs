@@ -4,4 +4,4 @@ using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Furniture.Floor.Wired.Effects;
 
-internal sealed class CycleItemStateEffectFurniture(int id, FloorFurnitureKind kind, Point2D dimensions, double height) : WiredEffectFurniture(id, kind, dimensions, height), ICycleItemStateEffectFurniture;
+internal sealed class CycleItemStateEffectFurniture(int id, IFloorFurnitureKind kind, Point2D dimensions, double height) : WiredEffectFurniture(id, kind, dimensions, height), ICycleItemStateEffectFurniture;

@@ -1,15 +1,18 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Skylight.API.DependencyInjection;
 using Skylight.API.Game.Furniture;
+using Skylight.API.Registry;
 using Skylight.Domain.Furniture;
 using Skylight.Infrastructure;
 using Skylight.Server.DependencyInjection;
 
 namespace Skylight.Server.Game.Furniture;
 
-internal sealed partial class FurnitureManager(IDbContextFactory<SkylightContext> dbContextFactory) : LoadableServiceBase<IFurnitureSnapshot>(new Snapshot(Cache.CreateBuilder().ToImmutable())), IFurnitureManager
+internal sealed partial class FurnitureManager(IDbContextFactory<SkylightContext> dbContextFactory, IRegistryHolder registryHolder) : LoadableServiceBase<IFurnitureSnapshot>(new Snapshot(Cache.CreateBuilder().ToImmutable(registryHolder))), IFurnitureManager
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
+
+	private readonly IRegistryHolder registryHolder = registryHolder;
 
 	public override async Task<IFurnitureSnapshot> LoadAsyncCore(ILoadableServiceContext context, CancellationToken cancellationToken = default)
 	{
@@ -40,6 +43,6 @@ internal sealed partial class FurnitureManager(IDbContextFactory<SkylightContext
 			}
 		}
 
-		return new Snapshot(builder.ToImmutable());
+		return new Snapshot(builder.ToImmutable(this.registryHolder));
 	}
 }

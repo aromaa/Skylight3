@@ -5,6 +5,7 @@ using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Rooms.Map.Private;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Numerics;
+using Skylight.API.Registry;
 using Skylight.Server.Collections;
 using Skylight.Server.Game.Rooms.Layout;
 using Skylight.Server.Game.Rooms.Private;
@@ -17,12 +18,19 @@ internal sealed class PrivateRoomTile : RoomTile, IPrivateRoomTile
 
 	private readonly IntervalTree<double, IFloorRoomItem> heightMap;
 
-	internal PrivateRoomTile(PrivateRoom room, IRoomMap map, Point2D location, RoomLayoutTile layoutTile)
+	private readonly IFloorFurnitureKind? walkable;
+
+	internal PrivateRoomTile(PrivateRoom room, IRoomMap map, IRegistryHolder registryHolder, Point2D location, RoomLayoutTile layoutTile)
 		: base(map, location, layoutTile)
 	{
 		this.room = room;
 
 		this.heightMap = new IntervalTree<double, IFloorRoomItem>();
+
+		if (FloorFurnitureKindTypes.Walkable.TryGet(registryHolder, out IFloorFurnitureKindType? walkableType))
+		{
+			this.walkable = walkableType.Value;
+		}
 	}
 
 	public IEnumerable<IFloorRoomItem> FloorItems => this.heightMap.Values;
@@ -32,7 +40,7 @@ internal sealed class PrivateRoomTile : RoomTile, IPrivateRoomTile
 	public override double? GetStepHeight(double z) => this.GetStepHeight(z, 2, 2);
 	internal override double? GetStepHeight(double z, double range, double emptySpace)
 	{
-		switch (this.heightMap.FindGabGreedy(z + range, emptySpace, static item => item.Furniture.Kind == FloorFurnitureKind.Walkable, out double value))
+		switch (this.heightMap.FindGabGreedy(z + range, emptySpace, item => item.Furniture.Kind == this.walkable, out double value))
 		{
 			case IntervalTree<double, IFloorRoomItem>.SearchResult.Success:
 				return value;

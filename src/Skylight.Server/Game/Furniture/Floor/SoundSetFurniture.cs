@@ -4,7 +4,7 @@ using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Furniture.Floor;
 
-internal sealed class SoundSetFurniture(int id, FloorFurnitureKind kind, Point2D dimensions, double height, int soundSetId, FrozenSet<int> samples) : PlainFloorFurniture(id, kind, dimensions, height), ISoundSetFurniture
+internal sealed class SoundSetFurniture(int id, IFloorFurnitureKind kind, Point2D dimensions, double height, int soundSetId, FrozenSet<int> samples) : PlainFloorFurniture(id, kind, dimensions, height), ISoundSetFurniture
 {
 	public int SoundSetId { get; } = soundSetId;
 

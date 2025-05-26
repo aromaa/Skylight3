@@ -6,6 +6,7 @@ using Skylight.API.Game.Badges;
 using Skylight.API.Game.Catalog;
 using Skylight.API.Game.Clients;
 using Skylight.API.Game.Furniture;
+using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Inventory.Items;
 using Skylight.API.Game.Navigator;
 using Skylight.API.Game.Recycler.FurniMatic;
@@ -18,6 +19,7 @@ using Skylight.API.Game.Users.Authentication;
 using Skylight.API.Net.Connection;
 using Skylight.API.Net.EndPoint;
 using Skylight.API.Net.Listener;
+using Skylight.API.Registry;
 using Skylight.API.Server;
 using Skylight.Server.DependencyInjection;
 using Skylight.Server.Game.Achievements;
@@ -26,6 +28,7 @@ using Skylight.Server.Game.Catalog;
 using Skylight.Server.Game.Catalog.Recycler.FurniMatic;
 using Skylight.Server.Game.Clients;
 using Skylight.Server.Game.Furniture;
+using Skylight.Server.Game.Furniture.Floor;
 using Skylight.Server.Game.Inventory.Items;
 using Skylight.Server.Game.Navigator;
 using Skylight.Server.Game.Rooms;
@@ -42,6 +45,7 @@ using Skylight.Server.Net.Listener;
 using Skylight.Server.Net.Listener.Connection;
 using Skylight.Server.Net.Listener.Ip;
 using Skylight.Server.Net.Listener.XmlSocket;
+using Skylight.Server.Registry;
 
 namespace Skylight.Server.Extensions;
 
@@ -99,6 +103,15 @@ public static class HostBuilderExtensions
 		builder.AddSingleton(typeof(IWallRoomItemStrategy<,>), typeof(WallRoomItemStrategy<,>));
 
 		builder.AddSingleton(typeof(Lazy<>), typeof(LazyService<>));
+
+		//TODO: Figure out something nicer than this
+		builder.AddSingleton(typeof(IRegistry), Registry<IFloorFurnitureKindType>.Create(RegistryTypes.FloorFurnitureKind,
+			(FloorFurnitureKindTypes.Seat.Key, new FloorFurnitureKindType(new FloorFurnitureKind())),
+			(FloorFurnitureKindTypes.Walkable.Key, new FloorFurnitureKindType(new FloorFurnitureKind())),
+			(FloorFurnitureKindTypes.Bed.Key, new FloorFurnitureKindType(new FloorFurnitureKind())),
+			(FloorFurnitureKindTypes.Obstacle.Key, new FloorFurnitureKindType(new FloorFurnitureKind()))));
+
+		builder.AddSingleton<IRegistryHolder>(l => l.GetRequiredService<IServer>());
 
 		return builder;
 	}

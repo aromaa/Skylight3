@@ -1,6 +1,7 @@
 ﻿using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Rooms.Map.Private;
 using Skylight.API.Numerics;
+using Skylight.API.Registry;
 using Skylight.Server.Collections.Immutable;
 using Skylight.Server.Game.Rooms.Layout;
 using Skylight.Server.Game.Rooms.Private;
@@ -11,7 +12,7 @@ internal sealed class PrivateRoomMap : RoomMap, IPrivateRoomMap
 {
 	private readonly ImmutableArray2D<IPrivateRoomTile> tiles;
 
-	internal PrivateRoomMap(PrivateRoom room, IRoomLayout layout)
+	internal PrivateRoomMap(PrivateRoom room, IRoomLayout layout, IRegistryHolder registryHolder)
 		: base(layout)
 	{
 		ImmutableArray2D<IPrivateRoomTile>.Builder builder = ImmutableArray2D.CreateBuilder<IPrivateRoomTile>(layout.Size.X, layout.Size.Y);
@@ -19,7 +20,7 @@ internal sealed class PrivateRoomMap : RoomMap, IPrivateRoomMap
 		{
 			for (int y = 0; y < layout.Size.Y; y++)
 			{
-				builder[x, y] = new PrivateRoomTile(room, this, new Point2D(x, y), ((RoomLayout)layout).Tiles[x, y]);
+				builder[x, y] = new PrivateRoomTile(room, this, registryHolder, new Point2D(x, y), ((RoomLayout)layout).Tiles[x, y]);
 			}
 		}
 
