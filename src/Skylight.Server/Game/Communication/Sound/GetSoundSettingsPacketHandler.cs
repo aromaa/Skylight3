@@ -14,9 +14,9 @@ internal sealed class GetSoundSettingsPacketHandler<T> : UserPacketHandler<T>
 	{
 		user.SendAsync(new AccountPreferencesOutgoingPacket
 		{
-			UIVolume = 75,
-			FurniVolume = 75,
-			TraxVolume = 75,
+			UIVolume = user.Settings!.UiVolume,
+			FurniVolume = user.Settings!.FurniVolume,
+			TraxVolume = user.Settings!.TraxVolume,
 			FreeFlowChatDisabled = false,
 			RoomInvitesIgnored = false,
 			RoomCameraFollowDisabled = false,

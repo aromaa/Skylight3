@@ -20,5 +20,14 @@ internal sealed class UserSettingsEntityTypeConfiguration : IEntityTypeConfigura
 			.WithMany()
 			.HasForeignKey(u => u.HomeRoomId)
 			.OnDelete(DeleteBehavior.SetNull);
+
+		builder.Property(u => u.UiVolume)
+			.HasDefaultValue(75);
+
+		builder.Property(u => u.FurniVolume)
+			.HasDefaultValue(75);
+
+		builder.Property(u => u.TraxVolume)
+			.HasDefaultValue(75);
 	}
 }
