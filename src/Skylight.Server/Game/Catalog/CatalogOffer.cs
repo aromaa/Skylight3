@@ -2,6 +2,7 @@
 using Skylight.API.Game.Catalog;
 using Skylight.API.Game.Catalog.Products;
 using Skylight.API.Game.Purse;
+using Skylight.API.Registry;
 
 namespace Skylight.Server.Game.Catalog;
 
@@ -47,7 +48,10 @@ internal sealed class CatalogOffer : ICatalogOffer
 		this.Products = products;
 	}
 
-	public bool CanPurchase(ICatalogTransaction transaction) => transaction.GetCurrencyBalance(CurrencyKeys.Credits) >= this.CostCredits;
+	private static readonly RegistryReference<Currency> credits = Currencies.Credits;
+
+	private bool CanPurchase(ICatalogTransaction tx) =>
+		tx.GetCurrencyBalance(CatalogOffer.credits) >= this.CostCredits;
 
 	public async ValueTask PurchaseAsync(
 		ICatalogTransaction transaction,
@@ -65,7 +69,7 @@ internal sealed class CatalogOffer : ICatalogOffer
 
 		if (this.CostCredits > 0)
 		{
-			transaction.DeductCurrency(CurrencyKeys.Credits, this.CostCredits);
+			transaction.DeductCurrency(CatalogOffer.credits, this.CostCredits);
 		}
 
 		IEnumerable<Task> purchaseTasks = this.Products

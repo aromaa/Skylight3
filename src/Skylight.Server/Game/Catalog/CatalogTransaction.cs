@@ -3,13 +3,16 @@ using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Skylight.API;
 using Skylight.API.Game.Badges;
 using Skylight.API.Game.Catalog;
 using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Furniture.Wall;
 using Skylight.API.Game.Inventory.Items;
+using Skylight.API.Game.Purse;
 using Skylight.API.Game.Users;
+using Skylight.API.Registry;
 using Skylight.Domain.Badges;
 using Skylight.Domain.Items;
 using Skylight.Domain.Users;
@@ -37,7 +40,7 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 	private List<FloorItemEntity>? floorItems;
 	private List<WallItemEntity>? wallItems;
 
-	private readonly Dictionary<string, int> currencyChanges = new();
+	private readonly Dictionary<ResourceKey, int> currencyChanges = new();
 
 	internal CatalogTransaction(IFurnitureSnapshot furnitures, IFurnitureInventoryItemStrategy furnitureInventoryItemStrategy, SkylightContext dbContext, IDbContextTransaction transaction, IUser user, string extraData)
 	{
@@ -118,46 +121,52 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 		this.dbContext.Add(entity);
 	}
 
-	public int GetCurrencyBalance(string currencyKey)
+	public int GetCurrencyBalance(RegistryReference<Currency> currency)
 	{
-		return this.sessionUser.Purse.GetBalance(currencyKey);
+		return this.sessionUser.Purse.GetBalance(currency);
 	}
 
-	public void AddCurrency(string currencyKey, int amount)
+	public void AddCurrency(RegistryReference<Currency> currency, int amount)
 	{
-		int current = this.sessionUser.Purse.GetBalance(currencyKey);
-		int updated = current + amount;
-
-		this.sessionUser.Purse.UpdateBalance(currencyKey, updated);
-		this.currencyChanges[currencyKey] = updated;
+		int updated = this.GetCurrencyBalance(currency) + amount;
+		this.sessionUser.Purse.UpdateBalance(currency, updated);
+		this.currencyChanges[currency.Key] = updated;
 	}
 
-	public void DeductCurrency(string currencyKey, int amount)
+	public void DeductCurrency(RegistryReference<Currency> currency, int amount)
 	{
-		int current = this.sessionUser.Purse.GetBalance(currencyKey);
+		int current = this.GetCurrencyBalance(currency);
 		if (current < amount)
 		{
 			throw new InvalidOperationException("Not enough balance to complete the purchase");
 		}
 
 		int updated = current - amount;
-		this.sessionUser.Purse.UpdateBalance(currencyKey, updated);
-		this.currencyChanges[currencyKey] = updated;
+		this.sessionUser.Purse.UpdateBalance(currency, updated);
+		this.currencyChanges[currency.Key] = updated;
 	}
 
 	public async Task CompleteAsync(CancellationToken cancellationToken = default)
 	{
 		int userId = this.User.Id;
 
-		Dictionary<string, UserPurseEntity> existing = await this.dbContext.UserPurse
-			.Where(uc => uc.UserId == userId && this.currencyChanges.Keys.Contains(uc.Currency))
-			.ToDictionaryAsync(uc => uc.Currency, uc => uc, cancellationToken)
-			.ConfigureAwait(false);
+		List<string> keysAsStrings = this.currencyChanges.Keys
+			.Select(k => k.ToString())
+			.ToList();
+
+		Dictionary<string, UserPurseEntity> existing =
+			await this.dbContext.UserPurse
+				.Where(uc => uc.UserId == userId && keysAsStrings.Contains(uc.Currency))
+				.ToDictionaryAsync(uc => uc.Currency, uc => uc, cancellationToken)
+				.ConfigureAwait(false);
 
 		List<UserPurseEntity> toAdd = [];
-		foreach ((string key, int newBal) in this.currencyChanges)
+
+		foreach ((ResourceKey key, int newBal) in this.currencyChanges)
 		{
-			if (existing.TryGetValue(key, out UserPurseEntity? row))
+			string keyStr = key.ToString();
+
+			if (existing.TryGetValue(keyStr, out UserPurseEntity? row))
 			{
 				row.Balance = newBal;
 			}
@@ -165,9 +174,9 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 			{
 				toAdd.Add(new UserPurseEntity
 				{
-					UserId = userId,
-					Currency = key,
-					Balance = newBal
+					UserId   = userId,
+					Currency = keyStr,
+					Balance  = newBal
 				});
 			}
 		}
@@ -181,15 +190,12 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 
 		try
 		{
-			await this.dbContext.SaveChangesAsync(cancellationToken)
-				.ConfigureAwait(false);
-			await this.transaction.CommitAsync(cancellationToken)
-				.ConfigureAwait(false);
+			await this.dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+			await this.transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 		}
 		catch
 		{
-			await this.transaction.RollbackAsync(cancellationToken)
-				.ConfigureAwait(false);
+			await this.transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
 			throw;
 		}
 	}

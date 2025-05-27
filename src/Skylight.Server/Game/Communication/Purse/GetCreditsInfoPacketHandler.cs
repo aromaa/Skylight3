@@ -13,7 +13,7 @@ internal sealed class GetCreditsInfoPacketHandler<T> : UserPacketHandler<T>
 {
 	internal override void Handle(IUser user, in T packet)
 	{
-		int creditsBalance = user.Purse.GetBalance(CurrencyKeys.Credits);
-		user.SendAsync(new CreditBalanceOutgoingPacket((int)creditsBalance));
+		int creditsBalance = user.Purse.GetBalance(Currencies.Credits);
+		user.SendAsync(new CreditBalanceOutgoingPacket(creditsBalance));
 	}
 }

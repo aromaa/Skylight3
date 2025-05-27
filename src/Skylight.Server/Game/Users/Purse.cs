@@ -1,33 +1,36 @@
 using System.Collections.Concurrent;
+using Microsoft.EntityFrameworkCore;
+using Skylight.API;
 using Skylight.API.Game.Purse;
+using Skylight.API.Registry;
 using Skylight.Infrastructure;
 
 namespace Skylight.Server.Game.Users;
 
 internal sealed class Purse : IPurse
 {
-	private readonly ConcurrentDictionary<string, int> currencies;
+	private readonly ConcurrentDictionary<ResourceKey, int> balances;
 
-	private Purse(Dictionary<string, int> initialCurrencies)
+	private Purse(IDictionary<ResourceKey, int> snapshot)
 	{
-		this.currencies = new ConcurrentDictionary<string, int>(initialCurrencies);
+		this.balances = new ConcurrentDictionary<ResourceKey, int>(snapshot);
 	}
 
-	public static Purse FromDatabase(int userId, SkylightContext db, CancellationToken ct)
+	public static Purse FromDatabase(
+		int userId,
+		SkylightContext db,
+		CancellationToken ct = default)
 	{
-		Dictionary<string, int> dbDict = db.UserPurse
-			.Where(c => c.UserId == userId)
-			.ToDictionary(c => c.Currency, c => c.Balance);
-
-		Dictionary<string, int> merged = CurrencyRegistry.RegisteredKeys
-			.ToDictionary(k => k, k => dbDict.GetValueOrDefault(k, 0));
-
-		return new Purse(merged);
+		Dictionary<ResourceKey, int> snapshot = db.UserPurse
+			.Where(p => p.UserId == userId)
+			.AsNoTracking()
+			.ToDictionary(
+				p => ResourceKey.Parse(p.Currency),
+				p => p.Balance);
+		return new Purse(snapshot);
 	}
 
-	public int GetBalance(string currencyKey)
-		=> this.currencies.GetValueOrDefault(currencyKey, 0);
+	public int GetBalance(RegistryReference<Currency> currency) => this.balances.GetValueOrDefault(currency.Key, 0);
 
-	public void UpdateBalance(string currencyKey, int newBalance)
-		=> this.currencies.AddOrUpdate(currencyKey, newBalance, (_, __) => newBalance);
+	public void UpdateBalance(RegistryReference<Currency> currency, int newBalance) => this.balances.AddOrUpdate(currency.Key, newBalance, (_, __) => newBalance);
 }
