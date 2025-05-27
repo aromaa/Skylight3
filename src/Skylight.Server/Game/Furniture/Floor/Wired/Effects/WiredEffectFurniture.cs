@@ -4,7 +4,7 @@ using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Furniture.Floor.Wired.Effects;
 
-internal abstract class WiredEffectFurniture(int id, FloorFurnitureType type, Point2D dimensions, double height) : FloorFurniture(id, type, dimensions), IWiredEffectFurniture
+internal abstract class WiredEffectFurniture(int id, IFloorFurnitureKind kind, Point2D dimensions, double height) : FloorFurniture(id, kind, dimensions), IWiredEffectFurniture
 {
 	public override double DefaultHeight => height;
 }

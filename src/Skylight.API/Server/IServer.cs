@@ -1,6 +1,8 @@
-﻿namespace Skylight.API.Server;
+﻿using Skylight.API.Registry;
 
-public interface IServer
+namespace Skylight.API.Server;
+
+public interface IServer : IRegistryHolder
 {
 	public Task StartAsync(CancellationToken cancellationToken);
 	public Task StopAsync(CancellationToken cancellationToken);

@@ -1,13 +1,15 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Skylight.API.DependencyInjection;
+using Skylight.API.Registry;
 using Skylight.API.Server;
 using Skylight.Server.Net;
 using Skylight.Server.Net.Communication;
+using Skylight.Server.Registry;
 
 namespace Skylight.Server;
 
-internal sealed class SkylightServer(IHostEnvironment hostEnvironment, PacketManagerCache packetManagerCache, NetworkManager networkManager, Lazy<ILoadableServiceManager> loadableServiceManager)
-	: IServer
+internal sealed class SkylightServer(IHostEnvironment hostEnvironment, PacketManagerCache packetManagerCache, NetworkManager networkManager, Lazy<ILoadableServiceManager> loadableServiceManager, IEnumerable<IRegistry> registries)
+	: RegistryHolder(registries), IServer
 {
 	private readonly IHostEnvironment hostEnvironment = hostEnvironment;
 

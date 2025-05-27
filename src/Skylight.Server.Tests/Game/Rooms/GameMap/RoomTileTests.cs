@@ -3,9 +3,13 @@ using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Numerics;
+using Skylight.API.Registry;
+using Skylight.Server.Game.Furniture.Floor;
 using Skylight.Server.Game.Rooms.Layout;
 using Skylight.Server.Game.Rooms.Map;
 using Skylight.Server.Game.Rooms.Map.Private;
+using Skylight.Server.Registry;
+using Skylight.Server.Tests.Registry;
 
 namespace Skylight.Server.Tests.Game.Rooms.GameMap;
 
@@ -20,6 +24,12 @@ public class RoomTileTests
 
 	public static IEnumerable<object[]> StepHeightData()
 	{
+		FloorFurnitureKind walkable = new();
+
+		DummyRegistryHolder registryHolder = new(Registry<IFloorFurnitureKindType>.Create(
+			RegistryTypes.FloorFurnitureKind,
+			(FloorFurnitureKindTypes.Walkable.Key, new FloorFurnitureKindType(walkable))));
+
 		yield return [CreateTile(), 123, 0, 0, 0];
 		yield return [CreateTile((123, 0)), 123, 0, 0, 123];
 		yield return [CreateTile((123, 0)), 23, 100, 0, 123];
@@ -34,18 +44,18 @@ public class RoomTileTests
 		yield return [CreateTile((123, 0)), double.BitDecrement(123), 0, 0, 0];
 		yield return [CreateTile((123, 0)), double.BitIncrement(123), 0, 0, 123];
 
-		static RoomTile CreateTile(params (double Z, double Height)[] slices)
+		RoomTile CreateTile(params (double Z, double Height)[] slices)
 		{
 			Point2D location = new(0, 0);
 
 			Mock<IRoomMap> roomMapMock = new();
 
-			PrivateRoomTile rangeMap = new(null!, roomMapMock.Object, location, new RoomLayoutTile(0));
+			PrivateRoomTile rangeMap = new(null!, roomMapMock.Object, registryHolder, location, new RoomLayoutTile(0));
 
 			foreach ((double z, double height) in slices)
 			{
 				Mock<IFloorRoomItem> itemMock = new();
-				itemMock.SetupGet(i => i.Furniture.Type).Returns(FloorFurnitureType.Walkable);
+				itemMock.SetupGet(i => i.Furniture.Kind).Returns(walkable);
 				itemMock.SetupGet(i => i.Position).Returns(new Point3D(location, z));
 				itemMock.SetupGet(i => i.Height).Returns(height);
 

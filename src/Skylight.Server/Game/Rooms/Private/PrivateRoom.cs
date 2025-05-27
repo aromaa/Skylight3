@@ -10,6 +10,7 @@ using Skylight.API.Game.Rooms.Map.Private;
 using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
+using Skylight.API.Registry;
 using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Data.Room.Engine;
 using Skylight.Protocol.Packets.Outgoing.Room.Engine;
@@ -29,11 +30,11 @@ internal sealed class PrivateRoom : Room, IPrivateRoom
 
 	private readonly double[,] tileHeights;
 
-	public PrivateRoom(IPrivateRoomInfo info, IRoomLayout roomLayout, IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, IFloorRoomItemStrategy floorRoomItemStrategy, IWallRoomItemStrategy wallRoomItemStrategy, IUserManager userManager, IRoomItemInteractionManager itemInteractionManager, INavigatorManager navigatorManager)
+	public PrivateRoom(IPrivateRoomInfo info, IRoomLayout roomLayout, IRegistryHolder registryHolder, IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, IFloorRoomItemStrategy floorRoomItemStrategy, IWallRoomItemStrategy wallRoomItemStrategy, IUserManager userManager, IRoomItemInteractionManager itemInteractionManager, INavigatorManager navigatorManager)
 		: base(roomLayout)
 	{
 		this.Info = info;
-		this.Map = new PrivateRoomMap(this, roomLayout);
+		this.Map = new PrivateRoomMap(this, roomLayout, registryHolder);
 
 		this.ItemManager = new RoomItemManager(this, roomLayout, dbContextFactory, userManager, furnitureManager, floorRoomItemStrategy, wallRoomItemStrategy, itemInteractionManager);
 
