@@ -25,8 +25,9 @@ internal sealed class CatalogOffer : ICatalogOffer
 	public bool HasOffer { get; }
 
 	public ImmutableArray<ICatalogProduct> Products { get; }
+	private readonly ICurrency priceCurrency;
 
-	internal CatalogOffer(int id, string name, int orderNum, int clubRank, int costCredits, int costActivityPoints, int activityPointsType, TimeSpan rentTime, bool hasOffer, ImmutableArray<ICatalogProduct> products)
+	internal CatalogOffer(int id, string name, int orderNum, int clubRank, int costCredits, int costActivityPoints, int activityPointsType, TimeSpan rentTime, bool hasOffer, ImmutableArray<ICatalogProduct> products, ICurrency priceCurrency)
 	{
 		this.Id = id;
 
@@ -46,12 +47,12 @@ internal sealed class CatalogOffer : ICatalogOffer
 		this.HasOffer = hasOffer;
 
 		this.Products = products;
+
+		this.priceCurrency = priceCurrency;
 	}
 
-	private static readonly RegistryReference<Currency> credits = Currencies.Credits;
-
 	private bool CanPurchase(ICatalogTransaction tx) =>
-		tx.GetCurrencyBalance(CatalogOffer.credits) >= this.CostCredits;
+		tx.GetCurrencyBalance(this.priceCurrency) >= this.CostCredits;
 
 	public async ValueTask PurchaseAsync(
 		ICatalogTransaction transaction,
@@ -69,7 +70,7 @@ internal sealed class CatalogOffer : ICatalogOffer
 
 		if (this.CostCredits > 0)
 		{
-			transaction.DeductCurrency(CatalogOffer.credits, this.CostCredits);
+			transaction.DeductCurrency(this.priceCurrency, this.CostCredits);
 		}
 
 		IEnumerable<Task> purchaseTasks = this.Products

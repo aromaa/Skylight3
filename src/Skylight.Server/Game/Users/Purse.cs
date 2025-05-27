@@ -30,7 +30,7 @@ internal sealed class Purse : IPurse
 		return new Purse(snapshot);
 	}
 
-	public int GetBalance(RegistryReference<Currency> currency) => this.balances.GetValueOrDefault(currency.Key, 0);
+	public int GetBalance(ResourceKey currency) => this.balances.GetValueOrDefault(currency, 0);
 
-	public void UpdateBalance(RegistryReference<Currency> currency, int newBalance) => this.balances.AddOrUpdate(currency.Key, newBalance, (_, __) => newBalance);
+	public void SetBalance(ResourceKey currency, int newBalance) => this.balances.AddOrUpdate(currency, newBalance, (_, _) => newBalance);
 }

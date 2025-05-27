@@ -12,7 +12,6 @@ using Skylight.API.Game.Furniture.Wall;
 using Skylight.API.Game.Inventory.Items;
 using Skylight.API.Game.Purse;
 using Skylight.API.Game.Users;
-using Skylight.API.Registry;
 using Skylight.Domain.Badges;
 using Skylight.Domain.Items;
 using Skylight.Domain.Users;
@@ -40,7 +39,7 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 	private List<FloorItemEntity>? floorItems;
 	private List<WallItemEntity>? wallItems;
 
-	private readonly Dictionary<ResourceKey, int> currencyChanges = new();
+	private readonly Dictionary<ResourceKey, int> balanceChanges = new();
 
 	internal CatalogTransaction(IFurnitureSnapshot furnitures, IFurnitureInventoryItemStrategy furnitureInventoryItemStrategy, SkylightContext dbContext, IDbContextTransaction transaction, IUser user, string extraData)
 	{
@@ -121,36 +120,33 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 		this.dbContext.Add(entity);
 	}
 
-	public int GetCurrencyBalance(RegistryReference<Currency> currency)
+	public int GetCurrencyBalance(ICurrency currency) => this.sessionUser.Purse.GetBalance(currency.Key);
+
+	public void AddCurrency(ICurrency currency, int amount)
 	{
-		return this.sessionUser.Purse.GetBalance(currency);
+		int newBal = this.GetCurrencyBalance(currency) + amount;
+		this.sessionUser.Purse.SetBalance(currency.Key, newBal);
+		this.balanceChanges[currency.Key] = newBal;
 	}
 
-	public void AddCurrency(RegistryReference<Currency> currency, int amount)
-	{
-		int updated = this.GetCurrencyBalance(currency) + amount;
-		this.sessionUser.Purse.UpdateBalance(currency, updated);
-		this.currencyChanges[currency.Key] = updated;
-	}
-
-	public void DeductCurrency(RegistryReference<Currency> currency, int amount)
+	public void DeductCurrency(ICurrency currency, int amount)
 	{
 		int current = this.GetCurrencyBalance(currency);
 		if (current < amount)
 		{
-			throw new InvalidOperationException("Not enough balance to complete the purchase");
+			throw new InvalidOperationException("Not enough balance");
 		}
 
-		int updated = current - amount;
-		this.sessionUser.Purse.UpdateBalance(currency, updated);
-		this.currencyChanges[currency.Key] = updated;
+		int newBal = current - amount;
+		this.sessionUser.Purse.SetBalance(currency.Key, newBal);
+		this.balanceChanges[currency.Key] = newBal;
 	}
 
 	public async Task CompleteAsync(CancellationToken cancellationToken = default)
 	{
 		int userId = this.User.Id;
 
-		List<string> keysAsStrings = this.currencyChanges.Keys
+		List<string> keysAsStrings = this.balanceChanges.Keys
 			.Select(k => k.ToString())
 			.ToList();
 
@@ -162,7 +158,7 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 
 		List<UserPurseEntity> toAdd = [];
 
-		foreach ((ResourceKey key, int newBal) in this.currencyChanges)
+		foreach ((ResourceKey key, int newBal) in this.balanceChanges)
 		{
 			string keyStr = key.ToString();
 
@@ -174,9 +170,9 @@ internal sealed class CatalogTransaction : ICatalogTransaction
 			{
 				toAdd.Add(new UserPurseEntity
 				{
-					UserId   = userId,
+					UserId = userId,
 					Currency = keyStr,
-					Balance  = newBal
+					Balance = newBal
 				});
 			}
 		}

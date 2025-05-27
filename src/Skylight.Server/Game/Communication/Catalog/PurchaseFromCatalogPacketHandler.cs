@@ -45,7 +45,7 @@ internal sealed partial class PurchaseFromCatalogPacketHandler<T>(ICatalogManage
 			try
 			{
 				await catalog.PurchaseOfferAsync(client.User!, offer, extraData, amount).ConfigureAwait(false);
-				int newBalance = client.User!.Purse.GetBalance(Currencies.Credits);
+				int newBalance = client.User!.Purse.GetBalance(Currencies.Credits.Key);
 				client.SendAsync(new CreditBalanceOutgoingPacket(newBalance));
 			}
 			catch (InvalidOperationException)

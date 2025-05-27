@@ -4,6 +4,6 @@ namespace Skylight.API.Game.Purse;
 
 public interface IPurse
 {
-	int GetBalance(RegistryReference<Currency> currency);
-	void UpdateBalance(RegistryReference<Currency> currency, int newBalance);
+	int GetBalance(ResourceKey currency);
+	void SetBalance(ResourceKey currency, int newBalance);
 }
