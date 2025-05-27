@@ -8,4 +8,7 @@ public class UserSettingsEntity
 	public UserEntity? User { get; set; }
 	public PrivateRoomEntity? HomeRoom { get; set; }
 	public int? HomeRoomId { get; set; }
+	public int? UiVolume { get; set; } = 75;
+	public int? FurniVolume { get; set; } = 75;
+	public int? TraxVolume { get; set; } = 75;
 }
