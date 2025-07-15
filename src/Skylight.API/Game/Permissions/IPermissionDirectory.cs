@@ -9,5 +9,7 @@ public interface IPermissionDirectory
 
 public interface IPermissionDirectory<T> : IPermissionDirectory
 {
-	ValueTask<IPermissionSubject?> GetSubjectAsync(T identifier);
+	public ValueTask<IPermissionSubject?> GetSubjectAsync(T identifier);
+
+	public IPermissionSubjectReference<T> CreateSubjectReference(T identifier);
 }

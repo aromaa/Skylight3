@@ -77,4 +77,6 @@ internal sealed class PermissionContainer : IPermissionContainer
 	}
 
 	internal bool RemoveParent(IPermissionSubjectReference reference) => this.parents.TryRemove(reference, out _);
+
+	public bool IsChildOf(IPermissionSubjectReference parent) => this.parents.ContainsKey(parent);
 }

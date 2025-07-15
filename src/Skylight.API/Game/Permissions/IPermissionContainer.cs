@@ -17,4 +17,6 @@ public interface IPermissionContainer
 
 	public ValueTask<bool> AddParentAsync(IPermissionSubjectReference reference);
 	public ValueTask<bool> RemoveParentAsync(IPermissionSubjectReference reference);
+
+	public bool IsChildOf(IPermissionSubjectReference parent);
 }

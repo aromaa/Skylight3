@@ -14,4 +14,6 @@ public interface IPermissionSubject
 
 	public bool TryGetPermission(string permission, out bool value);
 	public bool TryGetEntitlement(string entitlement, [NotNullWhen(true)] out string? value);
+
+	public bool IsChildOf(IPermissionSubjectReference parent);
 }

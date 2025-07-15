@@ -73,6 +73,37 @@ internal sealed class PermissionSubject(IPermissionDirectory directory) : IPermi
 		return defaults != this && defaults.TryGetEntitlement(entitlement, out value);
 	}
 
+	public bool IsChildOf(IPermissionSubjectReference parent)
+	{
+		if (this.TransientContainer.IsChildOf(parent)
+			|| this.Container.IsChildOf(parent))
+		{
+			return true;
+		}
+
+		foreach (IPermissionSubjectReference parentReference in this.TransientContainer.Parents)
+		{
+			IPermissionSubject? actualParent = parentReference.Resolve().Wait();
+			if (actualParent is not null && actualParent.IsChildOf(parent))
+			{
+				return true;
+			}
+		}
+
+		foreach (IPermissionSubjectReference parentReference in this.Container.Parents)
+		{
+			IPermissionSubject? actualParent = parentReference.Resolve().Wait();
+			if (actualParent is not null && actualParent.IsChildOf(parent))
+			{
+				return true;
+			}
+		}
+
+		IPermissionSubject defaults = this.Directory.Defaults;
+
+		return defaults != this && defaults.IsChildOf(parent);
+	}
+
 	IPermissionContainer IPermissionSubject.Container => this.Container;
 	IPermissionContainer IPermissionSubject.TransientContainer => this.TransientContainer;
 }

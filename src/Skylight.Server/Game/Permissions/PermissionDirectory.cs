@@ -10,4 +10,5 @@ internal sealed class PermissionDirectory<T>(PermissionManager manager, string i
 	public IPermissionSubject Defaults => defaults?.Invoke() ?? new PermissionSubject(this);
 
 	public ValueTask<IPermissionSubject?> GetSubjectAsync(T identifier) => fetcher(identifier);
+	public IPermissionSubjectReference<T> CreateSubjectReference(T identifier) => new PermissionSubjectReference<T>(this.manager, this.Id, identifier);
 }
