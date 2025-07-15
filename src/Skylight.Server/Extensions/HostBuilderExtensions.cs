@@ -9,6 +9,7 @@ using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Inventory.Items;
 using Skylight.API.Game.Navigator;
+using Skylight.API.Game.Permissions;
 using Skylight.API.Game.Recycler.FurniMatic;
 using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Floor;
@@ -31,6 +32,7 @@ using Skylight.Server.Game.Furniture;
 using Skylight.Server.Game.Furniture.Floor;
 using Skylight.Server.Game.Inventory.Items;
 using Skylight.Server.Game.Navigator;
+using Skylight.Server.Game.Permissions;
 using Skylight.Server.Game.Rooms;
 using Skylight.Server.Game.Rooms.Items.Floor;
 using Skylight.Server.Game.Rooms.Items.Interactions;
@@ -78,6 +80,8 @@ public static class HostBuilderExtensions
 
 		builder.AddSingleton<IUserManager, UserManager>();
 		builder.AddSingleton<IUserAuthentication, UserAuthentication>();
+
+		builder.AddLoadableSingleton<IPermissionManager, PermissionManager>();
 
 		builder.AddSingleton<IClientManager, ClientManager>();
 		builder.AddSingleton<PacketManagerCache>();

@@ -14,6 +14,12 @@ internal static class ValueTaskExtensions
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static T Wait<T>(this ValueTask<T> task)
+		=> !task.IsCompletedSuccessfully
+			? task.AsTask().GetAwaiter().GetResult()
+			: task.Result;
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal static bool TryGetOrSuppressThrowing<T>(this ValueTask<T> task, out T? value, out Awaiter<T> awaiter)
 	{
 		if (task.IsCompletedSuccessfully)

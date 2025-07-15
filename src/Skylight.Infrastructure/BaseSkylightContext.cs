@@ -6,6 +6,7 @@ using Skylight.Domain.Catalog;
 using Skylight.Domain.Furniture;
 using Skylight.Domain.Items;
 using Skylight.Domain.Navigator;
+using Skylight.Domain.Permissions;
 using Skylight.Domain.Recycler.FurniMatic;
 using Skylight.Domain.Rooms.Layout;
 using Skylight.Domain.Rooms.Private;
@@ -19,6 +20,7 @@ using Skylight.Infrastructure.EntityConfigurations.Catalog;
 using Skylight.Infrastructure.EntityConfigurations.Furniture;
 using Skylight.Infrastructure.EntityConfigurations.Items;
 using Skylight.Infrastructure.EntityConfigurations.Navigator;
+using Skylight.Infrastructure.EntityConfigurations.Permissions;
 using Skylight.Infrastructure.EntityConfigurations.Recycler.FurniMatic;
 using Skylight.Infrastructure.EntityConfigurations.Room.Layout;
 using Skylight.Infrastructure.EntityConfigurations.Room.Private;
@@ -57,6 +59,17 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 	public DbSet<NavigatorCategoryNodeEntity> NavigatorCategoryNodes { get; init; } = null!;
 	public DbSet<NavigatorNodeEntity> NavigatorNodes { get; init; } = null!;
 	public DbSet<NavigatorPublicRoomNodeEntity> NavigatorPublicRooms { get; init; } = null!;
+
+	public DbSet<PrincipalDefaultsEntitlementEntity> PrincipalDefaultsEntitlements { get; init; } = null!;
+	public DbSet<PrincipalDefaultsPermissionEntity> PrincipalDefaultsPermissions { get; init; } = null!;
+	public DbSet<PrincipalDefaultsRankEntity> PrincipalDefaultsRanks { get; init; } = null!;
+	public DbSet<RankEntitlementEntity> RankEntitlements { get; init; } = null!;
+	public DbSet<RankChildEntity> RankChildren { get; init; } = null!;
+	public DbSet<RankEntity> Ranks { get; init; } = null!;
+	public DbSet<RankPermissionEntity> RankPermissions { get; init; } = null!;
+	public DbSet<UserEntitlementEntity> UserEntitlements { get; init; } = null!;
+	public DbSet<UserPermissionEntity> UserPermissions { get; init; } = null!;
+	public DbSet<UserRankEntity> UserRanks { get; init; } = null!;
 
 	public DbSet<FurniMaticFloorItemEntity> FurniMaticFloorItems { get; init; } = null!;
 	public DbSet<FurniMaticGiftEntity> FurniMaticGifts { get; init; } = null!;
@@ -112,6 +125,17 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 		modelBuilder.ApplyConfiguration(new NavigatorCategoryNodeEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new NavigatorNodeEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new NavigatorPublicRoomNodeEntityTypeConfiguration());
+
+		modelBuilder.ApplyConfiguration(new PrincipalDefaultsEntitlementEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new PrincipalDefaultsPermissionEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new PrincipalDefaultsRankEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new RankChildEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new RankEntitlementEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new RankEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new RankPermissionEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new UserEntitlementEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new UserPermissionEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new UserRankEntityTypeConfiguration());
 
 		modelBuilder.ApplyConfiguration(new FurniMaticFloorItemEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new FurniMaticGiftEntityTypeConfiguration());

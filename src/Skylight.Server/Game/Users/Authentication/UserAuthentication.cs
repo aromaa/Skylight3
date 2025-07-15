@@ -3,6 +3,7 @@ using Skylight.API.Game.Badges;
 using Skylight.API.Game.Clients;
 using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Inventory.Items;
+using Skylight.API.Game.Permissions;
 using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Users;
 using Skylight.API.Game.Users.Authentication;
@@ -13,7 +14,7 @@ using StackExchange.Redis;
 
 namespace Skylight.Server.Game.Users.Authentication;
 
-internal sealed class UserAuthentication(RedisConnector redis, IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager, IRoomManager roomManager, IBadgeManager badgeManager, IFurnitureManager furnitureManager, IFurnitureInventoryItemStrategy furnitureInventoryItemFactory)
+internal sealed class UserAuthentication(RedisConnector redis, IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager, IPermissionManager permissionManager, IRoomManager roomManager, IBadgeManager badgeManager, IFurnitureManager furnitureManager, IFurnitureInventoryItemStrategy furnitureInventoryItemFactory)
 	: IUserAuthentication
 {
 	private static readonly RedisKey redisSsoTicketKeyPrefix = new("sso-ticket:");
@@ -24,6 +25,7 @@ internal sealed class UserAuthentication(RedisConnector redis, IDbContextFactory
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
 	private readonly IUserManager userManager = userManager;
+	private readonly IPermissionManager permissionManager = permissionManager;
 	private readonly IRoomManager roomManager = roomManager;
 
 	private readonly LoadContext loadContext = new(badgeManager, furnitureManager, furnitureInventoryItemFactory);
@@ -76,10 +78,17 @@ internal sealed class UserAuthentication(RedisConnector redis, IDbContextFactory
 			return null;
 		}
 
+		IPermissionDirectory<int> userPermissionDirectory = await this.permissionManager.GetUserDirectoryAsync(cancellationToken).ConfigureAwait(false);
+		IPermissionSubject? permissionSubject = await userPermissionDirectory.GetSubjectAsync(userId).ConfigureAwait(false);
+		if (permissionSubject is null)
+		{
+			return null;
+		}
+
 		await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
 		UserSettingsEntity? userSettings = await dbContext.UserSettings.FirstOrDefaultAsync(s => s.UserId == profile.Id, cancellationToken).ConfigureAwait(false);
-		User user = new(this.roomManager, client, profile, new UserSettings(userSettings));
+		User user = new(this.roomManager, client, profile, permissionSubject, new UserSettings(userSettings));
 
 		await user.LoadAsync(dbContext, this.loadContext, cancellationToken).ConfigureAwait(false);
 

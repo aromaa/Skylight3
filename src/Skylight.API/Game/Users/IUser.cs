@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Skylight.API.Game.Clients;
 using Skylight.API.Game.Inventory;
+using Skylight.API.Game.Permissions;
 using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users.Rooms;
@@ -13,6 +14,7 @@ public interface IUser : IPacketSender
 	public IClient Client { get; }
 	public IUserSettings Settings { get; }
 	public IUserProfile Profile { get; }
+	public IPermissionSubject PermissionSubject { get; }
 	public IInventory Inventory { get; }
 	public IRoomSession? RoomSession { get; }
 

@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using Skylight.API.Game.Clients;
 using Skylight.API.Game.Inventory;
+using Skylight.API.Game.Permissions;
 using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
@@ -22,11 +23,12 @@ internal sealed class User : IUser
 
 	public IClient Client { get; }
 	public IUserProfile Profile { get; }
+	public IPermissionSubject PermissionSubject { get; }
 	public IUserSettings Settings { get; }
 
 	private RoomSession? roomSession;
 
-	public User(IRoomManager roomManager, IClient client, IUserProfile profile, IUserSettings settings)
+	public User(IRoomManager roomManager, IClient client, IUserProfile profile, IPermissionSubject permissionSubject, IUserSettings settings)
 	{
 		this.roomManager = roomManager;
 
@@ -34,6 +36,7 @@ internal sealed class User : IUser
 
 		this.Client = client;
 		this.Profile = profile;
+		this.PermissionSubject = permissionSubject;
 		this.Settings = settings;
 	}
 
