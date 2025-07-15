@@ -14,6 +14,7 @@ using Skylight.Protocol.Packets.Outgoing.Handshake;
 using Skylight.Protocol.Packets.Outgoing.Navigator;
 using Skylight.Protocol.Packets.Outgoing.Notifications;
 using Skylight.Protocol.Packets.Outgoing.Perk;
+using Skylight.Server.Extensions;
 
 namespace Skylight.Server.Game.Clients;
 
@@ -54,7 +55,7 @@ internal sealed class Client : IClient
 		//Figure set ids
 		this.SendAsync(new NoobnessLevelOutgoingPacket(0));
 		this.SendAsync(new NavigatorSettingsOutgoingPacket(user.Settings.HomeRoomId, user.Settings.HomeRoomId));
-		this.SendAsync(new UserRightsOutgoingPacket(7, 7, true));
+		this.SendAsync(new UserRightsOutgoingPacket(user.PermissionSubject.GetClubLevel(), user.PermissionSubject.GetSecurityLevel(), true));
 		//Favourites
 		this.SendAsync(new AvailabilityStatusOutgoingPacket(true, false, true));
 		this.SendAsync(new InfoFeedEnableOutgoingPacket(true));

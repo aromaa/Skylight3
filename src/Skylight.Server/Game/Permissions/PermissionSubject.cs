@@ -70,7 +70,7 @@ internal sealed class PermissionSubject(IPermissionDirectory directory) : IPermi
 
 		IPermissionSubject defaults = this.Directory.Defaults;
 
-		return defaults.Directory != this.Directory && defaults.TryGetEntitlement(entitlement, out value);
+		return defaults != this && defaults.TryGetEntitlement(entitlement, out value);
 	}
 
 	IPermissionContainer IPermissionSubject.Container => this.Container;
