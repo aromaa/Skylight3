@@ -79,32 +79,44 @@ internal sealed class LoadableServiceContext : ILoadableServiceContext
 		return task;
 	}
 
+	public async Task<T> RequestServiceAsync<T>(CancellationToken cancellationToken = default)
+		where T : ILoadableService
+	{
+		ILoadableService service = this.loader.GetService(typeof(T));
+
+		await this.LoadServiceAsync(service, cancellationToken).ConfigureAwait(false);
+
+		return (T)service;
+	}
+
 	public async Task<T> RequestDependencyAsync<T>(CancellationToken cancellationToken = default)
 		where T : IServiceSnapshot
 	{
 		ILoadableService<T> service = this.loader.GetService<T>();
 
-		Task? task;
+		Task? task = await this.LoadServiceAsync(service, cancellationToken).ConfigureAwait(false);
+
+		return task is null
+			? service.Current
+			: ((Task<T>)task).Result;
+	}
+
+	private Task<Task?> LoadServiceAsync<T>(T service, CancellationToken cancellationToken)
+		where T : ILoadableService
+	{
 		if (LoadableServiceContext.currentCallerData.Value is { } caller)
 		{
 			this.loader.AddDependent(service, caller);
 
 			lock (this.loading)
 			{
-				if (!this.loading.TryGetValue(service, out task))
-				{
-					return service.Current;
-				}
+				return (Task<Task?>)this.loading.GetValueOrDefault(service, Task.FromResult<Task?>(null));
 			}
 		}
 		else
 		{
-			task = this.LoadAsync(service, cancellationToken);
+			return (Task<Task?>)this.LoadAsync(service, cancellationToken);
 		}
-
-		Task<Task> wrappedTask = (Task<Task>)task;
-		Task original = await wrappedTask.ConfigureAwait(false);
-		return ((Task<T>)original).Result;
 	}
 
 	public void Commit(Action action)

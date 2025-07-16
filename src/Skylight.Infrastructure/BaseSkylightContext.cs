@@ -43,6 +43,7 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 	public DbSet<CatalogBadgeProductEntity> CatalogBadgeProducts { get; init; } = null!;
 	public DbSet<CatalogFloorProductEntity> CatalogFloorProducts { get; init; } = null!;
 	public DbSet<CatalogOfferEntity> CatalogOffers { get; init; } = null!;
+	public DbSet<CatalogPageAccessEntity> CatalogPageAccess { get; init; } = null!;
 	public DbSet<CatalogPageEntity> CatalogPages { get; init; } = null!;
 	public DbSet<CatalogProductEntity> CatalogProducts { get; init; } = null!;
 	public DbSet<CatalogWallProductEntity> CatalogWallProducts { get; init; } = null!;
@@ -109,6 +110,7 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 		modelBuilder.ApplyConfiguration(new CatalogBadgeProductEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogFloorProductEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogOfferEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new CatalogPageAccessEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogPageEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogProductEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogWallProductEntityTypeConfiguration());

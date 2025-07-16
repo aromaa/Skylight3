@@ -27,7 +27,7 @@ public interface ICatalogPage
 	public IEnumerable<ICatalogOffer> Offers { get; }
 	public IEnumerable<ICatalogPage> Children { get; }
 
-	public bool CanAccess(IUser user) => this.Enabled;
+	public bool CanAccess(IUser user);
 
 	public bool TryGetOffer(int offerId, [NotNullWhen(true)] out ICatalogOffer? offer);
 }

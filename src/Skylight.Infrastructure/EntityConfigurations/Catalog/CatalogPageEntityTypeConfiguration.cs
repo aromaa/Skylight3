@@ -35,13 +35,6 @@ internal sealed class CatalogPageEntityTypeConfiguration : IEntityTypeConfigurat
 			.HasDefaultValue(true)
 			.ValueGeneratedNever();
 
-		builder.Property(p => p.MinRank)
-			.HasDefaultValue(1);
-
-		builder.Property(p => p.ClubRank)
-			.HasDefaultValue(0)
-			.ValueGeneratedNever();
-
 		builder.Property(p => p.IconColor)
 			.HasDefaultValue(1);
 

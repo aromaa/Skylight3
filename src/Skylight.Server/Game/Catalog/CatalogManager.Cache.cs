@@ -6,6 +6,7 @@ using Skylight.API.Game.Catalog.Products;
 using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Furniture.Wall;
+using Skylight.API.Game.Permissions;
 using Skylight.Domain.Catalog;
 using Skylight.Server.Game.Catalog.Products;
 
@@ -56,17 +57,23 @@ internal partial class CatalogManager
 				}
 			}
 
-			internal Cache ToImmutable(IBadgeSnapshot badges, IFurnitureSnapshot furnitures)
+			internal Cache ToImmutable(IFurnitureSnapshot furnitures) => new(furnitures, [], [], []);
+
+			internal async Task<Cache> ToImmutableAsync(IPermissionManager permissionManager, IBadgeSnapshot badges, IFurnitureSnapshot furnitures, CancellationToken cancellationToken)
 			{
+				IPermissionDirectory<string> ranksDirectory = await permissionManager.GetRanksDirectoryAsync(cancellationToken).ConfigureAwait(false);
+
 				Dictionary<int, ICatalogPage> catalogPages = [];
 				Dictionary<int, ICatalogOffer> catalogOffers = [];
 
-				CatalogPage CreatePage(CatalogPageEntity pageEntity)
+				async Task<CatalogPage> CreatePageAsync(CatalogPageEntity pageEntity, ImmutableArray<ImmutableArray<IPermissionSubject>> parentAccess)
 				{
+					ImmutableArray<ImmutableArray<IPermissionSubject>> access = await ResolveAccessAsync(pageEntity, parentAccess).ConfigureAwait(false);
+
 					Dictionary<int, ICatalogOffer> offers = [];
 					foreach (CatalogOfferEntity offerEntity in pageEntity.Offers!)
 					{
-						CatalogOffer offer = CreateOffer(offerEntity);
+						CatalogOffer offer = await CreateOfferAsync(offerEntity).ConfigureAwait(false);
 
 						offers.Add(offer.Id, offer);
 					}
@@ -74,20 +81,76 @@ internal partial class CatalogManager
 					OrderedDictionary<int, ICatalogPage> children = [];
 					foreach (CatalogPageEntity childEntity in pageEntity.Children!)
 					{
-						CatalogPage child = CreatePage(childEntity);
+						CatalogPage child = await CreatePageAsync(childEntity, access).ConfigureAwait(false);
 
 						children.Add(child.Id, child);
 					}
 
-					CatalogPage page = new(pageEntity.Id, pageEntity.Name, pageEntity.Localization, pageEntity.OrderNum, pageEntity.Enabled, pageEntity.Visible, pageEntity.MinRank, pageEntity.ClubRank, pageEntity.IconColor, pageEntity.IconImage, pageEntity.Layout, [.. pageEntity.Texts], [.. pageEntity.Images], pageEntity.AcceptSeasonCurrencyAsCredits, offers, children);
+					CatalogPage page = new(pageEntity.Id, pageEntity.Name, pageEntity.Localization, pageEntity.OrderNum, pageEntity.Enabled, pageEntity.Visible, pageEntity.IconColor, pageEntity.IconImage, pageEntity.Layout, [.. pageEntity.Texts], [.. pageEntity.Images], pageEntity.AcceptSeasonCurrencyAsCredits, access, offers, children);
 
 					catalogPages.Add(page.Id, page);
 
 					return page;
+
+					async Task<ImmutableArray<ImmutableArray<IPermissionSubject>>> ResolveAccessAsync(CatalogPageEntity pageEntity, ImmutableArray<ImmutableArray<IPermissionSubject>> parentAccess)
+					{
+						if (pageEntity.Access!.Count <= 0)
+						{
+							return parentAccess;
+						}
+
+						ImmutableArray<ImmutableArray<IPermissionSubject>>.Builder access = ImmutableArray.CreateBuilder<ImmutableArray<IPermissionSubject>>(parentAccess.Length + pageEntity.Access.Count);
+						access.AddRange(parentAccess);
+
+						string? lastPartition = null;
+						ImmutableArray<IPermissionSubject>.Builder accessSubjects = ImmutableArray.CreateBuilder<IPermissionSubject>();
+						foreach (CatalogPageAccessEntity accessEntity in pageEntity.Access)
+						{
+							if (accessEntity.Partition != lastPartition || accessEntity.Operation == CatalogPageAccessEntity.OperationType.Or)
+							{
+								lastPartition = accessEntity.Partition;
+
+								if (accessSubjects.Count > 0)
+								{
+									access.Add(accessSubjects.DrainToImmutable());
+								}
+							}
+
+							IPermissionSubject? permissionSubject = await ranksDirectory.GetSubjectAsync(accessEntity.RankId).ConfigureAwait(false);
+							if (permissionSubject is null)
+							{
+								throw new InvalidOperationException($"The page {pageEntity.Id} is referring to non-existent rank {accessEntity.RankId}!");
+							}
+
+							accessSubjects.Add(permissionSubject);
+
+							if (accessEntity.Operation == CatalogPageAccessEntity.OperationType.Or)
+							{
+								access.Add(accessSubjects.DrainToImmutable());
+							}
+						}
+
+						if (accessSubjects.Count > 0)
+						{
+							access.Add(accessSubjects.DrainToImmutable());
+						}
+
+						return access.ToImmutable();
+					}
 				}
 
-				CatalogOffer CreateOffer(CatalogOfferEntity offerEntity)
+				async Task<CatalogOffer> CreateOfferAsync(CatalogOfferEntity offerEntity)
 				{
+					IPermissionSubject? permissionRequirement = null;
+					if (offerEntity.RankId is { } rank)
+					{
+						permissionRequirement = await ranksDirectory.GetSubjectAsync(rank).ConfigureAwait(false);
+						if (permissionRequirement is null)
+						{
+							throw new InvalidOperationException($"The offer {offerEntity.Id} is referring to non-existent rank {rank}!");
+						}
+					}
+
 					ImmutableArray<ICatalogProduct>.Builder products = ImmutableArray.CreateBuilder<ICatalogProduct>(offerEntity.Products!.Count);
 					foreach (CatalogProductEntity productEntity in offerEntity.Products)
 					{
@@ -132,7 +195,7 @@ internal partial class CatalogManager
 						}
 					}
 
-					CatalogOffer offer = new(offerEntity.Id, offerEntity.Name, offerEntity.OrderNum, offerEntity.ClubRank, offerEntity.CostCredits, offerEntity.CostActivityPoints, offerEntity.ActivityPointsType, offerEntity.RentTime, offerEntity.HasOffer, products.MoveToImmutable());
+					CatalogOffer offer = new(offerEntity.Id, offerEntity.OrderNum, offerEntity.Name, permissionRequirement, offerEntity.CostCredits, offerEntity.CostActivityPoints, offerEntity.ActivityPointsType, offerEntity.RentTime, offerEntity.HasOffer, products.MoveToImmutable());
 
 					catalogOffers.Add(offer.Id, offer);
 
@@ -142,7 +205,7 @@ internal partial class CatalogManager
 				ImmutableArray<ICatalogPage>.Builder rootPages = ImmutableArray.CreateBuilder<ICatalogPage>(this.rootPages.Count);
 				foreach (CatalogPageEntity pageEntity in this.rootPages)
 				{
-					rootPages.Add(CreatePage(pageEntity));
+					rootPages.Add(await CreatePageAsync(pageEntity, []).ConfigureAwait(false));
 				}
 
 				return new Cache(furnitures, catalogPages, catalogOffers, rootPages.MoveToImmutable());

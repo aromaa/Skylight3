@@ -17,9 +17,6 @@ public class CatalogPageEntity
 	public bool Enabled { get; set; }
 	public bool Visible { get; set; }
 
-	public int MinRank { get; set; }
-	public int ClubRank { get; set; }
-
 	public int IconColor { get; set; }
 	public int IconImage { get; set; }
 
@@ -30,6 +27,7 @@ public class CatalogPageEntity
 
 	public bool AcceptSeasonCurrencyAsCredits { get; set; }
 
+	public List<CatalogPageAccessEntity>? Access { get; set; }
 	public List<CatalogPageEntity>? Children { get; set; }
 	public List<CatalogOfferEntity>? Offers { get; set; }
 }

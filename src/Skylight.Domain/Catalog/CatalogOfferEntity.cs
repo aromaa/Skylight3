@@ -1,4 +1,6 @@
-﻿namespace Skylight.Domain.Catalog;
+﻿using Skylight.Domain.Permissions;
+
+namespace Skylight.Domain.Catalog;
 
 public class CatalogOfferEntity
 {
@@ -7,11 +9,12 @@ public class CatalogOfferEntity
 	public int PageId { get; set; }
 	public CatalogPageEntity? Page { get; set; }
 
-	public string Name { get; set; } = null!;
-
 	public int OrderNum { get; set; }
 
-	public int ClubRank { get; set; }
+	public string Name { get; set; } = null!;
+
+	public string? RankId { get; set; }
+	public RankEntity? Rank { get; set; }
 
 	public int CostCredits { get; set; }
 	public int CostActivityPoints { get; set; }

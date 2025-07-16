@@ -1,5 +1,6 @@
 ﻿using Skylight.Domain.Badges;
 using Skylight.Domain.Items;
+using Skylight.Domain.Permissions;
 using Skylight.Domain.Rooms.Private;
 
 namespace Skylight.Domain.Users;
@@ -14,6 +15,8 @@ public class UserEntity
 	public string Motto { get; set; } = null!;
 
 	public DateTime LastOnline { get; set; }
+
+	public List<UserRankEntity>? Ranks { get; set; }
 
 	public UserSettingsEntity? Settings { get; set; }
 

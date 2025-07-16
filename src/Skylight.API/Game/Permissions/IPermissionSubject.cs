@@ -5,6 +5,7 @@ namespace Skylight.API.Game.Permissions;
 public interface IPermissionSubject
 {
 	public IPermissionDirectory Directory { get; }
+	public IPermissionSubjectReference Reference { get; }
 
 	public IPermissionContainer Container { get; }
 	public IPermissionContainer TransientContainer { get; }

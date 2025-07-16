@@ -1,18 +1,19 @@
 ﻿using System.Collections.Immutable;
 using Skylight.API.Game.Catalog;
 using Skylight.API.Game.Catalog.Products;
+using Skylight.API.Game.Permissions;
+using Skylight.API.Game.Users;
 
 namespace Skylight.Server.Game.Catalog;
 
 internal sealed class CatalogOffer : ICatalogOffer
 {
 	public int Id { get; }
+	internal int OrderNum { get; }
 
 	public string Name { get; }
 
-	internal int OrderNum { get; }
-
-	public int ClubRank { get; }
+	public IPermissionSubject? PermissionRequirement { get; }
 
 	public int CostCredits { get; }
 	public int CostActivityPoints { get; }
@@ -24,15 +25,14 @@ internal sealed class CatalogOffer : ICatalogOffer
 
 	public ImmutableArray<ICatalogProduct> Products { get; }
 
-	internal CatalogOffer(int id, string name, int orderNum, int clubRank, int costCredits, int costActivityPoints, int activityPointsType, TimeSpan rentTime, bool hasOffer, ImmutableArray<ICatalogProduct> products)
+	internal CatalogOffer(int id, int orderNum, string name, IPermissionSubject? permissionSubject, int costCredits, int costActivityPoints, int activityPointsType, TimeSpan rentTime, bool hasOffer, ImmutableArray<ICatalogProduct> products)
 	{
 		this.Id = id;
+		this.OrderNum = orderNum;
 
 		this.Name = name;
 
-		this.OrderNum = orderNum;
-
-		this.ClubRank = clubRank;
+		this.PermissionRequirement = permissionSubject;
 
 		this.CostCredits = costCredits;
 		this.CostActivityPoints = costActivityPoints;
@@ -45,6 +45,8 @@ internal sealed class CatalogOffer : ICatalogOffer
 
 		this.Products = products;
 	}
+
+	public bool CanPurchase(IUser user) => this.PermissionRequirement is not { } permissionRequirement || user.PermissionSubject.IsChildOf(permissionRequirement.Reference);
 
 	public async ValueTask PurchaseAsync(ICatalogTransaction transaction, CancellationToken cancellationToken)
 	{

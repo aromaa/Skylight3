@@ -18,12 +18,17 @@ internal sealed partial class GetCatalogIndexPacketHandler<T>(ICatalogManager ca
 	internal override void Handle(IUser user, in T packet)
 	{
 		//TODO: Caching
-		static List<CatalogNodeData> BuildChildren(IEnumerable<ICatalogPage> pages)
+		static List<CatalogNodeData> BuildChildren(IUser user, IEnumerable<ICatalogPage> pages)
 		{
 			List<CatalogNodeData> nodes = [];
 
 			foreach (ICatalogPage page in pages)
 			{
+				if (!page.CanAccess(user))
+				{
+					continue;
+				}
+
 				nodes.Add(new CatalogNodeData
 				{
 					Id = !page.Enabled
@@ -35,7 +40,7 @@ internal sealed partial class GetCatalogIndexPacketHandler<T>(ICatalogManager ca
 					Color = page.IconColor,
 					Icon = page.IconImage,
 					OfferIds = page.Offers.Select(o => o.Id).ToList(),
-					Children = BuildChildren(page.Children)
+					Children = BuildChildren(user, page.Children)
 				});
 			}
 
@@ -57,7 +62,7 @@ internal sealed partial class GetCatalogIndexPacketHandler<T>(ICatalogManager ca
 				Name = "root",
 				Localization = "Root",
 				OfferIds = Array.Empty<int>(),
-				Children = BuildChildren(catalog.RootPages)
+				Children = BuildChildren(client.User!, catalog.RootPages)
 			}, false));
 		});
 	}

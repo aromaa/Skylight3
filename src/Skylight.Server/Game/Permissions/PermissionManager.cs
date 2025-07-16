@@ -35,12 +35,12 @@ internal sealed class PermissionManager : IPermissionManager
 		{
 			defaults = await LoadDefaultsAsync(dbContext, cancellationToken).ConfigureAwait(false);
 
-			IPermissionSubject ranksDefaults = (await defaults.GetSubjectAsync("ranks").ConfigureAwait(false)) ?? new PermissionSubject(defaults);
-			IPermissionSubject usersDefaults = (await defaults.GetSubjectAsync("users").ConfigureAwait(false)) ?? new PermissionSubject(defaults);
+			IPermissionSubject ranksDefaults = (await defaults.GetSubjectAsync("ranks").ConfigureAwait(false)) ?? new PermissionSubject<string>(defaults, "ranks");
+			IPermissionSubject usersDefaults = (await defaults.GetSubjectAsync("users").ConfigureAwait(false)) ?? new PermissionSubject<string>(defaults, "users");
 
-			Dictionary<string, PermissionSubject> cachedRanks = [];
+			Dictionary<string, PermissionSubject<string>> cachedRanks = [];
 
-			ranks = new PermissionDirectory<string>(this, "ranks", () => ranksDefaults, i => !cachedRanks.TryGetValue(i, out PermissionSubject? value)
+			ranks = new PermissionDirectory<string>(this, "ranks", () => ranksDefaults, i => !cachedRanks.TryGetValue(i, out PermissionSubject<string>? value)
 				? default
 				: ValueTask.FromResult<IPermissionSubject?>(value));
 
@@ -53,7 +53,7 @@ internal sealed class PermissionManager : IPermissionManager
 				.WithCancellation(cancellationToken)
 				.ConfigureAwait(false))
 			{
-				PermissionSubject rank = new(ranks);
+				PermissionSubject<string> rank = new(ranks, rankEntity.Id);
 
 				foreach (RankPermissionEntity permissionEntity in rankEntity.Permissions!)
 				{
@@ -85,9 +85,9 @@ internal sealed class PermissionManager : IPermissionManager
 
 		async Task<PermissionDirectory<string>> LoadDefaultsAsync(SkylightContext dbContext, CancellationToken cancellationToken)
 		{
-			Dictionary<string, PermissionSubject> containers = [];
+			Dictionary<string, PermissionSubject<string>> containers = [];
 
-			PermissionDirectory<string> directory = new(this, "defaults", () => containers["defaults"], i => !containers.TryGetValue(i, out PermissionSubject? value)
+			PermissionDirectory<string> directory = new(this, "defaults", () => containers["defaults"], i => !containers.TryGetValue(i, out PermissionSubject<string>? value)
 				? default
 				: ValueTask.FromResult<IPermissionSubject?>(value));
 
@@ -96,8 +96,8 @@ internal sealed class PermissionManager : IPermissionManager
 				.WithCancellation(cancellationToken)
 				.ConfigureAwait(false))
 			{
-				ref PermissionSubject? subject = ref CollectionsMarshal.GetValueRefOrAddDefault(containers, entity.Identifier, out _);
-				subject ??= new PermissionSubject(directory);
+				ref PermissionSubject<string>? subject = ref CollectionsMarshal.GetValueRefOrAddDefault(containers, entity.Identifier, out _);
+				subject ??= new PermissionSubject<string>(directory, entity.Identifier);
 				subject.Container.SetPermission(entity.Permission, entity.Value);
 			}
 
@@ -106,8 +106,8 @@ internal sealed class PermissionManager : IPermissionManager
 				.WithCancellation(cancellationToken)
 				.ConfigureAwait(false))
 			{
-				ref PermissionSubject? container = ref CollectionsMarshal.GetValueRefOrAddDefault(containers, entity.Identifier, out _);
-				container ??= new PermissionSubject(directory);
+				ref PermissionSubject<string>? container = ref CollectionsMarshal.GetValueRefOrAddDefault(containers, entity.Identifier, out _);
+				container ??= new PermissionSubject<string>(directory, entity.Identifier);
 				container.Container.SetEntitlement(entity.Entitlement, entity.Value);
 			}
 
@@ -116,14 +116,14 @@ internal sealed class PermissionManager : IPermissionManager
 				.WithCancellation(cancellationToken)
 				.ConfigureAwait(false))
 			{
-				ref PermissionSubject? container = ref CollectionsMarshal.GetValueRefOrAddDefault(containers, entity.Identifier, out _);
-				container ??= new PermissionSubject(directory);
+				ref PermissionSubject<string>? container = ref CollectionsMarshal.GetValueRefOrAddDefault(containers, entity.Identifier, out _);
+				container ??= new PermissionSubject<string>(directory, entity.Identifier);
 				container.Container.AddParent(new PermissionSubjectReference<string>(this, "ranks", entity.RankId));
 			}
 
 			if (!containers.ContainsKey("defaults"))
 			{
-				containers["defaults"] = new PermissionSubject(directory);
+				containers["defaults"] = new PermissionSubject<string>(directory, "defaults");
 			}
 
 			return directory;
@@ -148,7 +148,7 @@ internal sealed class PermissionManager : IPermissionManager
 	{
 		await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
-		PermissionSubject user = new(this.users);
+		PermissionSubject<int> user = new(this.users, id);
 
 		await foreach (UserPermissionEntity permissionEntity in dbContext.UserPermissions
 			.Where(e => e.UserId == id)

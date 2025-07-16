@@ -41,7 +41,7 @@ internal static class CatalogOfferExtensions
 			ActivityPointsType = offer.ActivityPointsType,
 			Giftable = false,
 			Products = products,
-			ClubLevel = offer.ClubRank,
+			ClubLevel = offer.PermissionRequirement?.GetClubLevel() ?? 0,
 			BundlePurchaseAllowed = offer.HasOffer,
 			PreviewImage = string.Empty
 		};

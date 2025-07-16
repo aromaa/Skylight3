@@ -19,10 +19,6 @@ internal sealed class CatalogOfferEntityTypeConfiguration : IEntityTypeConfigura
 			.HasDefaultValue(0)
 			.ValueGeneratedNever();
 
-		builder.Property(o => o.ClubRank)
-			.HasDefaultValue(0)
-			.ValueGeneratedNever();
-
 		builder.Property(o => o.CostCredits)
 			.HasDefaultValue(3)
 			.ValueGeneratedNever();
