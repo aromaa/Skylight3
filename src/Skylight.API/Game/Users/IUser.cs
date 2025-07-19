@@ -2,6 +2,7 @@
 using Skylight.API.Game.Clients;
 using Skylight.API.Game.Inventory;
 using Skylight.API.Game.Permissions;
+using Skylight.API.Game.Purse;
 using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users.Rooms;
@@ -15,6 +16,7 @@ public interface IUser : IPacketSender
 	public IUserSettings Settings { get; }
 	public IUserProfile Profile { get; }
 	public IPermissionSubject PermissionSubject { get; }
+	public IPurse Purse { get; }
 	public IInventory Inventory { get; }
 	public IRoomSession? RoomSession { get; }
 

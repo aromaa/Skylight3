@@ -19,18 +19,6 @@ internal sealed class CatalogOfferEntityTypeConfiguration : IEntityTypeConfigura
 			.HasDefaultValue(0)
 			.ValueGeneratedNever();
 
-		builder.Property(o => o.CostCredits)
-			.HasDefaultValue(3)
-			.ValueGeneratedNever();
-
-		builder.Property(o => o.CostActivityPoints)
-			.HasDefaultValue(0)
-			.ValueGeneratedNever();
-
-		builder.Property(o => o.ActivityPointsType)
-			.HasDefaultValue(0)
-			.ValueGeneratedNever();
-
 		builder.Property(o => o.RentTime)
 			.HasDefaultValue(TimeSpan.Zero)
 			.ValueGeneratedNever();

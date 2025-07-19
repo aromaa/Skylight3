@@ -7,6 +7,7 @@ using Net.Metadata;
 using Net.Sockets;
 using Skylight.API.Game.Clients;
 using Skylight.API.Net.Connection;
+using Skylight.API.Registry;
 using Skylight.Protocol.Packets.Manager;
 using Skylight.Protocol.Packets.Outgoing.Handshake;
 using Skylight.Server.Game.Clients;
@@ -15,11 +16,12 @@ using Skylight.Server.Net.Handlers;
 
 namespace Skylight.Server.Net.Listener.Connection;
 
-internal sealed class NetworkConnectionHandler(IServiceProvider serviceProvider, ILogger<NetworkConnectionHandler> logger, IClientManager clientManager, PacketManagerCache packetManagerCache) : INetworkConnectionHandler
+internal sealed class NetworkConnectionHandler(IServiceProvider serviceProvider, IRegistryHolder registryHolder, ILogger<NetworkConnectionHandler> logger, IClientManager clientManager, PacketManagerCache packetManagerCache) : INetworkConnectionHandler
 {
 	public static readonly MetadataKey<Client> GameClientMetadataKey = MetadataKey<Client>.Create("GameClient");
 
 	private readonly IServiceProvider serviceProvider = serviceProvider;
+	private readonly IRegistryHolder registryHolder = registryHolder;
 	private readonly ILogger<NetworkConnectionHandler> logger = logger;
 
 	private readonly IClientManager clientManager = clientManager;
@@ -34,7 +36,7 @@ internal sealed class NetworkConnectionHandler(IServiceProvider serviceProvider,
 			return;
 		}
 
-		Client client = new(socket, encoding);
+		Client client = new(this.registryHolder, socket, encoding);
 		if (!this.clientManager.TryAccept(client))
 		{
 			socket.Disconnect();

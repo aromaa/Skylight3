@@ -34,19 +34,21 @@ internal sealed partial class PurchaseFromCatalogPacketHandler<T>(ICatalogManage
 
 			return;
 		}
-		else if (!offer.CanPurchase(user))
+		else if (!offer.CanEffort(user.Purse))
 		{
-			user.SendAsync(new PurchaseNotAllowedOutgoingPacket(PurchaseNotAllowedReason.NoClubMembership));
-
 			return;
 		}
 
 		string extraData = user.Client.Encoding.GetString(packet.ExtraData);
 		int amount = packet.Amount;
 
-		bool scheduled = user.Client.ScheduleTask(client =>
+		bool scheduled = user.Client.ScheduleTask(async client =>
 		{
-			return catalog.PurchaseOfferAsync(client.User!, offer, extraData, amount);
+			ICatalogTransactionResult result = await catalog.PurchaseOfferAsync(client.User!, offer, extraData, amount).ConfigureAwait(false);
+			if (result.Result != ICatalogTransactionResult.ResultType.Success)
+			{
+				user.SendAsync(new PurchaseErrorOutgoingPacket(PurchaseErrorReason.Generic));
+			}
 		});
 
 		if (!scheduled)

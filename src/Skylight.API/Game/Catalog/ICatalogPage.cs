@@ -22,8 +22,6 @@ public interface ICatalogPage
 	public ImmutableArray<string> Texts { get; }
 	public ImmutableArray<string> Images { get; }
 
-	public bool AcceptSeasonCurrencyAsCredits { get; }
-
 	public IEnumerable<ICatalogOffer> Offers { get; }
 	public IEnumerable<ICatalogPage> Children { get; }
 

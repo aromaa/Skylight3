@@ -42,6 +42,7 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 
 	public DbSet<CatalogBadgeProductEntity> CatalogBadgeProducts { get; init; } = null!;
 	public DbSet<CatalogFloorProductEntity> CatalogFloorProducts { get; init; } = null!;
+	public DbSet<CatalogOfferCostEntity> CatalogOffersCost { get; init; } = null!;
 	public DbSet<CatalogOfferEntity> CatalogOffers { get; init; } = null!;
 	public DbSet<CatalogPageAccessEntity> CatalogPageAccess { get; init; } = null!;
 	public DbSet<CatalogPageEntity> CatalogPages { get; init; } = null!;
@@ -94,6 +95,7 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 
 	public DbSet<UserEntity> Users { get; init; } = null!;
 
+	public DbSet<UserPurseEntity> UserPurse { get; init; } = null!;
 	public DbSet<UserSettingsEntity> UserSettings { get; init; } = null!;
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -109,6 +111,7 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 
 		modelBuilder.ApplyConfiguration(new CatalogBadgeProductEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogFloorProductEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new CatalogOfferCostEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogOfferEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogPageAccessEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogPageEntityTypeConfiguration());
@@ -160,6 +163,7 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 		modelBuilder.ApplyConfiguration(new SettingsEntityTypeConfiguration());
 
 		modelBuilder.ApplyConfiguration(new UserEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new UserPurseEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new UserSettingsEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new UserWardrobeEntityTypeConfiguration());
 	}

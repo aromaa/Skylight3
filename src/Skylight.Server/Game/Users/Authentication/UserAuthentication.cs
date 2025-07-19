@@ -7,6 +7,7 @@ using Skylight.API.Game.Permissions;
 using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Users;
 using Skylight.API.Game.Users.Authentication;
+using Skylight.API.Registry;
 using Skylight.Domain.Users;
 using Skylight.Infrastructure;
 using Skylight.Server.Redis;
@@ -14,11 +15,13 @@ using StackExchange.Redis;
 
 namespace Skylight.Server.Game.Users.Authentication;
 
-internal sealed class UserAuthentication(RedisConnector redis, IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager, IPermissionManager permissionManager, IRoomManager roomManager, IBadgeManager badgeManager, IFurnitureManager furnitureManager, IFurnitureInventoryItemStrategy furnitureInventoryItemFactory)
+internal sealed class UserAuthentication(IRegistryHolder registryHolder, RedisConnector redis, IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager, IPermissionManager permissionManager, IRoomManager roomManager, IBadgeManager badgeManager, IFurnitureManager furnitureManager, IFurnitureInventoryItemStrategy furnitureInventoryItemFactory)
 	: IUserAuthentication
 {
 	private static readonly RedisKey redisSsoTicketKeyPrefix = new("sso-ticket:");
 	private static readonly RedisValue[] redisSsoTicketValues = ["user-id", "user-ip"];
+
+	private readonly IRegistryHolder registryHolder = registryHolder;
 
 	private readonly RedisConnector redis = redis;
 
@@ -87,8 +90,9 @@ internal sealed class UserAuthentication(RedisConnector redis, IDbContextFactory
 
 		await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
+		Purse purse = await Purse.FromDatabaseAsync(client, this.registryHolder.Registry(RegistryTypes.Currency), dbContext, userId, cancellationToken).ConfigureAwait(false);
 		UserSettingsEntity? userSettings = await dbContext.UserSettings.FirstOrDefaultAsync(s => s.UserId == profile.Id, cancellationToken).ConfigureAwait(false);
-		User user = new(this.roomManager, client, profile, permissionSubject, new UserSettings(userSettings));
+		User user = new(this.roomManager, client, profile, permissionSubject, purse, new UserSettings(userSettings));
 
 		await user.LoadAsync(dbContext, this.loadContext, cancellationToken).ConfigureAwait(false);
 

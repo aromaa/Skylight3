@@ -18,6 +18,8 @@ public class UserEntity
 
 	public List<UserRankEntity>? Ranks { get; set; }
 
+	public List<UserPurseEntity>? Purse { get; set; }
+
 	public UserSettingsEntity? Settings { get; set; }
 
 	public List<FloorItemEntity>? FloorItems { get; set; }

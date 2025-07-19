@@ -16,13 +16,10 @@ public class CatalogOfferEntity
 	public string? RankId { get; set; }
 	public RankEntity? Rank { get; set; }
 
-	public int CostCredits { get; set; }
-	public int CostActivityPoints { get; set; }
-	public int ActivityPointsType { get; set; }
-
 	public TimeSpan RentTime { get; set; }
 
 	public bool HasOffer { get; set; }
 
+	public List<CatalogOfferCostEntity>? Cost { get; set; }
 	public List<CatalogProductEntity>? Products { get; set; }
 }

@@ -50,10 +50,6 @@ internal sealed class CatalogPageEntityTypeConfiguration : IEntityTypeConfigurat
 		builder.Property(p => p.Images)
 			.HasDefaultValue(new List<string>());
 
-		builder.Property(p => p.AcceptSeasonCurrencyAsCredits)
-			.HasDefaultValue(false)
-			.ValueGeneratedNever();
-
 		builder.HasOne(p => p.Parent)
 			.WithMany(p => p.Children)
 			.HasForeignKey(p => p.ParentId);

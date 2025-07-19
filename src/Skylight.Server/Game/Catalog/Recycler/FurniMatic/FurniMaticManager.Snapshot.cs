@@ -7,9 +7,11 @@ using Skylight.API.Game.Furniture.Wall;
 using Skylight.API.Game.Inventory.Items;
 using Skylight.API.Game.Inventory.Items.Floor;
 using Skylight.API.Game.Inventory.Items.Wall;
+using Skylight.API.Game.Purse;
 using Skylight.API.Game.Recycler.FurniMatic;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Users;
+using Skylight.API.Registry;
 using Skylight.Domain.Items;
 using Skylight.Domain.Recycler.FurniMatic;
 using Skylight.Infrastructure;
@@ -27,6 +29,7 @@ internal partial class FurniMaticManager
 
 	private sealed class Snapshot : IFurniMaticSnapshot
 	{
+		private readonly IRegistry<ICurrencyType> currencyRegistry;
 		private readonly IDbContextFactory<SkylightContext> dbContextFactory;
 
 		private readonly IFurnitureManager furnitureManager;
@@ -39,8 +42,9 @@ internal partial class FurniMaticManager
 
 		private readonly Cache cache;
 
-		internal Snapshot(IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, IFurnitureInventoryItemStrategy furnitureInventoryItemStrategy, ICatalogTransactionFactory catalogTransactionFactory, FurniMaticSettings settings, TimeProvider timeProvider, Cache cache)
+		internal Snapshot(IRegistry<ICurrencyType> currencyRegistry, IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, IFurnitureInventoryItemStrategy furnitureInventoryItemStrategy, ICatalogTransactionFactory catalogTransactionFactory, FurniMaticSettings settings, TimeProvider timeProvider, Cache cache)
 		{
+			this.currencyRegistry = currencyRegistry;
 			this.dbContextFactory = dbContextFactory;
 
 			this.furnitureManager = furnitureManager;
@@ -144,38 +148,46 @@ internal partial class FurniMaticManager
 				return null;
 			}
 
-			await using ICatalogTransaction transaction = await this.catalogTransactionFactory.CreateTransactionAsync(this.furnitureManager.Current, dbContext.Database.GetDbConnection(), user, string.Empty, cancellationToken).ConfigureAwait(false);
+			await using ICatalogTransaction transaction = await this.catalogTransactionFactory.CreateTransactionAsync(this.currencyRegistry, this.furnitureManager.Current, dbContext.Database.GetDbConnection(), user, string.Empty, cancellationToken).ConfigureAwait(false);
 
-			await using (await dbContext.Database.UseTransactionAsync(transaction.Transaction, cancellationToken).ConfigureAwait(false))
+			transaction.Context.AddConstraint(async (_, t, cancellationToken) =>
 			{
-				dbContext.FloorItems.Remove(new FloorItemEntity
+				await using (await dbContext.Database.UseTransactionAsync(t, cancellationToken).ConfigureAwait(false))
 				{
-					Id = gift.Id,
-					UserId = gift.Owner.Id,
-					RoomId = gift.Room.Info.Id
-				});
+					dbContext.FloorItems.Remove(new FloorItemEntity
+					{
+						Id = gift.Id,
+						UserId = gift.Owner.Id,
+						RoomId = gift.Room.Info.Id
+					});
 
-				await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-			}
+					await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+				}
+			});
 
-			foreach (IFurniture prizeFurniture in prize.Furnitures)
+			transaction.Context.AddCommand((t, _, _) =>
 			{
-				//TODO: Maybe make more general "ICatalogProduct" or just use it as impl detail
-				if (prizeFurniture is IStaticFloorFurniture floorFurniture)
+				foreach (IFurniture prizeFurniture in prize.Furnitures)
 				{
-					transaction.AddFloorItem(floorFurniture, null);
+					//TODO: Maybe make more general "ICatalogProduct" or just use it as impl detail
+					if (prizeFurniture is IStaticFloorFurniture floorFurniture)
+					{
+						t.Commands.AddFloorItem(floorFurniture, null);
+					}
+					else if (prizeFurniture is IStaticWallFurniture wallFurniture)
+					{
+						t.Commands.AddWallItem(wallFurniture, null);
+					}
+					else
+					{
+						throw new NotSupportedException();
+					}
 				}
-				else if (prizeFurniture is IStaticWallFurniture wallFurniture)
-				{
-					transaction.AddWallItem(wallFurniture, null);
-				}
-				else
-				{
-					throw new NotSupportedException();
-				}
-			}
 
-			await transaction.CompleteAsync(cancellationToken).ConfigureAwait(false);
+				return ValueTask.CompletedTask;
+			});
+
+			await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 
 			return prize;
 		}

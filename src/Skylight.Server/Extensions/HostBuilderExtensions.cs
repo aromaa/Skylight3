@@ -10,6 +10,7 @@ using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Inventory.Items;
 using Skylight.API.Game.Navigator;
 using Skylight.API.Game.Permissions;
+using Skylight.API.Game.Purse;
 using Skylight.API.Game.Recycler.FurniMatic;
 using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items.Floor;
@@ -22,6 +23,7 @@ using Skylight.API.Net.EndPoint;
 using Skylight.API.Net.Listener;
 using Skylight.API.Registry;
 using Skylight.API.Server;
+using Skylight.Protocol.Packets.Outgoing.Purse;
 using Skylight.Server.DependencyInjection;
 using Skylight.Server.Game.Achievements;
 using Skylight.Server.Game.Badges;
@@ -33,6 +35,7 @@ using Skylight.Server.Game.Furniture.Floor;
 using Skylight.Server.Game.Inventory.Items;
 using Skylight.Server.Game.Navigator;
 using Skylight.Server.Game.Permissions;
+using Skylight.Server.Game.Purse;
 using Skylight.Server.Game.Rooms;
 using Skylight.Server.Game.Rooms.Items.Floor;
 using Skylight.Server.Game.Rooms.Items.Interactions;
@@ -109,11 +112,16 @@ public static class HostBuilderExtensions
 		builder.AddSingleton(typeof(Lazy<>), typeof(LazyService<>));
 
 		//TODO: Figure out something nicer than this
-		builder.AddSingleton(typeof(IRegistry), Registry<IFloorFurnitureKindType>.Create(RegistryTypes.FloorFurnitureKind,
+		builder.AddSingleton<IRegistry>(Registry<IFloorFurnitureKindType>.Create(RegistryTypes.FloorFurnitureKind,
 			(FloorFurnitureKindTypes.Seat.Key, new FloorFurnitureKindType(new FloorFurnitureKind())),
 			(FloorFurnitureKindTypes.Walkable.Key, new FloorFurnitureKindType(new FloorFurnitureKind())),
 			(FloorFurnitureKindTypes.Bed.Key, new FloorFurnitureKindType(new FloorFurnitureKind())),
 			(FloorFurnitureKindTypes.Obstacle.Key, new FloorFurnitureKindType(new FloorFurnitureKind()))));
+
+		builder.AddSingleton<IRegistry>(Registry<ICurrencyType>.Create(RegistryTypes.Currency,
+			(CurrencyTypes.ActivityPoints.Key, new ActivityPointsCurrencyType()),
+			(CurrencyTypes.Credits.Key, new SimpleCurrencyType((c, u) => c.SendAsync(new CreditBalanceOutgoingPacket(u)))),
+			(CurrencyTypes.Silver.Key, new SimpleCurrencyType((_, _) => { }))));
 
 		builder.AddSingleton<IRegistryHolder>(l => l.GetRequiredService<IServer>());
 

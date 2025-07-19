@@ -4,15 +4,18 @@ using Skylight.API.Game.Badges;
 using Skylight.API.Game.Catalog;
 using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Permissions;
+using Skylight.API.Registry;
 using Skylight.Domain.Catalog;
 using Skylight.Infrastructure;
 using Skylight.Server.DependencyInjection;
 
 namespace Skylight.Server.Game.Catalog;
 
-internal sealed partial class CatalogManager(IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, ICatalogTransactionFactory catalogTransactionFactory)
-	: LoadableServiceBase<ICatalogSnapshot>(new Snapshot(catalogTransactionFactory, Cache.CreateBuilder().ToImmutable(furnitureManager.Current))), ICatalogManager
+internal sealed partial class CatalogManager(IDbContextFactory<SkylightContext> dbContextFactory, IRegistryHolder registryHolder, IFurnitureManager furnitureManager, ICatalogTransactionFactory catalogTransactionFactory)
+	: LoadableServiceBase<ICatalogSnapshot>(new Snapshot(catalogTransactionFactory, Cache.CreateBuilder().ToImmutable(registryHolder, furnitureManager.Current))), ICatalogManager
 {
+	private readonly IRegistryHolder registryHolder = registryHolder;
+
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
 	private readonly ICatalogTransactionFactory catalogTransactionFactory = catalogTransactionFactory;
@@ -32,6 +35,8 @@ internal sealed partial class CatalogManager(IDbContextFactory<SkylightContext> 
 				.AsSplitQuery()
 				.Include(p => p.Access!.OrderBy(a => a.Partition))
 				.Include(p => p.Children!)
+				.Include(o => o.Offers!)
+				.ThenInclude(o => o.Cost)
 				.Include(p => p.Offers!)
 				.ThenInclude(o => o.Products)
 				.OrderBy(p => p.ParentId)
@@ -47,6 +52,6 @@ internal sealed partial class CatalogManager(IDbContextFactory<SkylightContext> 
 			}
 		}
 
-		return new Snapshot(this.catalogTransactionFactory, await builder.ToImmutableAsync(await permissionManager.ConfigureAwait(false), await badgeSnapshot.ConfigureAwait(false), await furnitureSnapshot.ConfigureAwait(false), cancellationToken).ConfigureAwait(false));
+		return new Snapshot(this.catalogTransactionFactory, await builder.ToImmutableAsync(this.registryHolder, await permissionManager.ConfigureAwait(false), await badgeSnapshot.ConfigureAwait(false), await furnitureSnapshot.ConfigureAwait(false), cancellationToken).ConfigureAwait(false));
 	}
 }

@@ -1,5 +1,7 @@
 ﻿using System.Collections.Frozen;
 using System.Collections.Immutable;
+using System.Text.Json;
+using Skylight.API;
 using Skylight.API.Game.Badges;
 using Skylight.API.Game.Catalog;
 using Skylight.API.Game.Catalog.Products;
@@ -7,6 +9,8 @@ using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Furniture.Wall;
 using Skylight.API.Game.Permissions;
+using Skylight.API.Game.Purse;
+using Skylight.API.Registry;
 using Skylight.Domain.Catalog;
 using Skylight.Server.Game.Catalog.Products;
 
@@ -16,6 +20,7 @@ internal partial class CatalogManager
 {
 	private sealed class Cache
 	{
+		internal IRegistry<ICurrencyType> CurrencyRegistry { get; }
 		internal IFurnitureSnapshot Furnitures { get; }
 
 		internal FrozenDictionary<int, ICatalogPage> Pages { get; }
@@ -23,8 +28,9 @@ internal partial class CatalogManager
 
 		internal ImmutableArray<ICatalogPage> RootPages { get; }
 
-		private Cache(IFurnitureSnapshot furnitures, Dictionary<int, ICatalogPage> pages, Dictionary<int, ICatalogOffer> offers, ImmutableArray<ICatalogPage> rootPages)
+		private Cache(IRegistry<ICurrencyType> currencyRegistry, IFurnitureSnapshot furnitures, Dictionary<int, ICatalogPage> pages, Dictionary<int, ICatalogOffer> offers, ImmutableArray<ICatalogPage> rootPages)
 		{
+			this.CurrencyRegistry = currencyRegistry;
 			this.Furnitures = furnitures;
 
 			this.Pages = pages.ToFrozenDictionary();
@@ -57,10 +63,13 @@ internal partial class CatalogManager
 				}
 			}
 
-			internal Cache ToImmutable(IFurnitureSnapshot furnitures) => new(furnitures, [], [], []);
+			internal Cache ToImmutable(IRegistryHolder registryHolder, IFurnitureSnapshot furnitures)
+				=> new(registryHolder.Registry(RegistryTypes.Currency), furnitures, [], [], []);
 
-			internal async Task<Cache> ToImmutableAsync(IPermissionManager permissionManager, IBadgeSnapshot badges, IFurnitureSnapshot furnitures, CancellationToken cancellationToken)
+			internal async Task<Cache> ToImmutableAsync(IRegistryHolder registryHolder, IPermissionManager permissionManager, IBadgeSnapshot badges, IFurnitureSnapshot furnitures, CancellationToken cancellationToken)
 			{
+				IRegistry<ICurrencyType> currencyRegistry = registryHolder.Registry(RegistryTypes.Currency);
+
 				IPermissionDirectory<string> ranksDirectory = await permissionManager.GetRanksDirectoryAsync(cancellationToken).ConfigureAwait(false);
 
 				Dictionary<int, ICatalogPage> catalogPages = [];
@@ -86,7 +95,7 @@ internal partial class CatalogManager
 						children.Add(child.Id, child);
 					}
 
-					CatalogPage page = new(pageEntity.Id, pageEntity.Name, pageEntity.Localization, pageEntity.OrderNum, pageEntity.Enabled, pageEntity.Visible, pageEntity.IconColor, pageEntity.IconImage, pageEntity.Layout, [.. pageEntity.Texts], [.. pageEntity.Images], pageEntity.AcceptSeasonCurrencyAsCredits, access, offers, children);
+					CatalogPage page = new(pageEntity.Id, pageEntity.Name, pageEntity.Localization, pageEntity.OrderNum, pageEntity.Enabled, pageEntity.Visible, pageEntity.IconColor, pageEntity.IconImage, pageEntity.Layout, [.. pageEntity.Texts], [.. pageEntity.Images], access, offers, children);
 
 					catalogPages.Add(page.Id, page);
 
@@ -141,6 +150,19 @@ internal partial class CatalogManager
 
 				async Task<CatalogOffer> CreateOfferAsync(CatalogOfferEntity offerEntity)
 				{
+					Dictionary<ICurrency, int> cost = [];
+					foreach (CatalogOfferCostEntity costEntity in offerEntity.Cost!)
+					{
+						ICurrency currency = currencyRegistry.Value(ResourceKey.Parse(costEntity.CurrencyType)).Create(costEntity.CurrencyData is { } currencyData ? JsonDocument.Parse(currencyData) : null);
+
+						if (costEntity.Amount <= 0)
+						{
+							throw new InvalidOperationException($"The offer {offerEntity.Id} has invalid currency cost for {costEntity.CurrencyType}! Amount must be positive.");
+						}
+
+						cost[currency] = costEntity.Amount;
+					}
+
 					IPermissionSubject? permissionRequirement = null;
 					if (offerEntity.RankId is { } rank)
 					{
@@ -195,7 +217,7 @@ internal partial class CatalogManager
 						}
 					}
 
-					CatalogOffer offer = new(offerEntity.Id, offerEntity.OrderNum, offerEntity.Name, permissionRequirement, offerEntity.CostCredits, offerEntity.CostActivityPoints, offerEntity.ActivityPointsType, offerEntity.RentTime, offerEntity.HasOffer, products.MoveToImmutable());
+					CatalogOffer offer = new(offerEntity.Id, offerEntity.OrderNum, offerEntity.Name, permissionRequirement, cost.ToFrozenDictionary(), offerEntity.RentTime, offerEntity.HasOffer, products.MoveToImmutable());
 
 					catalogOffers.Add(offer.Id, offer);
 
@@ -208,7 +230,7 @@ internal partial class CatalogManager
 					rootPages.Add(await CreatePageAsync(pageEntity, []).ConfigureAwait(false));
 				}
 
-				return new Cache(furnitures, catalogPages, catalogOffers, rootPages.MoveToImmutable());
+				return new Cache(currencyRegistry, furnitures, catalogPages, catalogOffers, rootPages.MoveToImmutable());
 			}
 		}
 	}

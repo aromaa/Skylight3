@@ -4,8 +4,11 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Net.Sockets;
 using Skylight.API.Game.Clients;
+using Skylight.API.Game.Purse;
 using Skylight.API.Game.Users;
+using Skylight.API.Registry;
 using Skylight.Protocol.Packets.Data.CallForHelp;
+using Skylight.Protocol.Packets.Data.Notifications;
 using Skylight.Protocol.Packets.Data.Perk;
 using Skylight.Protocol.Packets.Outgoing;
 using Skylight.Protocol.Packets.Outgoing.Availability;
@@ -20,6 +23,8 @@ namespace Skylight.Server.Game.Clients;
 
 internal sealed class Client : IClient
 {
+	private readonly IRegistryHolder registryHolder;
+
 	public ISocket Socket { get; }
 	public Encoding Encoding { get; }
 
@@ -29,8 +34,10 @@ internal sealed class Client : IClient
 
 	private readonly PacketScheduler packetScheduler;
 
-	internal Client(ISocket socket, Encoding encoding)
+	internal Client(IRegistryHolder registryHolder, ISocket socket, Encoding encoding)
 	{
+		this.registryHolder = registryHolder;
+
 		this.Socket = socket;
 		this.Encoding = encoding;
 
@@ -59,7 +66,12 @@ internal sealed class Client : IClient
 		//Favourites
 		this.SendAsync(new AvailabilityStatusOutgoingPacket(true, false, true));
 		this.SendAsync(new InfoFeedEnableOutgoingPacket(true));
-		//Activity points
+
+		if (CurrencyTypes.ActivityPoints.TryGet(this.registryHolder, out ICompoundCurrencyType<IActivityPointsCurrency>? activityPointsCurrencyType))
+		{
+			this.SendAsync(new ActivityPointsOutgoingPacket(user.Purse.GetBalances(activityPointsCurrencyType).Select(e => new ActivityPointData(e.Currency.Kind, e.Balance)).ToArray()));
+		}
+
 		//Achievement score
 		this.SendAsync(new IsFirstLoginOfDayOutgoingPacket(true));
 		//Mystery box keys

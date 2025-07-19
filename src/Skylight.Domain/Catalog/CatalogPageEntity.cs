@@ -25,8 +25,6 @@ public class CatalogPageEntity
 	public List<string> Texts { get; set; } = null!;
 	public List<string> Images { get; set; } = null!;
 
-	public bool AcceptSeasonCurrencyAsCredits { get; set; }
-
 	public List<CatalogPageAccessEntity>? Access { get; set; }
 	public List<CatalogPageEntity>? Children { get; set; }
 	public List<CatalogOfferEntity>? Offers { get; set; }

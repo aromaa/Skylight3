@@ -16,5 +16,7 @@ public interface IRegistry<T> : IRegistry
 	public T Value(ResourceKey key);
 	public bool TryGetValue(ResourceKey key, [NotNullWhen(true)] out T? value);
 
+	public ResourceKey Key(T value);
+
 	ResourceLocation IRegistry.Location => this.Type.Location;
 }

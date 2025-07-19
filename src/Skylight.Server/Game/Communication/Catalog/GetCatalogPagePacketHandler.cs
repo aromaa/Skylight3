@@ -2,6 +2,7 @@
 using Net.Communication.Attributes;
 using Skylight.API.Game.Catalog;
 using Skylight.API.Game.Users;
+using Skylight.API.Registry;
 using Skylight.Protocol.Packets.Data.Catalog;
 using Skylight.Protocol.Packets.Incoming.Catalog;
 using Skylight.Protocol.Packets.Manager;
@@ -11,9 +12,11 @@ using Skylight.Server.Extensions;
 namespace Skylight.Server.Game.Communication.Catalog;
 
 [PacketManagerRegister(typeof(IGamePacketManager))]
-internal sealed class GetCatalogPagePacketHandler<T>(ICatalogManager catalogManager) : UserPacketHandler<T>
+internal sealed class GetCatalogPagePacketHandler<T>(IRegistryHolder registryHolder, ICatalogManager catalogManager) : UserPacketHandler<T>
 	where T : IGetCatalogPageIncomingPacket
 {
+	private readonly IRegistryHolder registryHolder = registryHolder;
+
 	private readonly ICatalogManager catalogManager = catalogManager;
 
 	internal override void Handle(IUser user, in T packet)
@@ -31,9 +34,9 @@ internal sealed class GetCatalogPagePacketHandler<T>(ICatalogManager catalogMana
 			LayoutCode = page.Layout,
 			Images = page.Images,
 			Texts = page.Texts,
-			Offers = page.BuildOffersData(),
+			Offers = page.BuildOffersData(this.registryHolder.Registry(RegistryTypes.Currency)),
 			OfferId = packet.OfferId,
-			AcceptSeasonCurrencyAsCredits = page.AcceptSeasonCurrencyAsCredits,
+			AcceptSeasonCurrencyAsCredits = false,
 			FrontPageItems = Array.Empty<CatalogFrontPageItemData>()
 		});
 	}

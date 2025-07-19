@@ -17,11 +17,11 @@ internal sealed class CatalogProductFloorItem : IFloorFurnitureCatalogProduct
 		this.Amount = amount;
 	}
 
-	public ValueTask PurchaseAsync(ICatalogTransaction transaction, CancellationToken cancellationToken)
+	public ValueTask ClaimAsync(ICatalogTransactionContext context, CancellationToken cancellationToken)
 	{
 		for (int i = 0; i < this.Amount; i++)
 		{
-			transaction.AddFloorItem(this.Furniture, null);
+			context.Commands.AddFloorItem(this.Furniture, null);
 		}
 
 		return ValueTask.CompletedTask;

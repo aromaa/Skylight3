@@ -26,14 +26,12 @@ internal sealed class CatalogPage : ICatalogPage
 	public ImmutableArray<string> Texts { get; }
 	public ImmutableArray<string> Images { get; }
 
-	public bool AcceptSeasonCurrencyAsCredits { get; }
-
 	private readonly ImmutableArray<ImmutableArray<IPermissionSubject>> access;
 
 	private readonly Dictionary<int, ICatalogOffer> offers;
 	private readonly OrderedDictionary<int, ICatalogPage> children;
 
-	internal CatalogPage(int id, string name, string localization, int orderNum, bool enabled, bool visible, int iconColor, int iconImage, string layout, ImmutableArray<string> texts, ImmutableArray<string> images, bool acceptSeasonCurrencyAsCredits, ImmutableArray<ImmutableArray<IPermissionSubject>> access, Dictionary<int, ICatalogOffer> offers, OrderedDictionary<int, ICatalogPage> children)
+	internal CatalogPage(int id, string name, string localization, int orderNum, bool enabled, bool visible, int iconColor, int iconImage, string layout, ImmutableArray<string> texts, ImmutableArray<string> images, ImmutableArray<ImmutableArray<IPermissionSubject>> access, Dictionary<int, ICatalogOffer> offers, OrderedDictionary<int, ICatalogPage> children)
 	{
 		this.Id = id;
 
@@ -52,8 +50,6 @@ internal sealed class CatalogPage : ICatalogPage
 
 		this.Texts = texts;
 		this.Images = images;
-
-		this.AcceptSeasonCurrencyAsCredits = acceptSeasonCurrencyAsCredits;
 
 		this.access = access;
 

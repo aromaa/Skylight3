@@ -13,9 +13,9 @@ internal sealed class CatalogProductBadge : IBadgeCatalogProduct
 		this.Badge = badge;
 	}
 
-	public ValueTask PurchaseAsync(ICatalogTransaction transaction, CancellationToken cancellationToken = default)
+	public ValueTask ClaimAsync(ICatalogTransactionContext context, CancellationToken cancellationToken = default)
 	{
-		transaction.AddBadge(this.Badge);
+		context.Commands.AddBadge(this.Badge);
 
 		return ValueTask.CompletedTask;
 	}

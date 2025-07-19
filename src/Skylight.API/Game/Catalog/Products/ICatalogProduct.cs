@@ -2,5 +2,5 @@
 
 public interface ICatalogProduct
 {
-	public ValueTask PurchaseAsync(ICatalogTransaction transaction, CancellationToken cancellationToken = default);
+	public ValueTask ClaimAsync(ICatalogTransactionContext context, CancellationToken cancellationToken = default);
 }

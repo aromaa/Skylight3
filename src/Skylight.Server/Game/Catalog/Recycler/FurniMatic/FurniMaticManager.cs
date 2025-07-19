@@ -6,15 +6,17 @@ using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Inventory.Items;
 using Skylight.API.Game.Recycler.FurniMatic;
+using Skylight.API.Registry;
 using Skylight.Domain.Recycler.FurniMatic;
 using Skylight.Infrastructure;
 using Skylight.Server.DependencyInjection;
 
 namespace Skylight.Server.Game.Catalog.Recycler.FurniMatic;
 
-internal sealed partial class FurniMaticManager(IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, ICatalogTransactionFactory catalogTransactionFactory, IFurnitureInventoryItemStrategy furnitureInventoryItemStrategy, IOptions<FurniMaticSettings> settings, TimeProvider timeProvider)
-	: LoadableServiceBase<IFurniMaticSnapshot>(new Snapshot(dbContextFactory, furnitureManager, furnitureInventoryItemStrategy, catalogTransactionFactory, settings.Value, timeProvider, Cache.CreateBuilder().ToImmutable(furnitureManager.Current))), IFurniMaticManager
+internal sealed partial class FurniMaticManager(IRegistryHolder registryHolder, IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, ICatalogTransactionFactory catalogTransactionFactory, IFurnitureInventoryItemStrategy furnitureInventoryItemStrategy, IOptions<FurniMaticSettings> settings, TimeProvider timeProvider)
+	: LoadableServiceBase<IFurniMaticSnapshot>(new Snapshot(registryHolder.Registry(RegistryTypes.Currency), dbContextFactory, furnitureManager, furnitureInventoryItemStrategy, catalogTransactionFactory, settings.Value, timeProvider, Cache.CreateBuilder().ToImmutable(furnitureManager.Current))), IFurniMaticManager
 {
+	private readonly IRegistryHolder registryHolder = registryHolder;
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
 	private readonly IFurnitureManager furnitureManager = furnitureManager;
@@ -57,6 +59,6 @@ internal sealed partial class FurniMaticManager(IDbContextFactory<SkylightContex
 			}
 		}
 
-		return new Snapshot(this.dbContextFactory, this.furnitureManager, this.furnitureInventoryItemStrategy, this.catalogTransactionFactory, this.settings, this.timeProvider, builder.ToImmutable(await furnitures.ConfigureAwait(false)));
+		return new Snapshot(this.registryHolder.Registry(RegistryTypes.Currency), this.dbContextFactory, this.furnitureManager, this.furnitureInventoryItemStrategy, this.catalogTransactionFactory, this.settings, this.timeProvider, builder.ToImmutable(await furnitures.ConfigureAwait(false)));
 	}
 }

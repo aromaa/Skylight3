@@ -18,9 +18,9 @@ internal sealed class CatalogProductStickyNote : IWallFurnitureCatalogProduct
 		this.Amount = amount;
 	}
 
-	public ValueTask PurchaseAsync(ICatalogTransaction transaction, CancellationToken cancellationToken)
+	public ValueTask ClaimAsync(ICatalogTransactionContext context, CancellationToken cancellationToken)
 	{
-		transaction.AddWallItem(this.Furniture, JsonSerializer.SerializeToDocument(this.Amount));
+		context.Commands.AddWallItem(this.Furniture, JsonSerializer.SerializeToDocument(this.Amount));
 
 		return ValueTask.CompletedTask;
 	}
