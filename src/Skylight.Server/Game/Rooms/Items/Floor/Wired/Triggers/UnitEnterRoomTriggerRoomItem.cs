@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Skylight.API.Game.Furniture.Floor.Wired.Triggers;
+using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor.Wired.Triggers;
 using Skylight.API.Game.Rooms.Items.Interactions.Wired.Triggers;
 using Skylight.API.Game.Rooms.Private;
@@ -11,7 +12,7 @@ using Skylight.Protocol.Packets.Outgoing.UserDefinedRoomEvents;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor.Wired.Triggers;
 
-internal sealed class UnitEnterRoomTriggerRoomItem(IPrivateRoom room, int id, IUserInfo owner, IUnitEnterRoomTriggerFurniture furniture, Point3D position, int direction, IUnitEnterRoomTriggerInteractionHandler interactionHandler,
+internal sealed class UnitEnterRoomTriggerRoomItem(IPrivateRoom room, RoomItemId id, IUserInfo owner, IUnitEnterRoomTriggerFurniture furniture, Point3D position, int direction, IUnitEnterRoomTriggerInteractionHandler interactionHandler,
 	string triggerUsername)
 	: WiredTriggerRoomItem<IUnitEnterRoomTriggerFurniture>(room, id, owner, furniture, position, direction), IUnitEnterRoomTriggerRoomItem
 {
@@ -33,7 +34,7 @@ internal sealed class UnitEnterRoomTriggerRoomItem(IPrivateRoom room, int id, IU
 
 	public override void Open(IUserRoomUnit unit)
 	{
-		unit.User.SendAsync(new WiredFurniTriggerOutgoingPacket(this.Id, this.Furniture.Id, TriggerType.UnitEnterRoom, 0, [], [], this.TriggerUsername ?? string.Empty));
+		unit.User.SendAsync(new WiredFurniTriggerOutgoingPacket<RoomItemId>(this.Id, this.Furniture.Id, TriggerType.UnitEnterRoom, 0, [], [], this.TriggerUsername ?? string.Empty));
 	}
 
 	public JsonDocument GetExtraData()

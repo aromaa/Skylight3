@@ -5,19 +5,23 @@ using Skylight.API.Game.Users;
 
 namespace Skylight.Server.Game.Furniture;
 
-internal abstract class FurnitureItemBuilder<TFurniture, TTarget, TBuilder> : IFurnitureItemBuilder<TFurniture, TTarget, TBuilder>
+internal abstract class FurnitureItemBuilder<TFurniture, TItemId, TTarget, TBuilder> : IFurnitureItemBuilder<TFurniture, TItemId, TTarget, TBuilder>
 	where TFurniture : IFurniture
+	where TItemId : struct
 	where TTarget : IFurnitureItem<TFurniture>
-	where TBuilder : FurnitureItemBuilder<TFurniture, TTarget, TBuilder>
+	where TBuilder : FurnitureItemBuilder<TFurniture, TItemId, TTarget, TBuilder>
 {
-	protected int IdValue { get; set; }
+	protected TItemId IdValue { get; set; }
 	protected TFurniture? FurnitureValue { get; set; }
 	protected IUserInfo? OwnerValue { get; set; }
 	protected JsonDocument? ExtraDataValue { get; set; }
 
-	public TBuilder Id(int id)
+	public TBuilder Id(TItemId id)
 	{
-		ArgumentOutOfRangeException.ThrowIfZero(id);
+		if (!this.ValidId(id))
+		{
+			throw new ArgumentException("Not valid id", nameof(id));
+		}
 
 		this.IdValue = id;
 
@@ -50,7 +54,7 @@ internal abstract class FurnitureItemBuilder<TFurniture, TTarget, TBuilder> : IF
 	[MemberNotNull(nameof(this.FurnitureValue), nameof(this.OwnerValue))]
 	protected virtual void CheckValid()
 	{
-		if (this.IdValue == 0)
+		if (!this.ValidId(this.IdValue))
 		{
 			throw new InvalidOperationException("Missing id");
 		}
@@ -65,4 +69,6 @@ internal abstract class FurnitureItemBuilder<TFurniture, TTarget, TBuilder> : IF
 			throw new InvalidOperationException("Missing owner");
 		}
 	}
+
+	protected abstract bool ValidId(TItemId value);
 }

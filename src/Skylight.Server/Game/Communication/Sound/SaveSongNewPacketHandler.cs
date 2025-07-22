@@ -2,9 +2,11 @@
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Net.Communication.Attributes;
+using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Interactions;
 using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
+using Skylight.API.Registry;
 using Skylight.Domain.Rooms.Sound;
 using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Incoming.Sound;
@@ -14,9 +16,12 @@ using Skylight.Protocol.Packets.Outgoing.Sound;
 namespace Skylight.Server.Game.Communication.Sound;
 
 [PacketManagerRegister(typeof(IGamePacketManager))]
-internal sealed partial class SaveSongNewPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory) : UserPacketHandler<T>
+internal sealed partial class SaveSongNewPacketHandler<T>(IRegistryHolder registryHolder, IDbContextFactory<SkylightContext> dbContextFactory) : UserPacketHandler<T>
 	where T : ISaveSongNewIncomingPacket
 {
+	// TODO: Support other domains
+	private readonly IRoomItemDomain normalRoomItemDomain = RoomItemDomains.Normal.Get(registryHolder);
+
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
 	internal override void Handle(IUser user, in T packet)
@@ -60,17 +65,17 @@ internal sealed partial class SaveSongNewPacketHandler<T>(IDbContextFactory<Skyl
 
 		user.Client.ScheduleTask(async client =>
 		{
-			int soundMachineId = await privateRoom.ScheduleTask(_ =>
+			RoomItemId soundMachineId = await privateRoom.ScheduleTask(_ =>
 			{
 				if (!roomUnit.InRoom || !privateRoom.ItemManager.TryGetInteractionHandler(out ISoundMachineInteractionManager? handler) || handler.SoundMachine is not { } soundMachine)
 				{
-					return 0;
+					return default;
 				}
 
 				return soundMachine.Id;
 			}).ConfigureAwait(false);
 
-			if (soundMachineId == 0)
+			if (soundMachineId == default || soundMachineId.Domain != this.normalRoomItemDomain)
 			{
 				return;
 			}
@@ -81,7 +86,7 @@ internal sealed partial class SaveSongNewPacketHandler<T>(IDbContextFactory<Skyl
 			{
 				UserId = client.User!.Profile.Id,
 
-				ItemId = soundMachineId,
+				ItemId = soundMachineId.Id,
 
 				Name = name,
 				Length = songLength,

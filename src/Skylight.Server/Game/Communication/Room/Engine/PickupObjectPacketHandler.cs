@@ -1,11 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Net.Communication.Attributes;
 using Skylight.API.Game.Inventory.Items;
+using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Wall;
 using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
+using Skylight.API.Registry;
 using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Incoming.Room.Engine;
 using Skylight.Protocol.Packets.Manager;
@@ -13,10 +15,13 @@ using Skylight.Protocol.Packets.Manager;
 namespace Skylight.Server.Game.Communication.Room.Engine;
 
 [PacketManagerRegister(typeof(IGamePacketManager))]
-internal sealed partial class PickupObjectPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureInventoryItemStrategy furnitureInventoryItemFactory)
+internal sealed partial class PickupObjectPacketHandler<T>(IRegistryHolder registryHolder, IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureInventoryItemStrategy furnitureInventoryItemFactory)
 	: UserPacketHandler<T>
 	where T : IPickupObjectIncomingPacket
 {
+	// TODO: Support other domains
+	private readonly IRoomItemDomain normalRoomItemDomain = RoomItemDomains.Normal.Get(registryHolder);
+
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
 	private readonly IFurnitureInventoryItemStrategy furnitureInventoryItemFactory = furnitureInventoryItemFactory;
@@ -30,19 +35,15 @@ internal sealed partial class PickupObjectPacketHandler<T>(IDbContextFactory<Sky
 
 		if (packet.ItemType == 1)
 		{
-			int floorItemId = packet.ItemId;
-
-			this.PickupWallItem(privateRoom, roomUnit, floorItemId);
+			this.PickupWallItem(privateRoom, roomUnit, new RoomItemId(this.normalRoomItemDomain, packet.ItemId));
 		}
 		else if (packet.ItemType == 2)
 		{
-			int wallItemId = packet.ItemId;
-
-			this.PickupFloorItem(privateRoom, roomUnit, wallItemId);
+			this.PickupFloorItem(privateRoom, roomUnit, new RoomItemId(this.normalRoomItemDomain, packet.ItemId));
 		}
 	}
 
-	private void PickupFloorItem(IPrivateRoom privateRoom, IUserRoomUnit roomUnit, int floorItemId)
+	private void PickupFloorItem(IPrivateRoom privateRoom, IUserRoomUnit roomUnit, RoomItemId floorItemId)
 	{
 		roomUnit.User.Client.ScheduleTask(async _ =>
 		{
@@ -55,20 +56,20 @@ internal sealed partial class PickupObjectPacketHandler<T>(IDbContextFactory<Sky
 
 				privateRoom.ItemManager.RemoveItem(item);
 
-				roomUnit.User.Inventory.TryAddFloorItem(this.furnitureInventoryItemFactory.CreateFurnitureItem(item.Id, item.Owner, item.Furniture, null));
-
 				return item;
 			}).ConfigureAwait(false);
 
-			if (item is null)
+			if (item is null || floorItemId.Domain != this.normalRoomItemDomain)
 			{
 				return;
 			}
 
+			roomUnit.User.Inventory.TryAddFloorItem(this.furnitureInventoryItemFactory.CreateFurnitureItem(item.Id.Id, item.Owner, item.Furniture));
+
 			await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
 			await dbContext.FloorItems
-				.Where(i => i.Id == item.Id)
+				.Where(i => i.Id == item.Id.Id)
 				.ExecuteUpdateAsync(setters => setters
 					.SetProperty(i => i.RoomId, (int?)null)
 					.SetProperty(i => i.UserId, roomUnit.User.Profile.Id))
@@ -76,7 +77,7 @@ internal sealed partial class PickupObjectPacketHandler<T>(IDbContextFactory<Sky
 		});
 	}
 
-	private void PickupWallItem(IPrivateRoom privateRoom, IUserRoomUnit roomUnit, int wallItemId)
+	private void PickupWallItem(IPrivateRoom privateRoom, IUserRoomUnit roomUnit, RoomItemId wallItemId)
 	{
 		roomUnit.User.Client.ScheduleTask(async _ =>
 		{
@@ -89,20 +90,20 @@ internal sealed partial class PickupObjectPacketHandler<T>(IDbContextFactory<Sky
 
 				privateRoom.ItemManager.RemoveItem(item);
 
-				roomUnit.User.Inventory.TryAddWallItem(this.furnitureInventoryItemFactory.CreateFurnitureItem(item.Id, item.Owner, item.Furniture, null));
-
 				return item;
 			}).ConfigureAwait(false);
 
-			if (item is null)
+			if (item is null || wallItemId.Domain != this.normalRoomItemDomain)
 			{
 				return;
 			}
 
+			roomUnit.User.Inventory.TryAddWallItem(this.furnitureInventoryItemFactory.CreateFurnitureItem(item.Id.Id, item.Owner, item.Furniture));
+
 			await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
 			await dbContext.WallItems
-				.Where(i => i.Id == item.Id)
+				.Where(i => i.Id == item.Id.Id)
 				.ExecuteUpdateAsync(setters => setters
 					.SetProperty(i => i.RoomId, (int?)null)
 					.SetProperty(i => i.UserId, roomUnit.User.Profile.Id))

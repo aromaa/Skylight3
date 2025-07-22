@@ -13,6 +13,7 @@ using Skylight.API.Game.Permissions;
 using Skylight.API.Game.Purse;
 using Skylight.API.Game.Recycler.FurniMatic;
 using Skylight.API.Game.Rooms;
+using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Interactions;
 using Skylight.API.Game.Rooms.Items.Wall;
@@ -37,6 +38,7 @@ using Skylight.Server.Game.Navigator;
 using Skylight.Server.Game.Permissions;
 using Skylight.Server.Game.Purse;
 using Skylight.Server.Game.Rooms;
+using Skylight.Server.Game.Rooms.Items.Domains;
 using Skylight.Server.Game.Rooms.Items.Floor;
 using Skylight.Server.Game.Rooms.Items.Interactions;
 using Skylight.Server.Game.Rooms.Items.Wall;
@@ -122,6 +124,11 @@ public static class HostBuilderExtensions
 			(CurrencyTypes.ActivityPoints.Key, new ActivityPointsCurrencyType()),
 			(CurrencyTypes.Credits.Key, new SimpleCurrencyType((c, u) => c.SendAsync(new CreditBalanceOutgoingPacket(u)))),
 			(CurrencyTypes.Silver.Key, new SimpleCurrencyType((_, _) => { }))));
+
+		builder.AddSingleton<IRegistry>(Registry<IRoomItemDomain>.Create(RegistryTypes.RoomItemDomain,
+			(RoomItemDomains.Normal.Key, new NormalRoomItemDomain()),
+			(RoomItemDomains.BuildersClub.Key, new BuildersClubRoomItemDomain()),
+			(RoomItemDomains.Transient.Key, new TransientRoomItemDomain())));
 
 		builder.AddSingleton<IRegistryHolder>(l => l.GetRequiredService<IServer>());
 

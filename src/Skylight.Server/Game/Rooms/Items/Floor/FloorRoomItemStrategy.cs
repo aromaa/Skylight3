@@ -5,11 +5,13 @@ using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Furniture.Floor.Wired.Effects;
 using Skylight.API.Game.Furniture.Floor.Wired.Triggers;
+using Skylight.API.Game.Inventory.Items.Floor;
 using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
+using Skylight.API.Registry;
 using Skylight.Server.Game.Rooms.Items.Builders.Floor;
 using Skylight.Server.Game.Rooms.Items.Builders.Floor.Wired.Effects;
 using Skylight.Server.Game.Rooms.Items.Builders.Floor.Wired.Triggers;
@@ -20,12 +22,16 @@ internal sealed class FloorRoomItemStrategy : IFloorRoomItemStrategy
 {
 	private readonly IServiceProvider serviceProvider;
 
+	private readonly IRoomItemDomain normalRoomItemDomain;
+
 	private readonly Dictionary<Type, ObjectFactory> builders = [];
 	private readonly ConcurrentDictionary<Type, ObjectFactory> typeCache = [];
 
-	public FloorRoomItemStrategy(IServiceProvider serviceProvider)
+	public FloorRoomItemStrategy(IServiceProvider serviceProvider, IRegistryHolder registryHolder)
 	{
 		this.serviceProvider = serviceProvider;
+
+		this.normalRoomItemDomain = RoomItemDomains.Normal.Get(registryHolder);
 
 		this.RegisterBuilder<IStaticFloorFurniture, StaticFloorRoomItemBuilder>();
 		this.RegisterBuilder<IFurniMaticGiftFurniture, FurniMaticGiftRoomItemBuilder>();
@@ -64,7 +70,7 @@ internal sealed class FloorRoomItemStrategy : IFloorRoomItemStrategy
 		throw new NotSupportedException();
 	}
 
-	public TRoomItem CreateFloorItem<TRoomItem, TFurniture>(int itemId, IPrivateRoom room, IUserInfo owner, TFurniture furniture, Point3D position, int direction, JsonDocument? extraData = null)
+	public TRoomItem CreateFloorItem<TRoomItem, TFurniture>(RoomItemId itemId, IPrivateRoom room, IUserInfo owner, TFurniture furniture, Point3D position, int direction, JsonDocument? extraData = null)
 		where TFurniture : IFloorFurniture
 		where TRoomItem : IFloorRoomItem, IFurnitureItem<TFurniture>
 	{
@@ -86,7 +92,7 @@ internal sealed class FloorRoomItemStrategy : IFloorRoomItemStrategy
 			.Build();
 	}
 
-	public TRoomItem CreateFloorItem<TRoomItem, TFurniture, TBuilder>(int itemId, IPrivateRoom room, IUserInfo owner, TFurniture furniture, Point3D position, int direction, Action<TBuilder> builder)
+	public TRoomItem CreateFloorItem<TRoomItem, TFurniture, TBuilder>(RoomItemId itemId, IPrivateRoom room, IUserInfo owner, TFurniture furniture, Point3D position, int direction, Action<TBuilder> builder)
 		where TRoomItem : IFloorRoomItem, IFurnitureItem<TFurniture>
 		where TFurniture : IFloorFurniture
 		where TBuilder : IFurnitureItemDataBuilder<TFurniture, TRoomItem, TBuilder>
@@ -105,4 +111,20 @@ internal sealed class FloorRoomItemStrategy : IFloorRoomItemStrategy
 			.Id(itemId)
 			.Build();
 	}
+
+	public IFloorRoomItem CreateFloorItem(IFloorInventoryItem item, IPrivateRoom room, Point3D position, int direction, JsonDocument? extraData = null)
+		=> this.CreateFloorItem<IFloorRoomItem, IFloorFurniture>(new RoomItemId(this.normalRoomItemDomain, item.Id), room, item.Owner, item.Furniture, position, direction, extraData);
+
+	public TRoomItem CreateFloorItem<TRoomItem, TFurniture, TInventoryItem>(TInventoryItem item, IPrivateRoom room, Point3D position, int direction, JsonDocument? extraData = null)
+		where TRoomItem : IFloorRoomItem, IFurnitureItem<TFurniture>
+		where TFurniture : IFloorFurniture
+		where TInventoryItem : IFloorInventoryItem, IFurnitureItem<TFurniture>
+		=> this.CreateFloorItem<TRoomItem, TFurniture>(new RoomItemId(this.normalRoomItemDomain, item.Id), room, item.Owner, ((IFurnitureItem<TFurniture>)item).Furniture, position, direction, extraData);
+
+	public TRoomItem CreateFloorItem<TRoomItem, TFurniture, TInventoryItem, TBuilder>(TInventoryItem item, IPrivateRoom room, Point3D position, int direction, Action<TBuilder> builder)
+		where TRoomItem : IFloorRoomItem, IFurnitureItem<TFurniture>
+		where TFurniture : IFloorFurniture
+		where TInventoryItem : IFloorInventoryItem, IFurnitureItem<TFurniture>
+		where TBuilder : IFurnitureItemDataBuilder<TFurniture, TRoomItem, TBuilder>
+		=> this.CreateFloorItem<TRoomItem, TFurniture, TBuilder>(new RoomItemId(this.normalRoomItemDomain, item.Id), room, item.Owner, ((IFurnitureItem<TFurniture>)item).Furniture, position, direction, builder);
 }

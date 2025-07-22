@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Skylight.API.Game.Furniture.Floor.Wired.Effects;
+using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor.Wired.Effects;
 using Skylight.API.Game.Rooms.Items.Interactions.Wired.Effects;
 using Skylight.API.Game.Rooms.Private;
@@ -12,7 +13,7 @@ using Skylight.Protocol.Packets.Outgoing.UserDefinedRoomEvents;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor.Wired.Effects;
 
-internal sealed class ShowMessageEffectRoomItem(IPrivateRoom room, int id, IUserInfo owner, IShowMessageEffectFurniture furniture, Point3D position, int direction, IWiredEffectInteractionHandler interactionHandler,
+internal sealed class ShowMessageEffectRoomItem(IPrivateRoom room, RoomItemId id, IUserInfo owner, IShowMessageEffectFurniture furniture, Point3D position, int direction, IWiredEffectInteractionHandler interactionHandler,
 	string message, int effectDelay)
 	: WiredEffectRoomItem<IShowMessageEffectFurniture>(room, id, owner, furniture, position, direction, effectDelay), IShowMessageEffectRoomItem
 {
@@ -41,7 +42,7 @@ internal sealed class ShowMessageEffectRoomItem(IPrivateRoom room, int id, IUser
 
 	public override void Open(IUserRoomUnit unit)
 	{
-		unit.User.SendAsync(new WiredFurniActionOutgoingPacket(this.Id, this.Furniture.Id, ActionType.ShowMessage, 0, [], 0, [], this.Message));
+		unit.User.SendAsync(new WiredFurniActionOutgoingPacket<RoomItemId>(this.Id, this.Furniture.Id, ActionType.ShowMessage, 0, [], 0, [], this.Message));
 	}
 
 	public override void Trigger(IUserRoomUnit? cause = null)

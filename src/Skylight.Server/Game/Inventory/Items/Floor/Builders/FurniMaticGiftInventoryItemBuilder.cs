@@ -7,7 +7,7 @@ namespace Skylight.Server.Game.Inventory.Items.Floor.Builders;
 
 internal sealed class FurniMaticGiftInventoryItemBuilder : FloorInventoryItemBuilder<IFurniMaticGiftFurniture, IFurniMaticGiftInventoryItem, FurniMaticGiftInventoryItemBuilder>,
 	IFurniMaticGiftInventoryItemDataBuilder<IFurniMaticGiftFurniture, IFurniMaticGiftInventoryItem, FurniMaticGiftInventoryItemBuilder, FurniMaticGiftInventoryItemBuilder>,
-	IFurnitureItemDataBuilder<IFurniMaticGiftFurniture, IFurniMaticGiftInventoryItem, FurniMaticGiftInventoryItemBuilder, FurniMaticGiftInventoryItemBuilder>
+	IFurnitureItemDataBuilder<IFurniMaticGiftFurniture, int, IFurniMaticGiftInventoryItem, FurniMaticGiftInventoryItemBuilder, FurniMaticGiftInventoryItemBuilder>
 {
 	private DateTime RecycledAtValue { get; set; }
 

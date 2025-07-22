@@ -4,7 +4,10 @@ using Skylight.Server.Game.Furniture;
 
 namespace Skylight.Server.Game.Inventory.Items;
 
-internal abstract class FurnitureInventoryItemBuilder<TFurniture, TTarget, TBuilder> : FurnitureItemBuilder<TFurniture, TTarget, TBuilder>, IFurnitureInventoryItemBuilder<TFurniture, TTarget, TBuilder>
+internal abstract class FurnitureInventoryItemBuilder<TFurniture, TTarget, TBuilder> : FurnitureItemBuilder<TFurniture, int, TTarget, TBuilder>, IFurnitureInventoryItemBuilder<TFurniture, TTarget, TBuilder>
 	where TFurniture : IFurniture
 	where TTarget : IFurnitureInventoryItem, IFurnitureItem<TFurniture>
-	where TBuilder : FurnitureInventoryItemBuilder<TFurniture, TTarget, TBuilder>;
+	where TBuilder : FurnitureInventoryItemBuilder<TFurniture, TTarget, TBuilder>
+{
+	protected override bool ValidId(int value) => value != 0;
+}

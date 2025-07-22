@@ -19,5 +19,5 @@ public interface IFurniMaticGiftRoomItemDataBuilder<in TFurniture, out TTarget, 
 public interface IFurniMaticGiftRoomItemDataBuilder<in TFurniture, out TTarget, out TBuilder, out TFurnitureBuilder> : IFurniMaticGiftRoomItemDataBuilder<TFurniture, TTarget, TBuilder>, IFloorRoomItemBuilder<TFurniture, TTarget, TFurnitureBuilder, TBuilder>
 	where TFurniture : IFurniMaticGiftFurniture
 	where TTarget : IFurniMaticGiftRoomItem, IFurnitureItem<TFurniture>
-	where TBuilder : IFurniMaticGiftRoomItemDataBuilder<TFurniture, TTarget, TBuilder, TFurnitureBuilder>, IFurnitureItemDataBuilder<TFurniture, TTarget, TBuilder, TFurnitureBuilder>
+	where TBuilder : IFurniMaticGiftRoomItemDataBuilder<TFurniture, TTarget, TBuilder, TFurnitureBuilder>, IFurnitureItemDataBuilder<TFurniture, RoomItemId, TTarget, TBuilder, TFurnitureBuilder>
 	where TFurnitureBuilder : IFloorRoomItemBuilder<TFurniture, TTarget, TFurnitureBuilder, TBuilder>;

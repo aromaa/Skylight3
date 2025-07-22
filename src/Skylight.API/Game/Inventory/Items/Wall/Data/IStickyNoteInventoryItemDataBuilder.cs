@@ -19,5 +19,5 @@ public interface IStickyNoteInventoryItemDataBuilder<in TFurniture, out TTarget,
 public interface IStickyNoteInventoryItemDataBuilder<in TFurniture, out TTarget, out TBuilder, out TFurnitureBuilder> : IStickyNoteInventoryItemDataBuilder<TFurniture, TTarget, TBuilder>, IWallInventoryItemBuilder<TFurniture, TTarget, TFurnitureBuilder, TBuilder>
 	where TFurniture : IStickyNoteFurniture
 	where TTarget : IStickyNoteInventoryItem, IFurnitureItem<TFurniture>
-	where TBuilder : IStickyNoteInventoryItemDataBuilder<TFurniture, TTarget, TBuilder, TFurnitureBuilder>, IFurnitureItemDataBuilder<TFurniture, TTarget, TBuilder, TFurnitureBuilder>
+	where TBuilder : IStickyNoteInventoryItemDataBuilder<TFurniture, TTarget, TBuilder, TFurnitureBuilder>, IFurnitureItemDataBuilder<TFurniture, int, TTarget, TBuilder, TFurnitureBuilder>
 	where TFurnitureBuilder : IWallInventoryItemBuilder<TFurniture, TTarget, TFurnitureBuilder, TBuilder>;

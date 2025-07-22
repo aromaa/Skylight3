@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Furniture.Wall;
+using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Interactions;
 using Skylight.API.Game.Rooms.Items.Wall;
 using Skylight.API.Game.Rooms.Items.Wall.Data;
@@ -10,7 +11,7 @@ namespace Skylight.Server.Game.Rooms.Items.Builders.Wall;
 
 internal sealed class StickyNoteRoomItemBuilder : WallRoomItemBuilder<IStickyNoteFurniture, IStickyNoteRoomItem, StickyNoteRoomItemBuilder>,
 	IStickyNoteRoomItemDataBuilder<IStickyNoteFurniture, IStickyNoteRoomItem, StickyNoteRoomItemBuilder, StickyNoteRoomItemBuilder>,
-	IFurnitureItemDataBuilder<IStickyNoteFurniture, IStickyNoteRoomItem, StickyNoteRoomItemBuilder, StickyNoteRoomItemBuilder>
+	IFurnitureItemDataBuilder<IStickyNoteFurniture, RoomItemId, IStickyNoteRoomItem, StickyNoteRoomItemBuilder, StickyNoteRoomItemBuilder>
 {
 	private Color ColorValue { get; set; }
 	private string? TextValue { get; set; }

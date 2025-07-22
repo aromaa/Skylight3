@@ -5,6 +5,7 @@ using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Floor.Wired.Effects;
 using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
+using Skylight.API.Registry;
 using Skylight.Protocol.Packets.Incoming.UserDefinedRoomEvents;
 using Skylight.Protocol.Packets.Manager;
 using Skylight.Protocol.Packets.Outgoing.UserDefinedRoomEvents;
@@ -12,9 +13,12 @@ using Skylight.Protocol.Packets.Outgoing.UserDefinedRoomEvents;
 namespace Skylight.Server.Game.Communication.UserDefinedRoomEvents;
 
 [PacketManagerRegister(typeof(IGamePacketManager))]
-internal sealed class UpdateEffectPacketHandler<T> : UserPacketHandler<T>
+internal sealed class UpdateEffectPacketHandler<T>(IRegistryHolder registryHolder) : UserPacketHandler<T>
 	where T : IUpdateActionIncomingPacket
 {
+	// TODO: Support other domains
+	private readonly IRoomItemDomain normalRoomItemDomain = RoomItemDomains.Normal.Get(registryHolder);
+
 	internal override void Handle(IUser user, in T packet)
 	{
 		if (user.RoomSession?.Unit is not { Room: IPrivateRoom privateRoom } roomUnit || !privateRoom.IsOwner(user))
@@ -22,7 +26,7 @@ internal sealed class UpdateEffectPacketHandler<T> : UserPacketHandler<T>
 			return;
 		}
 
-		int itemId = packet.ItemId;
+		RoomItemId itemId = new(this.normalRoomItemDomain, packet.ItemId);
 
 		IList<int> selectedItemIds = packet.SelectedItems;
 		IList<int> integerParameters = packet.IntegerParameters;
@@ -40,7 +44,7 @@ internal sealed class UpdateEffectPacketHandler<T> : UserPacketHandler<T>
 			HashSet<IRoomItem> selectedItems = [];
 			foreach (int selectedItemId in selectedItemIds)
 			{
-				if (!privateRoom.ItemManager.TryGetItem(selectedItemId, out IRoomItem? selectedItem))
+				if (!privateRoom.ItemManager.TryGetFloorItem(new RoomItemId(this.normalRoomItemDomain, selectedItemId), out IFloorRoomItem? selectedItem))
 				{
 					continue;
 				}

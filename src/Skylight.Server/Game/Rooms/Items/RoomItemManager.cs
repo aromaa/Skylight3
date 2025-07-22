@@ -11,6 +11,7 @@ using Skylight.API.Game.Rooms.Items.Wall;
 using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
+using Skylight.API.Registry;
 using Skylight.Domain.Items;
 using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Data.Room.Engine;
@@ -25,6 +26,8 @@ internal sealed class RoomItemManager : IRoomItemManager
 {
 	private readonly PrivateRoom room;
 
+	private readonly IRoomItemDomain normalRoomItemDomain;
+
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
 
 	private readonly IUserManager userManager;
@@ -36,15 +39,18 @@ internal sealed class RoomItemManager : IRoomItemManager
 	private readonly IRoomItemInteractionManager itemInteractionManager;
 	private readonly Dictionary<Type, IRoomItemInteractionHandler> interactionHandlers;
 
-	private readonly Dictionary<int, IFloorRoomItem> floorItems;
-	private readonly Dictionary<int, IWallRoomItem> wallItems;
+	private readonly Dictionary<RoomItemId, IFloorRoomItem> floorItems;
+	private readonly Dictionary<RoomItemId, IWallRoomItem> wallItems;
 
 	private readonly HashSet<IFloorRoomItem> floorItemsDatabaseQueue;
 	private readonly HashSet<IWallRoomItem> wallItemsDatabaseQueue;
 
-	internal RoomItemManager(PrivateRoom room, IRoomLayout layout, IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager, IFurnitureManager furnitureManager, IFloorRoomItemStrategy floorRoomItemStrategy, IWallRoomItemStrategy wallRoomItemStrategy, IRoomItemInteractionManager interactionManager)
+	internal RoomItemManager(PrivateRoom room, IRoomLayout layout, IRegistryHolder registryHolder, IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager, IFurnitureManager furnitureManager, IFloorRoomItemStrategy floorRoomItemStrategy, IWallRoomItemStrategy wallRoomItemStrategy, IRoomItemInteractionManager interactionManager)
 	{
 		this.room = room;
+
+		this.normalRoomItemDomain = RoomItemDomains.Normal.Get(registryHolder);
+		this.normalRoomItemDomain = RoomItemDomains.Transient.Get(registryHolder);
 
 		this.dbContextFactory = dbContextFactory;
 
@@ -99,7 +105,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 
 			Point3D position = new(floorItem.X, floorItem.Y, floorItem.Z);
 
-			this.AddItemInternal(this.floorRoomItemStrategy.CreateFloorItem(floorItem.Id, this.room, owner, furniture, position, floorItem.Direction, floorItem.Data?.ExtraData));
+			this.AddItemInternal(this.floorRoomItemStrategy.CreateFloorItem(new RoomItemId(this.normalRoomItemDomain, floorItem.Id), this.room, owner, furniture, position, floorItem.Direction, floorItem.Data?.ExtraData));
 		}
 
 		if (updateUsers is { Count: > 0 })
@@ -137,7 +143,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 			Point2D location = new(wallItem.LocationX, wallItem.LocationY);
 			Point2D position = new(wallItem.PositionX, wallItem.PositionY);
 
-			this.AddItemInternal(this.wallRoomItemStrategy.CreateWallItem(wallItem.Id, this.room, owner, furniture, location, position, wallItem.Data?.ExtraData));
+			this.AddItemInternal(this.wallRoomItemStrategy.CreateWallItem(new RoomItemId(this.normalRoomItemDomain, wallItem.Id), this.room, owner, furniture, location, position, wallItem.Data?.ExtraData));
 		}
 
 		if (updateUsers is { Count: > 0 })
@@ -155,7 +161,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 
 		this.floorItemsDatabaseQueue.Add(item);
 
-		this.room.SendAsync(new ObjectAddOutgoingPacket(new ObjectData(item.Id, item.Furniture.Id, item.Position.X, item.Position.Y, item.Position.Z, 0, 0, 0, item.GetItemData()), item.Owner.Username));
+		this.room.SendAsync(new ObjectAddOutgoingPacket<RoomItemId>(new ObjectData<RoomItemId>(item.Id, item.Furniture.Id, item.Position.X, item.Position.Y, item.Position.Z, 0, 0, 0, item.GetItemData()), item.Owner.Username));
 	}
 
 	private void AddItemInternal(IFloorRoomItem item)
@@ -173,7 +179,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 
 		this.wallItemsDatabaseQueue.Add(item);
 
-		this.room.SendAsync(new ItemAddOutgoingPacket(new ItemData(item.Id, item.Furniture.Id, new WallPosition(item.Location.X, item.Location.Y, item.Position.X, item.Position.Y), item.GetItemData()), item.Owner.Username));
+		this.room.SendAsync(new ItemAddOutgoingPacket<RoomItemId>(new ItemData<RoomItemId>(item.Id, item.Furniture.Id, new WallPosition(item.Location.X, item.Location.Y, item.Position.X, item.Position.Y), item.GetItemData()), item.Owner.Username));
 	}
 
 	private void AddItemInternal(IWallRoomItem item)
@@ -286,7 +292,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 
 		this.MoveItemInternal(item, position, direction);
 
-		this.room.SendAsync(new ObjectUpdateOutgoingPacket(new ObjectData(item.Id, item.Furniture.Id, position.X, position.Y, position.Z, direction, 0, 0, item.GetItemData())));
+		this.room.SendAsync(new ObjectUpdateOutgoingPacket<RoomItemId>(new ObjectData<RoomItemId>(item.Id, item.Furniture.Id, position.X, position.Y, position.Z, direction, 0, 0, item.GetItemData())));
 	}
 
 	public void MoveItem(IFloorRoomItem item, Point3D position, int direction)
@@ -294,7 +300,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 		this.RemoveItemFromTile(item);
 		this.MoveItemInternal(item, position, direction);
 
-		this.room.SendAsync(new ObjectUpdateOutgoingPacket(new ObjectData(item.Id, item.Furniture.Id, position.X, position.Y, position.Z, direction, 0, 0, item.GetItemData())));
+		this.room.SendAsync(new ObjectUpdateOutgoingPacket<RoomItemId>(new ObjectData<RoomItemId>(item.Id, item.Furniture.Id, position.X, position.Y, position.Z, direction, 0, 0, item.GetItemData())));
 	}
 
 	private void MoveItemInternal(IFloorRoomItem item, Point3D position, int direction)
@@ -310,7 +316,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 	{
 		this.floorItemsDatabaseQueue.Add(floorItem);
 
-		this.room.SendAsync(new ObjectDataUpdateOutgoingPacket(floorItem.Id, floorItem.GetItemData()));
+		this.room.SendAsync(new ObjectDataUpdateOutgoingPacket<RoomItemId>(floorItem.Id, floorItem.GetItemData()));
 	}
 
 	public void UpdateItem(IWallRoomItem wallItem)
@@ -330,7 +336,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 
 		item.OnRemove();
 
-		this.room.SendAsync(new ObjectRemoveOutgoingPacket(item.Id, false, 0, 0));
+		this.room.SendAsync(new ObjectRemoveOutgoingPacket<RoomItemId>(item.Id, false, 0, 0));
 	}
 
 	public void RemoveItem(IWallRoomItem item)
@@ -346,7 +352,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 
 		item.OnRemove();
 
-		this.room.SendAsync(new ItemRemoveOutgoingPacket(item.Id, 0));
+		this.room.SendAsync(new ItemRemoveOutgoingPacket<RoomItemId>(item.Id, 0));
 	}
 
 	private void RemoveItemFromTile(IFloorRoomItem item)
@@ -374,7 +380,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 			{
 				FloorItemEntity item = new()
 				{
-					Id = floorRoomItem.Id,
+					Id = floorRoomItem.Id.Id,
 					UserId = floorRoomItem.Owner.Id,
 					RoomId = this.room.Info.Id
 				};
@@ -390,7 +396,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 				{
 					itemData.Add(new FloorItemDataEntity
 					{
-						FloorItemId = floorRoomItem.Id,
+						FloorItemId = floorRoomItem.Id.Id,
 						ExtraData = furnitureData.GetExtraData()
 					});
 				}
@@ -401,7 +407,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 			{
 				WallItemEntity item = new()
 				{
-					Id = wallRoomItem.Id,
+					Id = wallRoomItem.Id.Id,
 					UserId = wallRoomItem.Owner.Id,
 					RoomId = this.room.Info.Id
 				};
@@ -417,7 +423,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 				{
 					wallData.Add(new WallItemDataEntity
 					{
-						WallItemId = wallRoomItem.Id,
+						WallItemId = wallRoomItem.Id.Id,
 						ExtraData = furnitureData.GetExtraData()
 					});
 				}
@@ -433,33 +439,8 @@ internal sealed class RoomItemManager : IRoomItemManager
 		}
 	}
 
-	public bool TryGetItem(int stripId, [NotNullWhen(true)] out IRoomItem? item)
-	{
-		if (stripId >= 0)
-		{
-			if (this.floorItems.TryGetValue(stripId, out IFloorRoomItem? floorItem))
-			{
-				item = floorItem;
-
-				return true;
-			}
-		}
-		else
-		{
-			if (this.wallItems.TryGetValue(stripId, out IWallRoomItem? wallItem))
-			{
-				item = wallItem;
-
-				return true;
-			}
-		}
-
-		item = null;
-		return false;
-	}
-
-	public bool TryGetFloorItem(int id, [NotNullWhen(true)] out IFloorRoomItem? item) => this.floorItems.TryGetValue(id, out item);
-	public bool TryGetWallItem(int id, [NotNullWhen(true)] out IWallRoomItem? item) => this.wallItems.TryGetValue(id, out item);
+	public bool TryGetFloorItem(RoomItemId id, [NotNullWhen(true)] out IFloorRoomItem? item) => this.floorItems.TryGetValue(id, out item);
+	public bool TryGetWallItem(RoomItemId id, [NotNullWhen(true)] out IWallRoomItem? item) => this.wallItems.TryGetValue(id, out item);
 
 	public bool TryGetInteractionHandler<T>([NotNullWhen(true)] out T? handler)
 		where T : IRoomItemInteractionHandler

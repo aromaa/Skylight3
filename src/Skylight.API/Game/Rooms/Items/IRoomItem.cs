@@ -8,7 +8,7 @@ public interface IRoomItem : IFurnitureItem<IFurniture>
 {
 	public IPrivateRoom Room { get; }
 
-	public int Id { get; }
+	public RoomItemId Id { get; }
 	public int StripId { get; }
 
 	public IUserInfo Owner { get; }

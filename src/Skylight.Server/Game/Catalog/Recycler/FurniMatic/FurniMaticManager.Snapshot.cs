@@ -9,6 +9,7 @@ using Skylight.API.Game.Inventory.Items.Floor;
 using Skylight.API.Game.Inventory.Items.Wall;
 using Skylight.API.Game.Purse;
 using Skylight.API.Game.Recycler.FurniMatic;
+using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Users;
 using Skylight.API.Registry;
@@ -30,6 +31,7 @@ internal partial class FurniMaticManager
 	private sealed class Snapshot : IFurniMaticSnapshot
 	{
 		private readonly IRegistry<ICurrencyType> currencyRegistry;
+		private readonly IRoomItemDomain normalRoomItemDomain;
 		private readonly IDbContextFactory<SkylightContext> dbContextFactory;
 
 		private readonly IFurnitureManager furnitureManager;
@@ -42,9 +44,10 @@ internal partial class FurniMaticManager
 
 		private readonly Cache cache;
 
-		internal Snapshot(IRegistry<ICurrencyType> currencyRegistry, IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, IFurnitureInventoryItemStrategy furnitureInventoryItemStrategy, ICatalogTransactionFactory catalogTransactionFactory, FurniMaticSettings settings, TimeProvider timeProvider, Cache cache)
+		internal Snapshot(IRegistry<ICurrencyType> currencyRegistry, IRoomItemDomain normalRoomItemDomain, IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, IFurnitureInventoryItemStrategy furnitureInventoryItemStrategy, ICatalogTransactionFactory catalogTransactionFactory, FurniMaticSettings settings, TimeProvider timeProvider, Cache cache)
 		{
 			this.currencyRegistry = currencyRegistry;
+			this.normalRoomItemDomain = normalRoomItemDomain;
 			this.dbContextFactory = dbContextFactory;
 
 			this.furnitureManager = furnitureManager;
@@ -140,9 +143,14 @@ internal partial class FurniMaticManager
 
 		public async Task<IFurniMaticPrize?> OpenGiftAsync(IUser user, IFurniMaticGiftRoomItem gift, CancellationToken cancellationToken)
 		{
+			if (gift.Id.Domain != this.normalRoomItemDomain)
+			{
+				return null;
+			}
+
 			await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
-			FurniMaticGiftEntity? giftEntity = await dbContext.FurniMaticGifts.FirstOrDefaultAsync(i => i.ItemId == gift.Id, cancellationToken).ConfigureAwait(false);
+			FurniMaticGiftEntity? giftEntity = await dbContext.FurniMaticGifts.FirstOrDefaultAsync(i => i.ItemId == gift.Id.Id, cancellationToken).ConfigureAwait(false);
 			if (giftEntity is null || !this.cache.Prizes.TryGetPrize(giftEntity.PrizeId, out IFurniMaticPrize? prize))
 			{
 				return null;
@@ -156,7 +164,7 @@ internal partial class FurniMaticManager
 				{
 					dbContext.FloorItems.Remove(new FloorItemEntity
 					{
-						Id = gift.Id,
+						Id = gift.Id.Id,
 						UserId = gift.Owner.Id,
 						RoomId = gift.Room.Info.Id
 					});

@@ -2,6 +2,7 @@
 using CommunityToolkit.HighPerformance;
 using Net.Collections;
 using Skylight.API.Game.Rooms;
+using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Wall;
 using Skylight.API.Game.Rooms.Map;
@@ -84,25 +85,25 @@ internal abstract class Room : IRoom
 		});
 
 		List<PublicRoomObjectData> publicRoomObjects = [];
-		List<ObjectData> objects = [];
-		List<ItemData> items = [];
+		List<ObjectData<RoomItemId>> objects = [];
+		List<ItemData<RoomItemId>> items = [];
 		if (this is IPrivateRoom privateRoom)
 		{
 			foreach (IFloorRoomItem roomItem in privateRoom.ItemManager.FloorItems)
 			{
-				objects.Add(new ObjectData(roomItem.Id, roomItem.Furniture.Id, roomItem.Position.X, roomItem.Position.Y, roomItem.Position.Z, roomItem.Direction, roomItem.Height, 0, roomItem.GetItemData()));
+				objects.Add(new ObjectData<RoomItemId>(roomItem.Id, roomItem.Furniture.Id, roomItem.Position.X, roomItem.Position.Y, roomItem.Position.Z, roomItem.Direction, roomItem.Height, 0, roomItem.GetItemData()));
 			}
 
 			foreach (IWallRoomItem roomItem in privateRoom.ItemManager.WallItems)
 			{
-				items.Add(new ItemData(roomItem.Id, roomItem.Furniture.Id, new WallPosition(roomItem.Location.X, roomItem.Location.Y, roomItem.Position.X, roomItem.Position.Y), roomItem.GetItemData()));
+				items.Add(new ItemData<RoomItemId>(roomItem.Id, roomItem.Furniture.Id, new WallPosition(roomItem.Location.X, roomItem.Location.Y, roomItem.Position.X, roomItem.Position.Y), roomItem.GetItemData()));
 			}
 		}
 
 		//TODO: Public items
 		user.SendAsync(new PublicRoomObjectsOutgoingPacket(this.Map.Layout.Id, publicRoomObjects));
-		user.SendAsync(new ObjectsOutgoingPacket(objects, Array.Empty<(int, string)>()));
-		user.SendAsync(new ItemsOutgoingPacket(items, Array.Empty<(int, string)>()));
+		user.SendAsync(new ObjectsOutgoingPacket<RoomItemId>(objects, Array.Empty<(int, string)>()));
+		user.SendAsync(new ItemsOutgoingPacket<RoomItemId>(items, Array.Empty<(int, string)>()));
 
 		List<RoomUnitData> units = [];
 		foreach (IUserRoomUnit unit in this.UnitManager.Units)

@@ -8,7 +8,7 @@ using Skylight.API.Numerics;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor;
 
-internal abstract class MultiStateFloorRoomItem<T>(IPrivateRoom room, int id, IUserInfo owner, T furniture, Point3D position, int direction, int state)
+internal abstract class MultiStateFloorRoomItem<T>(IPrivateRoom room, RoomItemId id, IUserInfo owner, T furniture, Point3D position, int direction, int state)
 	: StatefulFloorRoomItem<T>(room, id, owner, furniture, position, direction), IMultiStateFloorItem
 	where T : IMultiStateFloorFurniture
 {

@@ -5,47 +5,47 @@ namespace Skylight.API.Game.Furniture;
 
 public interface IFurnitureItemBuilder;
 
-public interface IFurnitureItemBuilder<out TTarget> : IFurnitureItemBuilder
+public interface IFurnitureItemBuilder<in TItemId, out TTarget> : IFurnitureItemBuilder
 {
-	public IFurnitureItemBuilder<TTarget> Id(int id);
-	public IFurnitureItemBuilder<TTarget> Furniture(IFurniture furniture);
-	public IFurnitureItemBuilder<TTarget> Owner(IUserInfo owner);
-	public IFurnitureItemBuilder<TTarget> ExtraData(JsonDocument extraData);
+	public IFurnitureItemBuilder<TItemId, TTarget> Id(TItemId id);
+	public IFurnitureItemBuilder<TItemId, TTarget> Furniture(IFurniture furniture);
+	public IFurnitureItemBuilder<TItemId, TTarget> Owner(IUserInfo owner);
+	public IFurnitureItemBuilder<TItemId, TTarget> ExtraData(JsonDocument extraData);
 	public TTarget Build();
 }
 
-public interface IFurnitureItemBuilder<in TFurniture, out TTarget> : IFurnitureItemBuilder<TTarget>
+public interface IFurnitureItemBuilder<in TFurniture, in TItemId, out TTarget> : IFurnitureItemBuilder<TItemId, TTarget>
 	where TFurniture : IFurniture
 	where TTarget : IFurnitureItem<TFurniture>
 {
-	public IFurnitureItemBuilder<TFurniture, TTarget> Furniture(TFurniture furniture);
+	public IFurnitureItemBuilder<TFurniture, TItemId, TTarget> Furniture(TFurniture furniture);
 
-	IFurnitureItemBuilder<TTarget> IFurnitureItemBuilder<TTarget>.Furniture(IFurniture furniture) => this.Furniture((TFurniture)furniture);
+	IFurnitureItemBuilder<TItemId, TTarget> IFurnitureItemBuilder<TItemId, TTarget>.Furniture(IFurniture furniture) => this.Furniture((TFurniture)furniture);
 }
 
-public interface IFurnitureItemBuilder<in TFurniture, out TTarget, out TBuilder> : IFurnitureItemBuilder<TFurniture, TTarget>
+public interface IFurnitureItemBuilder<in TFurniture, in TItemId, out TTarget, out TBuilder> : IFurnitureItemBuilder<TFurniture, TItemId, TTarget>
 	where TFurniture : IFurniture
 	where TTarget : IFurnitureItem<TFurniture>
-	where TBuilder : IFurnitureItemBuilder<TFurniture, TTarget, TBuilder>
+	where TBuilder : IFurnitureItemBuilder<TFurniture, TItemId, TTarget, TBuilder>
 {
-	public new TBuilder Id(int id);
+	public new TBuilder Id(TItemId id);
 	public new TBuilder Furniture(TFurniture furniture);
 	public new TBuilder Owner(IUserInfo owner);
 	public new TBuilder ExtraData(JsonDocument extraData);
 	public new TTarget Build();
 
-	IFurnitureItemBuilder<TTarget> IFurnitureItemBuilder<TTarget>.Id(int id) => this.Id(id);
-	IFurnitureItemBuilder<TTarget> IFurnitureItemBuilder<TTarget>.Owner(IUserInfo owner) => this.Owner(owner);
-	IFurnitureItemBuilder<TTarget> IFurnitureItemBuilder<TTarget>.ExtraData(JsonDocument extraData) => this.ExtraData(extraData);
-	IFurnitureItemBuilder<TFurniture, TTarget> IFurnitureItemBuilder<TFurniture, TTarget>.Furniture(TFurniture furniture) => this.Furniture(furniture);
-	TTarget IFurnitureItemBuilder<TTarget>.Build() => this.Build();
+	IFurnitureItemBuilder<TItemId, TTarget> IFurnitureItemBuilder<TItemId, TTarget>.Id(TItemId id) => this.Id(id);
+	IFurnitureItemBuilder<TItemId, TTarget> IFurnitureItemBuilder<TItemId, TTarget>.Owner(IUserInfo owner) => this.Owner(owner);
+	IFurnitureItemBuilder<TItemId, TTarget> IFurnitureItemBuilder<TItemId, TTarget>.ExtraData(JsonDocument extraData) => this.ExtraData(extraData);
+	IFurnitureItemBuilder<TFurniture, TItemId, TTarget> IFurnitureItemBuilder<TFurniture, TItemId, TTarget>.Furniture(TFurniture furniture) => this.Furniture(furniture);
+	TTarget IFurnitureItemBuilder<TItemId, TTarget>.Build() => this.Build();
 }
 
-public interface IFurnitureItemBuilder<in TFurniture, out TTarget, out TBuilder, out TDataBuilder> : IFurnitureItemBuilder<TFurniture, TTarget, TBuilder>
+public interface IFurnitureItemBuilder<in TFurniture, in TItemId, out TTarget, out TBuilder, out TDataBuilder> : IFurnitureItemBuilder<TFurniture, TItemId, TTarget, TBuilder>
 	where TFurniture : IFurniture
 	where TTarget : IFurnitureItem<TFurniture>
-	where TBuilder : IFurnitureItemBuilder<TFurniture, TTarget, TBuilder, TDataBuilder>
-	where TDataBuilder : IFurnitureItemDataBuilder<TFurniture, TTarget, TDataBuilder, TBuilder>
+	where TBuilder : IFurnitureItemBuilder<TFurniture, TItemId, TTarget, TBuilder, TDataBuilder>
+	where TDataBuilder : IFurnitureItemDataBuilder<TFurniture, TItemId, TTarget, TDataBuilder, TBuilder>
 {
 	public TDataBuilder Data();
 }

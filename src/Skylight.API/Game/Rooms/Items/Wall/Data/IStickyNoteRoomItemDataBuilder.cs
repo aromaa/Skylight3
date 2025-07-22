@@ -21,5 +21,5 @@ public interface IStickyNoteRoomItemDataBuilder<in TFurniture, out TTarget, out 
 public interface IStickyNoteRoomItemDataBuilder<in TFurniture, out TTarget, out TBuilder, out TFurnitureBuilder> : IStickyNoteRoomItemDataBuilder<TFurniture, TTarget, TBuilder>, IWallRoomItemBuilder<TFurniture, TTarget, TFurnitureBuilder, TBuilder>
 	where TFurniture : IStickyNoteFurniture
 	where TTarget : IStickyNoteRoomItem, IFurnitureItem<TFurniture>
-	where TBuilder : IStickyNoteRoomItemDataBuilder<TFurniture, TTarget, TBuilder, TFurnitureBuilder>, IFurnitureItemDataBuilder<TFurniture, TTarget, TBuilder, TFurnitureBuilder>
+	where TBuilder : IStickyNoteRoomItemDataBuilder<TFurniture, TTarget, TBuilder, TFurnitureBuilder>, IFurnitureItemDataBuilder<TFurniture, RoomItemId, TTarget, TBuilder, TFurnitureBuilder>
 	where TFurnitureBuilder : IWallRoomItemBuilder<TFurniture, TTarget, TFurnitureBuilder, TBuilder>;

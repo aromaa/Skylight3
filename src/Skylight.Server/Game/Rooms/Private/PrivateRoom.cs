@@ -36,7 +36,7 @@ internal sealed class PrivateRoom : Room, IPrivateRoom
 		this.Info = info;
 		this.Map = new PrivateRoomMap(this, roomLayout, registryHolder);
 
-		this.ItemManager = new RoomItemManager(this, roomLayout, dbContextFactory, userManager, furnitureManager, floorRoomItemStrategy, wallRoomItemStrategy, itemInteractionManager);
+		this.ItemManager = new RoomItemManager(this, roomLayout, registryHolder, dbContextFactory, userManager, furnitureManager, floorRoomItemStrategy, wallRoomItemStrategy, itemInteractionManager);
 
 		this.UnitManager = new PrivateRoomUnitManager(this, navigatorManager);
 

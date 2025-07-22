@@ -22,5 +22,5 @@ public interface IUnitEnterRoomTriggerRoomItemDataBuilder<in TFurniture, out TTa
 public interface IUnitEnterRoomTriggerRoomItemDataBuilder<in TFurniture, out TTarget, out TBuilder, out TFurnitureBuilder> : IUnitEnterRoomTriggerRoomItemDataBuilder<TFurniture, TTarget, TBuilder>, IFloorRoomItemBuilder<TFurniture, TTarget, TFurnitureBuilder, TBuilder>
 	where TFurniture : IUnitEnterRoomTriggerFurniture
 	where TTarget : IUnitEnterRoomTriggerRoomItem, IFurnitureItem<TFurniture>
-	where TBuilder : IUnitEnterRoomTriggerRoomItemDataBuilder<TFurniture, TTarget, TBuilder, TFurnitureBuilder>, IFurnitureItemDataBuilder<TFurniture, TTarget, TBuilder, TFurnitureBuilder>
+	where TBuilder : IUnitEnterRoomTriggerRoomItemDataBuilder<TFurniture, TTarget, TBuilder, TFurnitureBuilder>, IFurnitureItemDataBuilder<TFurniture, RoomItemId, TTarget, TBuilder, TFurnitureBuilder>
 	where TFurnitureBuilder : IFloorRoomItemBuilder<TFurniture, TTarget, TFurnitureBuilder, TBuilder>;

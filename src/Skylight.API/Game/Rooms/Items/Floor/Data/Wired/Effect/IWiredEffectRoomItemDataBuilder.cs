@@ -22,5 +22,5 @@ public interface IWiredEffectRoomItemDataBuilder<in TFurniture, out TTarget, out
 public interface IWiredEffectRoomItemDataBuilder<in TFurniture, out TTarget, out TBuilder, out TFurnitureBuilder> : IWiredEffectRoomItemDataBuilder<TFurniture, TTarget, TBuilder>
 	where TFurniture : IWiredEffectFurniture
 	where TTarget : IWiredEffectRoomItem, IFurnitureItem<TFurniture>
-	where TBuilder : IWiredEffectRoomItemDataBuilder<TFurniture, TTarget, TBuilder, TFurnitureBuilder>, IFurnitureItemDataBuilder<TFurniture, TTarget, TBuilder, TFurnitureBuilder>
+	where TBuilder : IWiredEffectRoomItemDataBuilder<TFurniture, TTarget, TBuilder, TFurnitureBuilder>, IFurnitureItemDataBuilder<TFurniture, RoomItemId, TTarget, TBuilder, TFurnitureBuilder>
 	where TFurnitureBuilder : IFloorRoomItemBuilder<TFurniture, TTarget, TFurnitureBuilder, TBuilder>;

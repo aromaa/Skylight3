@@ -5,12 +5,12 @@ using Skylight.API.Game.Users;
 
 namespace Skylight.Server.Game.Rooms.Items;
 
-internal abstract class RoomItem<T>(IPrivateRoom room, int id, IUserInfo owner, T furniture) : IRoomItem
+internal abstract class RoomItem<T>(IPrivateRoom room, RoomItemId id, IUserInfo owner, T furniture) : IRoomItem
 	where T : IFurniture
 {
 	public IPrivateRoom Room { get; } = room;
 
-	public int Id { get; } = id;
+	public RoomItemId Id { get; } = id;
 
 	public IUserInfo Owner { get; } = owner;
 

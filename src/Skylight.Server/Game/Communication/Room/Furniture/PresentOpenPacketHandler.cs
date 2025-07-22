@@ -1,9 +1,11 @@
 ﻿using Net.Communication.Attributes;
 using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Recycler.FurniMatic;
+using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
+using Skylight.API.Registry;
 using Skylight.Protocol.Packets.Data.Room.Object;
 using Skylight.Protocol.Packets.Incoming.Room.Furniture;
 using Skylight.Protocol.Packets.Manager;
@@ -12,9 +14,12 @@ using Skylight.Protocol.Packets.Outgoing.Room.Furniture;
 namespace Skylight.Server.Game.Communication.Room.Furniture;
 
 [PacketManagerRegister(typeof(IGamePacketManager))]
-internal sealed partial class PresentOpenPacketHandler<T>(IFurniMaticManager furniMaticManager) : UserPacketHandler<T>
+internal sealed partial class PresentOpenPacketHandler<T>(IRegistryHolder registryHolder, IFurniMaticManager furniMaticManager) : UserPacketHandler<T>
 	where T : IPresentOpenIncomingPacket
 {
+	// TODO: Support other domains
+	private readonly IRoomItemDomain normalRoomItemDomain = RoomItemDomains.Normal.Get(registryHolder);
+
 	private readonly IFurniMaticManager furniMaticManager = furniMaticManager;
 
 	internal override void Handle(IUser user, in T packet)
@@ -24,7 +29,7 @@ internal sealed partial class PresentOpenPacketHandler<T>(IFurniMaticManager fur
 			return;
 		}
 
-		int itemId = packet.ItemId;
+		RoomItemId itemId = new(this.normalRoomItemDomain, packet.ItemId);
 
 		user.Client.ScheduleTask(async client =>
 		{

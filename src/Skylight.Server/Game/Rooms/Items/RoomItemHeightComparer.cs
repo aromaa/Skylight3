@@ -23,6 +23,6 @@ internal sealed class RoomItemHeightComparer : IComparer<IFloorRoomItem>
 		}
 
 		//Last resort, the most recently purchased item
-		return x.Id.CompareTo(y.Id);
+		return x.Id.Id.CompareTo(y.Id.Id);
 	}
 }

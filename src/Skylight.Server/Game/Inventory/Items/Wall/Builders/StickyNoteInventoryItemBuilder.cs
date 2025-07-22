@@ -9,7 +9,7 @@ namespace Skylight.Server.Game.Inventory.Items.Wall.Builders;
 
 internal sealed class StickyNoteInventoryItemBuilder(IDbContextFactory<SkylightContext> dbContextFactory) : WallInventoryItemBuilder<IStickyNoteFurniture, IStickyNoteInventoryItem, StickyNoteInventoryItemBuilder>,
 	IStickyNoteInventoryItemDataBuilder<IStickyNoteFurniture, IStickyNoteInventoryItem, StickyNoteInventoryItemBuilder, StickyNoteInventoryItemBuilder>,
-	IFurnitureItemDataBuilder<IStickyNoteFurniture, IStickyNoteInventoryItem, StickyNoteInventoryItemBuilder, StickyNoteInventoryItemBuilder>
+	IFurnitureItemDataBuilder<IStickyNoteFurniture, int, IStickyNoteInventoryItem, StickyNoteInventoryItemBuilder, StickyNoteInventoryItemBuilder>
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 

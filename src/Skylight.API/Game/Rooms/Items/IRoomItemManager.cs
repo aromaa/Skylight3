@@ -47,9 +47,8 @@ public interface IRoomItemManager
 
 	public double GetPlacementHeight(IFloorFurniture furniture, Point2D location, int direction);
 
-	public bool TryGetItem(int stripId, [NotNullWhen(true)] out IRoomItem? item);
-	public bool TryGetFloorItem(int itemId, [NotNullWhen(true)] out IFloorRoomItem? item);
-	public bool TryGetWallItem(int itemId, [NotNullWhen(true)] out IWallRoomItem? item);
+	public bool TryGetFloorItem(RoomItemId itemId, [NotNullWhen(true)] out IFloorRoomItem? item);
+	public bool TryGetWallItem(RoomItemId itemId, [NotNullWhen(true)] out IWallRoomItem? item);
 
 	public bool TryGetInteractionHandler<T>([NotNullWhen(true)] out T? handler)
 		where T : IRoomItemInteractionHandler;

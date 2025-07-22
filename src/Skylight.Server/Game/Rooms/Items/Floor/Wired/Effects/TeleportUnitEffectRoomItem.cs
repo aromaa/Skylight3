@@ -8,15 +8,19 @@ using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
+using Skylight.API.Registry;
 using Skylight.Protocol.Packets.Data.UserDefinedRoomEvents;
 using Skylight.Protocol.Packets.Outgoing.UserDefinedRoomEvents;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor.Wired.Effects;
 
-internal sealed class TeleportUnitEffectRoomItem(IPrivateRoom room, int id, IUserInfo owner, ITeleportUnitEffectFurniture furniture, Point3D position, int direction, IWiredEffectInteractionHandler interactionHandler,
+internal sealed class TeleportUnitEffectRoomItem(IRegistryHolder registryHolder, IPrivateRoom room, RoomItemId id, IUserInfo owner, ITeleportUnitEffectFurniture furniture, Point3D position, int direction, IWiredEffectInteractionHandler interactionHandler,
 	HashSet<IRoomItem>? selectedItems, JsonDocument? extraData, int effectDelay)
 	: WiredEffectRoomItem<ITeleportUnitEffectFurniture>(room, id, owner, furniture, position, direction, effectDelay), ITeleportUnitEffectRoomItem
 {
+	// TODO: Support other domains
+	private readonly IRoomItemDomain normalRoomItemDomain = RoomItemDomains.Normal.Get(registryHolder);
+
 	private readonly IWiredEffectInteractionHandler interactionHandler = interactionHandler;
 
 	private LazyRoomItemSetHolder selectedItems = selectedItems is null
@@ -27,7 +31,7 @@ internal sealed class TeleportUnitEffectRoomItem(IPrivateRoom room, int id, IUse
 
 	public IReadOnlySet<IRoomItem> SelectedItems
 	{
-		get => this.selectedItems.Get(this.Room.ItemManager);
+		get => this.selectedItems.Get(this.Room.ItemManager, this.normalRoomItemDomain);
 		set => this.selectedItems.Set([.. value]);
 	}
 
@@ -36,12 +40,12 @@ internal sealed class TeleportUnitEffectRoomItem(IPrivateRoom room, int id, IUse
 
 	public override void Open(IUserRoomUnit unit)
 	{
-		unit.User.SendAsync(new WiredFurniActionOutgoingPacket(this.Id, this.Furniture.Id, ActionType.TeleportUnit, 100, this.SelectedItems.Select(i => i.Id).ToList(), 0, [], string.Empty));
+		unit.User.SendAsync(new WiredFurniActionOutgoingPacket<RoomItemId>(this.Id, this.Furniture.Id, ActionType.TeleportUnit, 100, this.SelectedItems.Select(i => i.Id).ToList(), 0, [], string.Empty));
 	}
 
 	public override void Trigger(IUserRoomUnit? cause = null)
 	{
-		HashSet<IRoomItem> items = this.selectedItems.Get(this.Room.ItemManager);
+		HashSet<IRoomItem> items = this.selectedItems.Get(this.Room.ItemManager, this.normalRoomItemDomain);
 		if (cause is null || items.Count <= 0)
 		{
 			return;

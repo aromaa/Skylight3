@@ -1,5 +1,6 @@
 ﻿using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Furniture.Floor;
+using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Numerics;
 
@@ -30,7 +31,7 @@ internal abstract class FloorItemBuilder<TFurniture, TTarget, TBuilder> : RoomIt
 
 internal abstract class FloorItemBuilder<TFurniture, TTarget, TBuilder, TDataBuilder> : FloorItemBuilder<TFurniture, TTarget, TBuilder>,
 	IFloorRoomItemBuilder<TFurniture, TTarget, TBuilder, TDataBuilder>,
-	IFurnitureItemDataBuilder<TFurniture, TTarget, TDataBuilder, TBuilder>
+	IFurnitureItemDataBuilder<TFurniture, RoomItemId, TTarget, TDataBuilder, TBuilder>
 	where TFurniture : IFloorFurniture
 	where TTarget : IFloorRoomItem, IFurnitureItem<TFurniture>
 	where TBuilder : FloorItemBuilder<TFurniture, TTarget, TBuilder, TDataBuilder>

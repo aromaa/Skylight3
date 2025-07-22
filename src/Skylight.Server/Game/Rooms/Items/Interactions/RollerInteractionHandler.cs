@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Rooms;
+using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Interactions;
 using Skylight.API.Game.Rooms.Map;
@@ -38,7 +39,7 @@ internal sealed class RollerInteractionHandler : IRollerInteractionHandler, IRoo
 
 	public void Execute(IRoom room)
 	{
-		HashSet<int> itemsMoved = [];
+		HashSet<RoomItemId> itemsMoved = [];
 		foreach (RollerRoomTile rollerTile in Unsafe.As<ImmutableArray2D<RollerRoomTile>, RollerRoomTile[,]>(ref Unsafe.AsRef(in this.tiles)))
 		{
 			if (rollerTile.TargetTile is not { } targetTile || targetTile.RoomTile.HasRoomUnit)

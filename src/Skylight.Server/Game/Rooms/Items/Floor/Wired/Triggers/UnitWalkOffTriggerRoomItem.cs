@@ -7,15 +7,19 @@ using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
+using Skylight.API.Registry;
 using Skylight.Protocol.Packets.Data.UserDefinedRoomEvents;
 using Skylight.Protocol.Packets.Outgoing.UserDefinedRoomEvents;
 
 namespace Skylight.Server.Game.Rooms.Items.Floor.Wired.Triggers;
 
-internal sealed class UnitWalkOffTriggerRoomItem(IPrivateRoom room, int id, IUserInfo owner, IUnitWalkOffTriggerFurniture furniture, Point3D position, int direction, IUnitWalkOffTriggerInteractionHandler interactionHandler,
+internal sealed class UnitWalkOffTriggerRoomItem(IRegistryHolder registryHolder, IPrivateRoom room, RoomItemId id, IUserInfo owner, IUnitWalkOffTriggerFurniture furniture, Point3D position, int direction, IUnitWalkOffTriggerInteractionHandler interactionHandler,
 	HashSet<IRoomItem>? selectedItems, JsonDocument? extraData)
 	: WiredTriggerRoomItem<IUnitWalkOffTriggerFurniture>(room, id, owner, furniture, position, direction), IUnitWalkOffTriggerRoomItem
 {
+	// TODO: Support other domains
+	private readonly IRoomItemDomain normalRoomItemDomain = RoomItemDomains.Normal.Get(registryHolder);
+
 	private readonly IUnitWalkOffTriggerInteractionHandler interactionHandler = interactionHandler;
 
 	private LazyRoomItemSetHolder selectedItems = selectedItems is null
@@ -26,7 +30,7 @@ internal sealed class UnitWalkOffTriggerRoomItem(IPrivateRoom room, int id, IUse
 
 	public IReadOnlySet<IRoomItem> SelectedItems
 	{
-		get => this.selectedItems.Get(this.Room.ItemManager);
+		get => this.selectedItems.Get(this.Room.ItemManager, this.normalRoomItemDomain);
 		set => this.selectedItems.Set([.. value]);
 	}
 
@@ -42,7 +46,7 @@ internal sealed class UnitWalkOffTriggerRoomItem(IPrivateRoom room, int id, IUse
 
 	public override void Open(IUserRoomUnit unit)
 	{
-		unit.User.SendAsync(new WiredFurniTriggerOutgoingPacket(this.Id, this.Furniture.Id, TriggerType.UnitUseItem, 100, this.SelectedItems.Select(i => i.Id).ToList(), [], string.Empty));
+		unit.User.SendAsync(new WiredFurniTriggerOutgoingPacket<RoomItemId>(this.Id, this.Furniture.Id, TriggerType.UnitUseItem, 100, this.SelectedItems.Select(i => i.Id).ToList(), [], string.Empty));
 	}
 
 	public JsonDocument GetExtraData()

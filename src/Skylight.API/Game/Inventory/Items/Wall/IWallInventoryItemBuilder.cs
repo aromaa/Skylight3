@@ -20,4 +20,4 @@ public interface IWallInventoryItemBuilder<in TFurniture, out TTarget, out TBuil
 	where TFurniture : IFurniture
 	where TTarget : IWallInventoryItem, IFurnitureItem<TFurniture>
 	where TBuilder : IFurnitureInventoryItemBuilder<TFurniture, TTarget, TBuilder, TDataBuilder>
-	where TDataBuilder : IFurnitureItemDataBuilder<TFurniture, TTarget, TDataBuilder, TBuilder>;
+	where TDataBuilder : IFurnitureItemDataBuilder<TFurniture, int, TTarget, TDataBuilder, TBuilder>;

@@ -6,7 +6,7 @@ using Skylight.Server.Game.Furniture;
 
 namespace Skylight.Server.Game.Rooms.Items.Builders;
 
-internal abstract class RoomItemBuilder<TFurniture, TTarget, TBuilder> : FurnitureItemBuilder<TFurniture, TTarget, TBuilder>, IRoomItemBuilder<TFurniture, TTarget, TBuilder>
+internal abstract class RoomItemBuilder<TFurniture, TTarget, TBuilder> : FurnitureItemBuilder<TFurniture, RoomItemId, TTarget, TBuilder>, IRoomItemBuilder<TFurniture, TTarget, TBuilder>
 	where TFurniture : IFurniture
 	where TTarget : IRoomItem, IFurnitureItem<TFurniture>
 	where TBuilder : RoomItemBuilder<TFurniture, TTarget, TBuilder>
@@ -27,4 +27,6 @@ internal abstract class RoomItemBuilder<TFurniture, TTarget, TBuilder> : Furnitu
 
 		ArgumentNullException.ThrowIfNull(this.RoomValue);
 	}
+
+	protected override bool ValidId(RoomItemId value) => value.Id != 0;
 }

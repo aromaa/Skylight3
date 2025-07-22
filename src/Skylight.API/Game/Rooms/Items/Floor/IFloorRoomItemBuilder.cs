@@ -40,4 +40,4 @@ public interface IFloorRoomItemBuilder<in TFurniture, out TTarget, out TBuilder,
 	where TFurniture : IFloorFurniture
 	where TTarget : IFloorRoomItem, IFurnitureItem<TFurniture>
 	where TBuilder : IFloorRoomItemBuilder<TFurniture, TTarget, TBuilder, TDataBuilder>
-	where TDataBuilder : IFurnitureItemDataBuilder<TFurniture, TTarget, TDataBuilder, TBuilder>;
+	where TDataBuilder : IFurnitureItemDataBuilder<TFurniture, RoomItemId, TTarget, TDataBuilder, TBuilder>;
