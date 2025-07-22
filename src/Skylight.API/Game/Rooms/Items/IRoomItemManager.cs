@@ -31,6 +31,9 @@ public interface IRoomItemManager
 	public void AddItem(IFloorRoomItem floorItem);
 	public void AddItem(IWallRoomItem wallItem);
 
+	public IFloorRoomItem CreateItem(IRoomItemDomain domain, Func<RoomItemId, IFloorRoomItem> action);
+	public IWallRoomItem CreateItem(IRoomItemDomain domain, Func<RoomItemId, IWallRoomItem> action);
+
 	public void MoveItem(IFloorRoomItem floorItem, Point2D location) => this.MoveItem(floorItem, location, floorItem.Direction);
 	public void MoveItem(IFloorRoomItem floorItem, Point2D location, int direction);
 

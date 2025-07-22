@@ -45,12 +45,14 @@ internal sealed class RoomItemManager : IRoomItemManager
 	private readonly HashSet<IFloorRoomItem> floorItemsDatabaseQueue;
 	private readonly HashSet<IWallRoomItem> wallItemsDatabaseQueue;
 
+	private DynamicRoomItemsHandler buildersClubItemsHandler;
+	private DynamicRoomItemsHandler transientItemsHandler;
+
 	internal RoomItemManager(PrivateRoom room, IRoomLayout layout, IRegistryHolder registryHolder, IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager, IFurnitureManager furnitureManager, IFloorRoomItemStrategy floorRoomItemStrategy, IWallRoomItemStrategy wallRoomItemStrategy, IRoomItemInteractionManager interactionManager)
 	{
 		this.room = room;
 
 		this.normalRoomItemDomain = RoomItemDomains.Normal.Get(registryHolder);
-		this.normalRoomItemDomain = RoomItemDomains.Transient.Get(registryHolder);
 
 		this.dbContextFactory = dbContextFactory;
 
@@ -68,6 +70,9 @@ internal sealed class RoomItemManager : IRoomItemManager
 
 		this.floorItemsDatabaseQueue = [];
 		this.wallItemsDatabaseQueue = [];
+
+		this.buildersClubItemsHandler = new DynamicRoomItemsHandler(RoomItemDomains.BuildersClub.Get(registryHolder));
+		this.transientItemsHandler = new DynamicRoomItemsHandler(RoomItemDomains.Transient.Get(registryHolder));
 	}
 
 	public IEnumerable<IFloorRoomItem> FloorItems => this.floorItems.Values;
@@ -159,7 +164,10 @@ internal sealed class RoomItemManager : IRoomItemManager
 	{
 		this.AddItemInternal(item);
 
-		this.floorItemsDatabaseQueue.Add(item);
+		if (item.Id.Domain == this.normalRoomItemDomain)
+		{
+			this.floorItemsDatabaseQueue.Add(item);
+		}
 
 		this.room.SendAsync(new ObjectAddOutgoingPacket<RoomItemId>(new ObjectData<RoomItemId>(item.Id, item.Furniture.Id, item.Position.X, item.Position.Y, item.Position.Z, 0, 0, 0, item.GetItemData()), item.Owner.Username));
 	}
@@ -177,7 +185,10 @@ internal sealed class RoomItemManager : IRoomItemManager
 	{
 		this.AddItemInternal(item);
 
-		this.wallItemsDatabaseQueue.Add(item);
+		if (item.Id.Domain == this.normalRoomItemDomain)
+		{
+			this.wallItemsDatabaseQueue.Add(item);
+		}
 
 		this.room.SendAsync(new ItemAddOutgoingPacket<RoomItemId>(new ItemData<RoomItemId>(item.Id, item.Furniture.Id, new WallPosition(item.Location.X, item.Location.Y, item.Position.X, item.Position.Y), item.GetItemData()), item.Owner.Username));
 	}
@@ -189,6 +200,52 @@ internal sealed class RoomItemManager : IRoomItemManager
 		this.AddItemToTile(item);
 
 		item.OnPlace();
+	}
+
+	public IFloorRoomItem CreateItem(IRoomItemDomain domain, Func<RoomItemId, IFloorRoomItem> action)
+	{
+		RoomItemId id;
+		if (domain == this.buildersClubItemsHandler.Domain)
+		{
+			id = this.buildersClubItemsHandler.GetNextFloorItemId();
+		}
+		else if (domain == this.transientItemsHandler.Domain)
+		{
+			id = this.transientItemsHandler.GetNextFloorItemId();
+		}
+		else
+		{
+			throw new ArgumentException("Unsupported domain");
+		}
+
+		IFloorRoomItem item = action(id);
+
+		this.AddItem(item);
+
+		return item;
+	}
+
+	public IWallRoomItem CreateItem(IRoomItemDomain domain, Func<RoomItemId, IWallRoomItem> action)
+	{
+		RoomItemId id;
+		if (domain == this.buildersClubItemsHandler.Domain)
+		{
+			id = this.buildersClubItemsHandler.GetNextWallItemId();
+		}
+		else if (domain == this.transientItemsHandler.Domain)
+		{
+			id = this.transientItemsHandler.GetNextWallItemId();
+		}
+		else
+		{
+			throw new ArgumentException("Unsupported domain");
+		}
+
+		IWallRoomItem item = action(id);
+
+		this.AddItem(item);
+
+		return item;
 	}
 
 	public bool CanPlaceItem(IFloorFurniture furniture, Point3D position, int direction, IUser? source)
@@ -448,5 +505,22 @@ internal sealed class RoomItemManager : IRoomItemManager
 		Unsafe.SkipInit(out handler);
 
 		return this.interactionHandlers.TryGetValue(typeof(T), out Unsafe.As<T?, IRoomItemInteractionHandler?>(ref handler));
+	}
+
+	private struct DynamicRoomItemsHandler
+	{
+		internal IRoomItemDomain Domain { get; }
+
+		// TODO: Reuse ids
+		private int nextFloorItemId;
+		private int nextWallItemId;
+
+		internal DynamicRoomItemsHandler(IRoomItemDomain domain)
+		{
+			this.Domain = domain;
+		}
+
+		internal RoomItemId GetNextFloorItemId() => new(this.Domain, ++this.nextFloorItemId);
+		internal RoomItemId GetNextWallItemId() => new(this.Domain, ++this.nextWallItemId);
 	}
 }
