@@ -8,6 +8,7 @@ using Skylight.API.Game.Users.Authentication;
 using Skylight.Protocol.Packets.Incoming.Handshake;
 using Skylight.Protocol.Packets.Manager;
 using Skylight.Protocol.Packets.Outgoing.Handshake;
+using Skylight.Server.Extensions;
 using Skylight.Server.Net;
 
 namespace Skylight.Server.Game.Communication.Handshake;
@@ -71,8 +72,8 @@ internal sealed class InfoRetrievePacketHandler<T>(IUserAuthentication userAuthe
 		{
 			UserId = user.Profile.Id,
 			Username = user.Profile.Username,
-			Figure = user.Profile.Figure,
-			Gender = user.Profile.Gender,
+			Figure = user.Profile.Avatar.Data.ToString(),
+			Gender = user.Profile.Avatar.Sex.ToNetwork(),
 			CustomData = string.Empty,
 			Tickets = 0,
 			SwimSuit = string.Empty,

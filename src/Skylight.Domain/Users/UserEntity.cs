@@ -1,4 +1,5 @@
 ﻿using Skylight.Domain.Badges;
+using Skylight.Domain.Figure;
 using Skylight.Domain.Items;
 using Skylight.Domain.Permissions;
 using Skylight.Domain.Rooms.Private;
@@ -10,12 +11,13 @@ public class UserEntity
 	public int Id { get; init; }
 
 	public string Username { get; set; } = null!;
-	public string Figure { get; set; } = null!;
-	public string Gender { get; set; } = null!;
+
+	public FigureSexType Sex { get; set; }
 	public string Motto { get; set; } = null!;
 
 	public DateTime LastOnline { get; set; }
 
+	public List<UserFigureEntity>? FigureSets { get; set; }
 	public List<UserRankEntity>? Ranks { get; set; }
 
 	public List<UserPurseEntity>? Purse { get; set; }

@@ -25,7 +25,7 @@ internal sealed partial class GetExtendedProfilePacketHandler<T>(IUserManager us
 				return;
 			}
 
-			client.SendAsync(new ExtendedProfileOutgoingPacket(new ExtendedProfileData(userId, profile.Username, profile.Figure, profile.Motto, "08-03-2001", 666, 0, false, false, true, [], (int)(DateTime.Now - profile.LastOnline).TotalSeconds, true, false, 69, 8, 420, true, false)));
+			client.SendAsync(new ExtendedProfileOutgoingPacket(new ExtendedProfileData(userId, profile.Username, profile.Avatar.Data.ToString(), profile.Motto, "08-03-2001", 666, 0, false, false, true, [], (int)(DateTime.Now - profile.LastOnline).TotalSeconds, true, false, 69, 8, 420, true, false)));
 		});
 	}
 }

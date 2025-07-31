@@ -29,8 +29,9 @@ builder.ConfigureContainer(new LayeredServiceProviderFactory(), layeredBuilder =
 
 		bootstrapLayer.AddSingleton<RedisConnector>(_ => new RedisConnector(redis["ConnectionString"] ?? "localhost"));
 
-		bootstrapLayer.AddPooledDbContextFactory<SkylightContext>(options => BaseSkylightContext.ConfigureNpgsqlDbContextOptions(options, database["ConnectionString"])
-			.EnableThreadSafetyChecks(false));
+		bootstrapLayer.AddPooledDbContextFactory<SkylightContext>((serviceProvider, options) => BaseSkylightContext.ConfigureNpgsqlDbContextOptions(options, database["ConnectionString"])
+			.EnableThreadSafetyChecks(false)
+			.UseLoggerFactory(serviceProvider.GetRequiredService<ILoggerFactory>()));
 	}, provider =>
 	{
 		provider.GetRequiredService<RedisConnector>().GetDatabaseAsync().Preserve();

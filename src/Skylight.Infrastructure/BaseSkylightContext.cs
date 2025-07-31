@@ -3,6 +3,7 @@ using Npgsql;
 using Skylight.Domain.Achievements;
 using Skylight.Domain.Badges;
 using Skylight.Domain.Catalog;
+using Skylight.Domain.Figure;
 using Skylight.Domain.Furniture;
 using Skylight.Domain.Items;
 using Skylight.Domain.Navigator;
@@ -17,6 +18,7 @@ using Skylight.Domain.Users;
 using Skylight.Infrastructure.EntityConfigurations.Achievements;
 using Skylight.Infrastructure.EntityConfigurations.Badges;
 using Skylight.Infrastructure.EntityConfigurations.Catalog;
+using Skylight.Infrastructure.EntityConfigurations.Figure;
 using Skylight.Infrastructure.EntityConfigurations.Furniture;
 using Skylight.Infrastructure.EntityConfigurations.Items;
 using Skylight.Infrastructure.EntityConfigurations.Navigator;
@@ -38,7 +40,9 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 
 	public DbSet<BadgeEntity> Badges { get; init; } = null!;
 	public DbSet<UserBadgeEntity> UserBadges { get; init; } = null!;
-	public DbSet<UserWardrobeSlotEntity> UserWardrobe { get; init; } = null!;
+	public DbSet<UserWardrobeSlotEntity> UserWardrobeSlots { get; init; } = null!;
+	public DbSet<UserWardrobeSlotFigureColorEntity> UserWardrobeSlotFigureColors { get; init; } = null!;
+	public DbSet<UserWardrobeSlotFigureEntity> UserWardrobeSlotFigure { get; init; } = null!;
 
 	public DbSet<CatalogBadgeProductEntity> CatalogBadgeProducts { get; init; } = null!;
 	public DbSet<CatalogFloorProductEntity> CatalogFloorProducts { get; init; } = null!;
@@ -48,6 +52,13 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 	public DbSet<CatalogPageEntity> CatalogPages { get; init; } = null!;
 	public DbSet<CatalogProductEntity> CatalogProducts { get; init; } = null!;
 	public DbSet<CatalogWallProductEntity> CatalogWallProducts { get; init; } = null!;
+
+	public DbSet<FigureAssetLibraryEntity> FigureAssetLibraries { get; init; } = null!;
+	public DbSet<FigureColorPaletteEntity> FigurePalettes { get; init; } = null!;
+	public DbSet<FigurePartEntity> FigureParts { get; init; } = null!;
+	public DbSet<FigurePartTypeEntity> FigurePartTypes { get; init; } = null!;
+	public DbSet<FigureSetTypeEntity> FigureSetTypes { get; init; } = null!;
+	public DbSet<FigureValidationEntity> FigureValidations { get; init; } = null!;
 
 	public DbSet<FloorFurnitureEntity> FloorFurniture { get; init; } = null!;
 	public DbSet<WallFurnitureEntity> WallFurniture { get; init; } = null!;
@@ -94,6 +105,8 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 	public DbSet<SettingsEntity> Settings { get; init; } = null!;
 
 	public DbSet<UserEntity> Users { get; init; } = null!;
+	public DbSet<UserFigureEntity> UserFigureSets { get; init; } = null!;
+	public DbSet<UserFigureColorEntity> UserFigureColors { get; init; } = null!;
 
 	public DbSet<UserPurseEntity> UserPurse { get; init; } = null!;
 	public DbSet<UserSettingsEntity> UserSettings { get; init; } = null!;
@@ -117,6 +130,20 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 		modelBuilder.ApplyConfiguration(new CatalogPageEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogProductEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogWallProductEntityTypeConfiguration());
+
+		modelBuilder.ApplyConfiguration(new FigureAssetLibraryEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new FigureAssetPartEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new FigureColorPaletteColorEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new FigureColorPaletteEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new FigurePartEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new FigurePartTypeEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new FigureSetEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new FigureSetHiddenLayerEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new FigureSetPartEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new FigureSetTypeEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new FigureValidationEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new FigureValidationSetTypeRuleEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new FigureValidationSetTypeRuleExemptRankEntityTypeConfiguration());
 
 		modelBuilder.ApplyConfiguration(new FloorFurnitureEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new WallFurnitureEntityTypeConfiguration());
@@ -163,9 +190,13 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 		modelBuilder.ApplyConfiguration(new SettingsEntityTypeConfiguration());
 
 		modelBuilder.ApplyConfiguration(new UserEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new UserFigureColorEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new UserFigureEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new UserPurseEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new UserSettingsEntityTypeConfiguration());
-		modelBuilder.ApplyConfiguration(new UserWardrobeEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new UserWardrobeSlotEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new UserWardrobeSlotFigureColorEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new UserWardrobeSlotFigureEntityTypeConfiguration());
 	}
 
 	public static NpgsqlDataSource CreateNpgsqlDataSource(string connectionString)

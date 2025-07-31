@@ -5,6 +5,7 @@ using Skylight.API.Game.Achievements;
 using Skylight.API.Game.Badges;
 using Skylight.API.Game.Catalog;
 using Skylight.API.Game.Clients;
+using Skylight.API.Game.Figure;
 using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Inventory.Items;
@@ -31,6 +32,7 @@ using Skylight.Server.Game.Badges;
 using Skylight.Server.Game.Catalog;
 using Skylight.Server.Game.Catalog.Recycler.FurniMatic;
 using Skylight.Server.Game.Clients;
+using Skylight.Server.Game.Figure;
 using Skylight.Server.Game.Furniture;
 using Skylight.Server.Game.Furniture.Floor;
 using Skylight.Server.Game.Inventory.Items;
@@ -94,6 +96,7 @@ public static class HostBuilderExtensions
 
 		builder.AddLoadableSingleton<IBadgeManager, BadgeManager>();
 		builder.AddLoadableSingleton<IAchievementManager, AchievementManager>();
+		builder.AddLoadableSingleton<IFigureConfigurationManager, FigureConfigurationManager>();
 
 		builder.AddLoadableSingleton<IFurnitureManager, FurnitureManager>();
 		builder.AddLoadableSingleton<ICatalogManager, CatalogManager>();

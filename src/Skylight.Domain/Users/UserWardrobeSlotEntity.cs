@@ -1,4 +1,6 @@
-﻿namespace Skylight.Domain.Users;
+﻿using Skylight.Domain.Figure;
+
+namespace Skylight.Domain.Users;
 
 public class UserWardrobeSlotEntity
 {
@@ -7,6 +9,7 @@ public class UserWardrobeSlotEntity
 
 	public int SlotId { get; init; }
 
-	public string Gender { get; set; } = null!;
-	public string Figure { get; set; } = null!;
+	public FigureSexType Sex { get; set; }
+
+	public List<UserWardrobeSlotFigureEntity>? FigureSets { get; set; }
 }
