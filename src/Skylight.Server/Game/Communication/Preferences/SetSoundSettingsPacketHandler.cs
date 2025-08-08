@@ -39,9 +39,9 @@ internal sealed partial class SetSoundSettingsPacketHandler<T>(IDbContextFactory
 			}).On(c => c.UserId)
 			.WhenMatched((_, c) => new UserSettingsEntity
 			{
-				UiVolume = c.uiVolume,
-				FurniVolume = c.furniVolume,
-				TraxVolume = c.traxVolume,
+				UiVolume = c.UiVolume,
+				FurniVolume = c.FurniVolume,
+				TraxVolume = c.TraxVolume,
 			}).RunAsync().ConfigureAwait(false);
 
 			client.User.Settings.UiVolume = uiVolume;
