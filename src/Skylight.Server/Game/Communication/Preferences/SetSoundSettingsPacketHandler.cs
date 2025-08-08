@@ -5,7 +5,6 @@ using Skylight.Domain.Users;
 using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Incoming.Preferences;
 using Skylight.Protocol.Packets.Manager;
-using Skylight.Protocol.Packets.Outgoing.Navigator;
 
 namespace Skylight.Server.Game.Communication.Preferences;
 
