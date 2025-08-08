@@ -39,14 +39,14 @@ internal sealed partial class SetSoundSettingsPacketHandler<T>(IDbContextFactory
 			}).On(c => c.UserId)
 			.WhenMatched((_, c) => new UserSettingsEntity
 			{
-				HomeRoomId = c.HomeRoomId,
+				UiVolume = c.uiVolume,
+				FurniVolume = c.furniVolume,
+				TraxVolume = c.traxVolume,
 			}).RunAsync().ConfigureAwait(false);
 
 			client.User.Settings.UiVolume = uiVolume;
 			client.User.Settings.FurniVolume = furniVolume;
 			client.User.Settings.TraxVolume = traxVolume;
-
-			client.SendAsync(new NavigatorSettingsOutgoingPacket(client.User.Settings.HomeRoomId, client.User.Settings.HomeRoomId));
 
 			await dbContext.SaveChangesAsync().ConfigureAwait(false);
 		});
