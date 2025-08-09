@@ -21,7 +21,7 @@ internal sealed class RankEntityTypeConfiguration : IEntityTypeConfiguration<Ran
 			.HasForeignKey(e => e.RankId);
 
 		builder.HasMany(e => e.Children)
-			.WithOne(e => e.ChildRank)
-			.HasForeignKey(e => e.ChildRankId);
+			.WithOne(e => e.Rank)
+			.HasForeignKey(e => e.RankId);
 	}
 }

@@ -54,6 +54,7 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 	public DbSet<CatalogWallProductEntity> CatalogWallProducts { get; init; } = null!;
 
 	public DbSet<FigureAssetLibraryEntity> FigureAssetLibraries { get; init; } = null!;
+	public DbSet<FigureAssetPartEntity> FigureAssetParts { get; init; } = null!;
 	public DbSet<FigureColorPaletteEntity> FigurePalettes { get; init; } = null!;
 	public DbSet<FigurePartEntity> FigureParts { get; init; } = null!;
 	public DbSet<FigurePartTypeEntity> FigurePartTypes { get; init; } = null!;

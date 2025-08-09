@@ -11,5 +11,13 @@ internal sealed class RankChildEntityTypeConfiguration : IEntityTypeConfiguratio
 		builder.ToTable("rank_children");
 
 		builder.HasKey(e => new { e.RankId, e.ChildRankId });
+
+		builder.HasOne(e => e.Rank)
+			.WithMany(e => e.Children)
+			.HasForeignKey(e => e.RankId);
+
+		builder.HasOne(e => e.ChildRank)
+			.WithMany()
+			.HasForeignKey(e => e.ChildRankId);
 	}
 }
