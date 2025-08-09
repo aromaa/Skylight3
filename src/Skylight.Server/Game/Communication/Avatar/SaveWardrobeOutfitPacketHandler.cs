@@ -41,7 +41,7 @@ internal sealed class SaveWardrobeOutfitPacketHandler<T>(IDbContextFactory<Skyli
 
 			await dbContext.Upsert(new UserWardrobeSlotEntity
 			{
-				UserId = user.Profile.Id,
+				UserId = user.Id,
 				SlotId = slotId,
 				Sex = sex
 			}).WhenMatched((_, u) => new UserWardrobeSlotEntity
@@ -52,8 +52,8 @@ internal sealed class SaveWardrobeOutfitPacketHandler<T>(IDbContextFactory<Skyli
 			await dbContext.UserWardrobeSlotFigure
 				.ToLinqToDBTable()
 				.Merge()
-				.Using(figure.Sets.Select(e => (UserId: user.Profile.Id, SetTypeId: e.Key.Id, SetId: e.Value.Set.Id)))
-				.On((e, f) => e.UserId == user.Profile.Id && e.SlotId == slotId && e.SetTypeId == f.SetTypeId)
+				.Using(figure.Sets.Select(e => (UserId: user.Id, SetTypeId: e.Key.Id, SetId: e.Value.Set.Id)))
+				.On((e, f) => e.UserId == user.Id && e.SlotId == slotId && e.SetTypeId == f.SetTypeId)
 				.UpdateWhenMatched(static (e, f) => new UserWardrobeSlotFigureEntity
 				{
 					SetId = f.SetId
@@ -65,7 +65,7 @@ internal sealed class SaveWardrobeOutfitPacketHandler<T>(IDbContextFactory<Skyli
 					SetTypeId = f.SetTypeId,
 					SetId = f.SetId
 				})
-				.DeleteWhenNotMatchedBySourceAnd(e => e.UserId == user.Profile.Id && e.SlotId == slotId)
+				.DeleteWhenNotMatchedBySourceAnd(e => e.UserId == user.Id && e.SlotId == slotId)
 				.MergeAsync()
 				.ConfigureAwait(false);
 
@@ -73,8 +73,8 @@ internal sealed class SaveWardrobeOutfitPacketHandler<T>(IDbContextFactory<Skyli
 				.ToLinqToDBTable()
 				.Merge()
 				.Using(figure.Sets.SelectMany(static e => e.Value.Colors.Select(static (v, i) => (Index: i, Value: v)),
-					(p, v) => (UserId: user.Profile.Id, SetTypeId: p.Key.Id, Index: v.Index, ColorId: v.Value.Id)))
-				.On((e, f) => e.UserId == user.Profile.Id && e.SlotId == slotId && e.SetTypeId == f.SetTypeId && e.Index == f.Index)
+					(p, v) => (UserId: user.Id, SetTypeId: p.Key.Id, Index: v.Index, ColorId: v.Value.Id)))
+				.On((e, f) => e.UserId == user.Id && e.SlotId == slotId && e.SetTypeId == f.SetTypeId && e.Index == f.Index)
 				.UpdateWhenMatched(static (e, f) => new UserWardrobeSlotFigureColorEntity
 				{
 					ColorId = f.ColorId
@@ -87,7 +87,7 @@ internal sealed class SaveWardrobeOutfitPacketHandler<T>(IDbContextFactory<Skyli
 					Index = f.Index,
 					ColorId = f.ColorId
 				})
-				.DeleteWhenNotMatchedBySourceAnd(e => e.UserId == user.Profile.Id && e.SlotId == slotId)
+				.DeleteWhenNotMatchedBySourceAnd(e => e.UserId == user.Id && e.SlotId == slotId)
 				.MergeAsync()
 				.ConfigureAwait(false);
 

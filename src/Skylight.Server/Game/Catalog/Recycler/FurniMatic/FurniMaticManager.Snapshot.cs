@@ -78,7 +78,7 @@ internal partial class FurniMaticManager
 			//TODO: Catalog transaction?
 			FloorItemEntity giftItemEntity = new()
 			{
-				UserId = user.Profile.Id,
+				UserId = user.Id,
 				FurnitureId = giftFurniture.Id,
 				Data = new FloorItemDataEntity
 				{
@@ -104,7 +104,7 @@ internal partial class FurniMaticManager
 						dbContext.FloorItems.Remove(new FloorItemEntity
 						{
 							Id = floorItem.Id,
-							UserId = user.Profile.Id
+							UserId = user.Id
 						});
 					}
 					else if (item is IWallInventoryItem wallItem)
@@ -112,7 +112,7 @@ internal partial class FurniMaticManager
 						dbContext.WallItems.Remove(new WallItemEntity
 						{
 							Id = wallItem.Id,
-							UserId = user.Profile.Id
+							UserId = user.Id
 						});
 					}
 					else
@@ -136,7 +136,7 @@ internal partial class FurniMaticManager
 				return null;
 			}
 
-			user.Inventory.AddUnseenFloorItem(this.furnitureInventoryItemStrategy.CreateFurnitureItem(giftItemEntity.Id, user.Profile, giftFurniture, giftItemEntity.Data?.ExtraData));
+			user.Inventory.AddUnseenFloorItem(this.furnitureInventoryItemStrategy.CreateFurnitureItem(giftItemEntity.Id, user.Info, giftFurniture, giftItemEntity.Data?.ExtraData));
 
 			return prize;
 		}

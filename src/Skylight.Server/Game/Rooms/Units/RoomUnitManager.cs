@@ -19,6 +19,8 @@ internal abstract class RoomUnitManager : IRoomUnitManager
 	private readonly Dictionary<int, IRoomUnit> roomUnits = [];
 	private readonly LinkedList<IRoomUnit> movingUnits = [];
 
+	private readonly Dictionary<int, UserTracker> trackers = [];
+
 	private int nextUnitId = 1;
 
 	public IEnumerable<IRoomUnit> Units => this.roomUnits.Values;
@@ -36,7 +38,7 @@ internal abstract class RoomUnitManager : IRoomUnitManager
 
 				this.Room.SendAsync(new UserUpdateOutgoingPacket(
 				[
-					new RoomUnitUpdateData(roomUnit.Id, ((IUserRoomUnit)roomUnit).User.Profile.Username, roomUnit.Position.X, roomUnit.Position.Y, roomUnit.Position.Z, roomUnit.Rotation.X, roomUnit.Rotation.Y, roomUnit.Moving ? $"mv {roomUnit.NextStepPosition.X},{roomUnit.NextStepPosition.Y},{roomUnit.NextStepPosition.Z.ToString(CultureInfo.InvariantCulture)}" : string.Empty)
+					new RoomUnitUpdateData(roomUnit.Id, ((IUserRoomUnit)roomUnit).User.Info.Username, roomUnit.Position.X, roomUnit.Position.Y, roomUnit.Position.Z, roomUnit.Rotation.X, roomUnit.Rotation.Y, roomUnit.Moving ? $"mv {roomUnit.NextStepPosition.X},{roomUnit.NextStepPosition.Y},{roomUnit.NextStepPosition.Z.ToString(CultureInfo.InvariantCulture)}" : string.Empty)
 				]));
 
 				if (!roomUnit.Moving)
@@ -71,29 +73,11 @@ internal abstract class RoomUnitManager : IRoomUnitManager
 
 		if (unit is IUserRoomUnit userUnit)
 		{
-			this.Room.SendAsync(new UsersOutgoingPacket(
-			[
-				new RoomUnitData
-				{
-					IdentifierId = userUnit.User.Profile.Id,
-					Name = userUnit.User.Profile.Username,
-					Motto = userUnit.User.Profile.Motto,
-					Figure = userUnit.User.Profile.Avatar.Data.ToString(),
-					RoomUnitId = userUnit.Id,
-					X = unit.Position.X,
-					Y = unit.Position.Y,
-					Z = unit.Position.Z,
-					Direction = unit.Rotation.X,
-					Type = 1,
-					Gender = userUnit.User.Profile.Avatar.Sex.ToNetwork(),
-					GroupId = 0,
-					GroupStatus = 0,
-					GroupName = string.Empty,
-					SwimSuit = string.Empty,
-					AchievementScore = 666,
-					IsModerator = true
-				}
-			]));
+			UserTracker tracker = new(userUnit);
+
+			this.trackers.Add(unit.Id, tracker);
+
+			tracker.Add();
 
 			if (this.Room is PrivateRoom privateRoom && privateRoom.ItemManager.TryGetInteractionHandler(out IUnitEnterRoomTriggerInteractionHandler? handler))
 			{
@@ -104,18 +88,74 @@ internal abstract class RoomUnitManager : IRoomUnitManager
 
 	public void RemoveUnit(IRoomUnit unit)
 	{
-		this.roomUnits.Remove(unit.Id);
-		this.movingUnits.Remove(unit);
-
 		IRoomTile lastTile = this.Room.Map.GetTile(unit.Moving ? unit.NextStepPosition.XY : unit.Position.XY);
 		lastTile.WalkOff(unit);
 
-		this.Room.SendAsync(new UserRemoveOutgoingPacket(unit.Id, ((IUserRoomUnit)unit).User.Profile.Username));
+		this.roomUnits.Remove(unit.Id);
+		this.movingUnits.Remove(unit);
+
+		if (this.trackers.Remove(unit.Id, out UserTracker? tracker))
+		{
+			tracker.Remove();
+		}
 	}
 
 	internal void Move(RoomUnit unit)
 	{
 		this.movingUnits.Remove(unit);
 		this.movingUnits.AddLast(unit);
+	}
+
+	private sealed class UserTracker(IUserRoomUnit unit)
+	{
+		private readonly IUserRoomUnit unit = unit;
+
+		internal void Add()
+		{
+			IUserInfoView view = this.unit.User.Info.Snapshot;
+
+			this.unit.Room.SendAsync(new UsersOutgoingPacket(
+			[
+				new RoomUnitData
+				{
+					IdentifierId = view.Id,
+					Name = view.Username,
+					Motto = view.Motto,
+					Figure = view.Avatar.Data.ToString(),
+					RoomUnitId = this.unit.Id,
+					X = this.unit.Position.X,
+					Y = this.unit.Position.Y,
+					Z = this.unit.Position.Z,
+					Direction = this.unit.Rotation.X,
+					Type = 1,
+					Gender = view.Avatar.Sex.ToNetwork(),
+					GroupId = 0,
+					GroupStatus = 0,
+					GroupName = string.Empty,
+					SwimSuit = string.Empty,
+					AchievementScore = 666,
+					IsModerator = true
+				}
+			]));
+
+			IUserInfoEvents events = this.unit.User.Info.Events(view);
+			events.AvatarChanged += this.OnUserChanged;
+			events.MottoChanged += this.OnUserChanged;
+		}
+
+		internal void Remove()
+		{
+			this.unit.User.Info.AvatarChanged -= this.OnUserChanged;
+			this.unit.User.Info.MottoChanged -= this.OnUserChanged;
+
+			this.unit.Room.SendAsync(new UserRemoveOutgoingPacket(this.unit.Id, this.unit.User.Info.Username));
+		}
+
+		private void OnUserChanged(object? sender, object e)
+		{
+			IUserInfo info = (IUserInfo)sender!;
+
+			this.unit.Room.SendAsync(new UserChangeOutgoingPacket(this.unit.Id, info.Avatar.Data.ToString(), info.Avatar.Sex.ToNetwork(), info.Motto, 666));
+		}
 	}
 }

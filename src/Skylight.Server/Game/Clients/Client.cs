@@ -17,6 +17,7 @@ using Skylight.Protocol.Packets.Outgoing.Handshake;
 using Skylight.Protocol.Packets.Outgoing.Navigator;
 using Skylight.Protocol.Packets.Outgoing.Notifications;
 using Skylight.Protocol.Packets.Outgoing.Perk;
+using Skylight.Protocol.Packets.Outgoing.Room.Engine;
 using Skylight.Server.Extensions;
 
 namespace Skylight.Server.Game.Clients;
@@ -24,6 +25,8 @@ namespace Skylight.Server.Game.Clients;
 internal sealed class Client : IClient
 {
 	private readonly IRegistryHolder registryHolder;
+
+	private readonly Lock userLock;
 
 	public ISocket Socket { get; }
 	public Encoding Encoding { get; }
@@ -38,6 +41,8 @@ internal sealed class Client : IClient
 	{
 		this.registryHolder = registryHolder;
 
+		this.userLock = new Lock();
+
 		this.Socket = socket;
 		this.Encoding = encoding;
 
@@ -48,12 +53,19 @@ internal sealed class Client : IClient
 
 	public void Authenticate(IUser user)
 	{
-		if (this.User is not null)
+		lock (this.userLock)
 		{
-			throw new InvalidOperationException();
-		}
+			if (this.User is not null)
+			{
+				throw new InvalidOperationException();
+			}
 
-		this.User = user;
+			this.User = user;
+
+			IUserInfoEvents events = user.Info.Events(user.Info.Snapshot);
+			events.AvatarChanged += this.OnUserChange;
+			events.MottoChanged += this.OnUserChange;
+		}
 
 		//SSO stuff
 		this.SendAsync(new AuthenticationOKOutgoingPacket());
@@ -101,6 +113,13 @@ internal sealed class Client : IClient
 		});
 	}
 
+	private void OnUserChange(object? sender, object e)
+	{
+		IUserInfo info = (IUserInfo)sender!;
+
+		this.SendAsync(new UserChangeOutgoingPacket(-1, info.Avatar.Data.ToString(), info.Avatar.Sex.ToNetwork(), info.Motto, 666));
+	}
+
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void SendAsync<T>(in T packet)
 		where T : IGameOutgoingPacket
@@ -122,7 +141,16 @@ internal sealed class Client : IClient
 
 	public void Disconnect()
 	{
-		this.User?.Disconnect();
+		lock (this.userLock)
+		{
+			if (this.User is { } user)
+			{
+				user.Info.AvatarChanged -= this.OnUserChange;
+				user.Info.MottoChanged -= this.OnUserChange;
+
+				user.Disconnect();
+			}
+		}
 	}
 
 	private sealed class PacketScheduler

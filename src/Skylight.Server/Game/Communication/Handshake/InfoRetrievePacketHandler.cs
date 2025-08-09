@@ -68,12 +68,14 @@ internal sealed class InfoRetrievePacketHandler<T>(IUserAuthentication userAuthe
 
 	private void SendUserObject(IUser user)
 	{
+		IUserInfoView info = user.Info.Snapshot;
+
 		user.SendAsync(new UserObjectOutgoingPacket
 		{
-			UserId = user.Profile.Id,
-			Username = user.Profile.Username,
-			Figure = user.Profile.Avatar.Data.ToString(),
-			Gender = user.Profile.Avatar.Sex.ToNetwork(),
+			UserId = info.Id,
+			Username = info.Username,
+			Figure = info.Avatar.Data.ToString(),
+			Gender = info.Avatar.Sex.ToNetwork(),
 			CustomData = string.Empty,
 			Tickets = 0,
 			SwimSuit = string.Empty,
@@ -84,7 +86,7 @@ internal sealed class InfoRetrievePacketHandler<T>(IUserAuthentication userAuthe
 			RespectLeft = 0,
 			PerRespectLeft = 0,
 			StreamPublishingAllowed = false,
-			LastAccessDate = user.Profile.LastOnline,
+			LastAccessDate = info.LastOnline,
 			NameChangeAllowed = true,
 			AccountSafetyLocked = false
 		});

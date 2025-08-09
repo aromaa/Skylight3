@@ -32,7 +32,7 @@ internal sealed class ClientManager : IClientManager
 
 			if (client.User is { } user)
 			{
-				this.users.TryRemove(KeyValuePair.Create(user.Profile.Id, new UserHolder(user)));
+				this.users.TryRemove(KeyValuePair.Create(user.Id, new UserHolder(user)));
 			}
 		});
 

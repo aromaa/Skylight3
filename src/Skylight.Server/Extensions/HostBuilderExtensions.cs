@@ -55,6 +55,7 @@ using Skylight.Server.Net.Listener.Connection;
 using Skylight.Server.Net.Listener.Ip;
 using Skylight.Server.Net.Listener.XmlSocket;
 using Skylight.Server.Registry;
+using Skylight.Server.Scheduling;
 
 namespace Skylight.Server.Extensions;
 
@@ -64,6 +65,7 @@ public static class HostBuilderExtensions
 	public static IServiceCollection ConfigureSkylightServer(this IServiceCollection builder, IConfiguration configuration)
 	{
 		builder.AddHostedService<ServerHostService>();
+		builder.AddHostedService<BackgroundWorkerService>();
 
 		builder.Configure<FurniMaticSettings>(configuration.GetSection("FurniMatic"));
 		builder.Configure<NetworkSettings>(configuration.GetSection("Network"));
@@ -116,6 +118,8 @@ public static class HostBuilderExtensions
 
 		builder.AddSingleton(typeof(Lazy<>), typeof(LazyService<>));
 
+		builder.AddBackgroundWorker<DatabaseBackgroundWorker>();
+
 		//TODO: Figure out something nicer than this
 		builder.AddSingleton<IRegistry>(Registry<IFloorFurnitureKindType>.Create(RegistryTypes.FloorFurnitureKind,
 			(FloorFurnitureKindTypes.Seat.Key, new FloorFurnitureKindType(new FloorFurnitureKind())),
@@ -145,6 +149,15 @@ public static class HostBuilderExtensions
 	{
 		services.AddSingleton<TService, TImplementation>();
 		services.AddSingleton<ILoadableService, TImplementation>(l => (TImplementation)l.GetRequiredService<TService>());
+
+		return services;
+	}
+
+	internal static IServiceCollection AddBackgroundWorker<T>(this IServiceCollection services)
+		where T : BackgroundWorker
+	{
+		services.AddSingleton<T>();
+		services.AddSingleton<BackgroundWorker, T>(l => l.GetRequiredService<T>());
 
 		return services;
 	}

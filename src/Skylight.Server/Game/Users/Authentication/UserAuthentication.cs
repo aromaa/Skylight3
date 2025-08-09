@@ -91,7 +91,7 @@ internal sealed class UserAuthentication(IRegistryHolder registryHolder, RedisCo
 		await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
 		Purse purse = await Purse.FromDatabaseAsync(client, this.registryHolder.Registry(RegistryTypes.Currency), dbContext, userId, cancellationToken).ConfigureAwait(false);
-		UserSettingsEntity? userSettings = await dbContext.UserSettings.FirstOrDefaultAsync(s => s.UserId == profile.Id, cancellationToken).ConfigureAwait(false);
+		UserSettingsEntity? userSettings = await dbContext.UserSettings.FirstOrDefaultAsync(s => s.UserId == userId, cancellationToken).ConfigureAwait(false);
 		User user = new(this.roomManager, client, profile, permissionSubject, purse, new UserSettings(userSettings));
 
 		await user.LoadAsync(dbContext, this.loadContext, cancellationToken).ConfigureAwait(false);

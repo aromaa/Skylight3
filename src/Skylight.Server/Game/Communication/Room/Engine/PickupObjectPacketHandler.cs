@@ -72,7 +72,7 @@ internal sealed partial class PickupObjectPacketHandler<T>(IRegistryHolder regis
 				.Where(i => i.Id == item.Id.Id)
 				.ExecuteUpdateAsync(setters => setters
 					.SetProperty(i => i.RoomId, (int?)null)
-					.SetProperty(i => i.UserId, roomUnit.User.Profile.Id))
+					.SetProperty(i => i.UserId, roomUnit.User.Id))
 				.ConfigureAwait(false);
 		});
 	}
@@ -106,7 +106,7 @@ internal sealed partial class PickupObjectPacketHandler<T>(IRegistryHolder regis
 				.Where(i => i.Id == item.Id.Id)
 				.ExecuteUpdateAsync(setters => setters
 					.SetProperty(i => i.RoomId, (int?)null)
-					.SetProperty(i => i.UserId, roomUnit.User.Profile.Id))
+					.SetProperty(i => i.UserId, roomUnit.User.Id))
 				.ConfigureAwait(false);
 		});
 	}

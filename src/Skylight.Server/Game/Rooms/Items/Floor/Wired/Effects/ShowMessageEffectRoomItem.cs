@@ -47,7 +47,7 @@ internal sealed class ShowMessageEffectRoomItem(IPrivateRoom room, RoomItemId id
 
 	public override void Trigger(IUserRoomUnit? cause = null)
 	{
-		cause?.User.SendAsync(new WhisperOutgoingPacket(cause.Id, cause.User.Profile.Username, this.Message, 0, 34, -1, Array.Empty<(string, string, bool)>()));
+		cause?.User.SendAsync(new WhisperOutgoingPacket(cause.Id, cause.User.Info.Username, this.Message, 0, 34, -1, Array.Empty<(string, string, bool)>()));
 	}
 
 	public JsonDocument GetExtraData()

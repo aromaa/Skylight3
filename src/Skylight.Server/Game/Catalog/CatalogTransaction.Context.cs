@@ -61,7 +61,7 @@ internal partial class CatalogTransaction
 
 			UserBadgeEntity entity = new()
 			{
-				UserId = this.transaction.user.Profile.Id,
+				UserId = this.transaction.user.Id,
 				BadgeCode = badge.Code
 			};
 
@@ -78,7 +78,7 @@ internal partial class CatalogTransaction
 			FloorItemEntity entity = new()
 			{
 				FurnitureId = furniture.Id,
-				UserId = this.transaction.user.Profile.Id
+				UserId = this.transaction.user.Id
 			};
 
 			if (extraData is not null)
@@ -102,7 +102,7 @@ internal partial class CatalogTransaction
 			WallItemEntity entity = new()
 			{
 				FurnitureId = furniture.Id,
-				UserId = this.transaction.user.Profile.Id
+				UserId = this.transaction.user.Id
 			};
 
 			if (extraData is not null)
@@ -190,7 +190,7 @@ internal partial class CatalogTransaction
 						.ToLinqToDBTable()
 						.Merge()
 						.Using(balanceChanges.Select(static b => (b.Key.Key, b.Key.Data, b.Value.Change)))
-						.On((e, b) => e.UserId == this.transaction.user.Profile.Id && e.CurrencyType == b.Key && e.CurrencyData == b.Data)
+						.On((e, b) => e.UserId == this.transaction.user.Id && e.CurrencyType == b.Key && e.CurrencyData == b.Data)
 						.UpdateWhenMatchedAnd(static (e, b) => e.Balance + b.Change >= 0, static (e, b) => new UserPurseEntity
 						{
 							Balance = e.Balance + b.Change
@@ -245,7 +245,7 @@ internal partial class CatalogTransaction
 			{
 				foreach (IBadge badge in this.badges)
 				{
-					items.Add(new BadgeInventoryItem(badge, this.transaction.user.Profile));
+					items.Add(new BadgeInventoryItem(badge, this.transaction.user.Info));
 				}
 			}
 
@@ -255,7 +255,7 @@ internal partial class CatalogTransaction
 				{
 					this.transaction.furnitures.TryGetFloorFurniture(item.FurnitureId, out IFloorFurniture? furniture);
 
-					items.Add(this.transaction.furnitureInventoryItemStrategy.CreateFurnitureItem(item.Id, this.transaction.user.Profile, furniture!, item.Data?.ExtraData));
+					items.Add(this.transaction.furnitureInventoryItemStrategy.CreateFurnitureItem(item.Id, this.transaction.user.Info, furniture!, item.Data?.ExtraData));
 				}
 			}
 
@@ -265,7 +265,7 @@ internal partial class CatalogTransaction
 				{
 					this.transaction.furnitures.TryGetWallFurniture(item.FurnitureId, out IWallFurniture? furniture);
 
-					items.Add(this.transaction.furnitureInventoryItemStrategy.CreateFurnitureItem(item.Id, this.transaction.user.Profile, furniture!, item.Data?.ExtraData));
+					items.Add(this.transaction.furnitureInventoryItemStrategy.CreateFurnitureItem(item.Id, this.transaction.user.Info, furniture!, item.Data?.ExtraData));
 				}
 			}
 
@@ -287,7 +287,7 @@ internal partial class CatalogTransaction
 				: (key, null);
 		}
 
-		IUserInfo ICatalogTransactionContext.User => this.transaction.user.Profile;
+		IUserInfo ICatalogTransactionContext.User => this.transaction.user.Info;
 		string ICatalogTransactionContext.ExtraData => this.transaction.ExtraData;
 
 		public ICatalogTransactionContext.IConstraints Constraints => this;

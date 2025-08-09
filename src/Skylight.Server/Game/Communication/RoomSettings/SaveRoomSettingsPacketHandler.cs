@@ -93,7 +93,7 @@ internal sealed class SaveRoomSettingsPacketHandler<T>(IDbContextFactory<Skyligh
 				return;
 			}
 
-			if (roomInfo.Owner.Id != user.Profile.Id)
+			if (roomInfo.Owner.Id != user.Id)
 			{
 				return;
 			}

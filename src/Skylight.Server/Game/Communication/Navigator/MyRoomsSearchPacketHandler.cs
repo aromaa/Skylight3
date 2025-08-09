@@ -27,7 +27,7 @@ internal sealed class MyRoomsSearchPacketHandler<T>(IDbContextFactory<SkylightCo
 		List<GuestRoomData> rooms = [];
 
 		foreach (int roomId in dbContext.PrivateRooms
-			.Where(r => r.OwnerId == user.Profile.Id)
+			.Where(r => r.OwnerId == user.Id)
 			.Select(r => r.Id))
 		{
 			IPrivateRoomInfo room = this.navigatorManager.GetPrivateRoomInfoAsync(roomId).GetAwaiter().GetResult()!;

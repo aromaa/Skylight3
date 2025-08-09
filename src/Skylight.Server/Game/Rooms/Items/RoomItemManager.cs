@@ -257,7 +257,7 @@ internal sealed class RoomItemManager : IRoomItemManager
 			return false;
 		}
 
-		return source?.Profile.Id == this.room.Info.Owner.Id && this.ValidItemLocation(furniture, position.XY, direction);
+		return source?.Id == this.room.Info.Owner.Id && this.ValidItemLocation(furniture, position.XY, direction);
 	}
 
 	public bool CanPlaceItem(IWallFurniture furniture, Point2D location, Point2D position, int direction, IUser? source)
@@ -269,21 +269,21 @@ internal sealed class RoomItemManager : IRoomItemManager
 			return false;
 		}
 
-		return source?.Profile.Id == this.room.Info.Owner.Id && this.ValidItemLocation(furniture, location, position, direction);
+		return source?.Id == this.room.Info.Owner.Id && this.ValidItemLocation(furniture, location, position, direction);
 	}
 
 	public bool CanMoveItem(IFloorRoomItem floorItem, Point3D position, int direction, IUser? source = null)
 	{
-		return source?.Profile.Id == this.room.Info.Owner.Id && this.ValidItemLocation(floorItem.Furniture, position.XY, direction);
+		return source?.Id == this.room.Info.Owner.Id && this.ValidItemLocation(floorItem.Furniture, position.XY, direction);
 	}
 
 	public bool CanMoveItem(IWallRoomItem wallItem, Point2D location, Point2D position, int direction, IUser? source = null)
 	{
-		return source?.Profile.Id == this.room.Info.Owner.Id && this.ValidItemLocation(wallItem.Furniture, location, position, direction);
+		return source?.Id == this.room.Info.Owner.Id && this.ValidItemLocation(wallItem.Furniture, location, position, direction);
 	}
 
-	public bool CanPickupItem(IFloorRoomItem floorItem, IUser? source = null) => source?.Profile.Id == this.room.Info.Owner.Id;
-	public bool CanPickupItem(IWallRoomItem floorItem, IUser? source = null) => source?.Profile.Id == this.room.Info.Owner.Id;
+	public bool CanPickupItem(IFloorRoomItem floorItem, IUser? source = null) => source?.Id == this.room.Info.Owner.Id;
+	public bool CanPickupItem(IWallRoomItem floorItem, IUser? source = null) => source?.Id == this.room.Info.Owner.Id;
 
 	public bool ValidItemLocation(IFloorFurniture furniture, Point2D location, int direction)
 	{

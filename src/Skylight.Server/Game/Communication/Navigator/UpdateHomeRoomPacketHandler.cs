@@ -35,7 +35,7 @@ internal sealed partial class UpdateHomeRoomPacketHandler<T>(IDbContextFactory<S
 
 			await dbContext.UserSettings.Upsert(new UserSettingsEntity
 			{
-				UserId = client.User!.Profile.Id,
+				UserId = client.User!.Id,
 				HomeRoomId = homeRoomId,
 			}).On(c => c.UserId)
 			.WhenMatched((_, c) => new UserSettingsEntity

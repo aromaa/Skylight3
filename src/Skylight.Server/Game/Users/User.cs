@@ -22,7 +22,10 @@ internal sealed class User : IUser
 
 	private readonly UserInventory inventory;
 
+	public int Id { get; }
+
 	public IClient Client { get; }
+	public IUserInfo Info { get; }
 	public IUserProfile Profile { get; }
 	public IPermissionSubject PermissionSubject { get; }
 	public IPurse Purse { get; }
@@ -37,7 +40,9 @@ internal sealed class User : IUser
 
 		this.inventory = new UserInventory(this);
 
+		this.Id = profile.Info.Id;
 		this.Client = client;
+		this.Info = profile.Info;
 		this.Profile = profile;
 		this.PermissionSubject = permissionSubject;
 		this.Purse = purse;

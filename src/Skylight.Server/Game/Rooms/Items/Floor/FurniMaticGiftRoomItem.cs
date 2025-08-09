@@ -15,7 +15,7 @@ internal sealed class FurniMaticGiftRoomItem(IPrivateRoom room, RoomItemId id, I
 
 	public new IFurniMaticGiftFurniture Furniture => this.furniture;
 
-	public bool CanOpen(IUser user) => this.Owner.Id == user.Profile.Id;
+	public bool CanOpen(IUser user) => this.Owner.Id == user.Id;
 
 	public JsonDocument GetExtraData() => JsonSerializer.SerializeToDocument(this.RecycledAt);
 }

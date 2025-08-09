@@ -31,7 +31,7 @@ internal sealed class GetWardrobePacketHandler<T>(IDbContextFactory<SkylightCont
 			IFigureConfigurationSnapshot figureConfigurationSnapshot = this.figureConfigurationManager.Current;
 
 			List<WardrobeSlotData> wardrobe = dbContext.UserWardrobeSlots
-				.Where(e => e.UserId == user.Profile.Id)
+				.Where(e => e.UserId == user.Id)
 				.Include(e => e.FigureSets!)
 				.ThenInclude(e => e.Colors)
 				.AsEnumerable()

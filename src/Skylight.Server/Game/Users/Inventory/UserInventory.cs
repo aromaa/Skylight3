@@ -61,7 +61,7 @@ internal sealed class UserInventory : IInventory
 
 		await foreach (FloorItemEntity item in dbContext.FloorItems
 						   .AsNoTracking()
-						   .Where(i => i.UserId == this.user.Profile.Id && i.RoomId == null)
+						   .Where(i => i.UserId == this.user.Id && i.RoomId == null)
 						   .Include(i => i.Data)
 						   .AsAsyncEnumerable()
 						   .WithCancellation(cancellationToken)
@@ -72,12 +72,12 @@ internal sealed class UserInventory : IInventory
 				continue;
 			}
 
-			this.floorItems.TryAdd(item.Id, loadContext.FurnitureInventoryItemFactory.CreateFurnitureItem(item.Id, this.user.Profile, furniture, item.Data?.ExtraData));
+			this.floorItems.TryAdd(item.Id, loadContext.FurnitureInventoryItemFactory.CreateFurnitureItem(item.Id, this.user.Info, furniture, item.Data?.ExtraData));
 		}
 
 		await foreach (WallItemEntity item in dbContext.WallItems
 						   .AsNoTracking()
-						   .Where(i => i.UserId == this.user.Profile.Id && i.RoomId == null)
+						   .Where(i => i.UserId == this.user.Id && i.RoomId == null)
 						   .Include(i => i.Data)
 						   .AsAsyncEnumerable()
 						   .WithCancellation(cancellationToken)
@@ -88,7 +88,7 @@ internal sealed class UserInventory : IInventory
 				continue;
 			}
 
-			this.wallItems.TryAdd(item.Id, loadContext.FurnitureInventoryItemFactory.CreateFurnitureItem(item.Id, this.user.Profile, furniture, item.Data?.ExtraData));
+			this.wallItems.TryAdd(item.Id, loadContext.FurnitureInventoryItemFactory.CreateFurnitureItem(item.Id, this.user.Info, furniture, item.Data?.ExtraData));
 		}
 	}
 
@@ -98,7 +98,7 @@ internal sealed class UserInventory : IInventory
 
 		await foreach (UserBadgeEntity entity in dbContext.UserBadges
 						   .AsNoTracking()
-						   .Where(b => b.UserId == this.user.Profile.Id)
+						   .Where(b => b.UserId == this.user.Id)
 						   .AsAsyncEnumerable()
 						   .WithCancellation(cancellationToken)
 						   .ConfigureAwait(false))
@@ -108,7 +108,7 @@ internal sealed class UserInventory : IInventory
 				continue;
 			}
 
-			this.badges.TryAdd(badge.Code, new BadgeInventoryItem(badge, this.user.Profile));
+			this.badges.TryAdd(badge.Code, new BadgeInventoryItem(badge, this.user.Info));
 		}
 	}
 

@@ -31,7 +31,7 @@ internal sealed partial class SetSoundSettingsPacketHandler<T>(IDbContextFactory
 
 			await dbContext.UserSettings.Upsert(new UserSettingsEntity
 			{
-				UserId = client.User!.Profile.Id,
+				UserId = client.User!.Id,
 				UiVolume = uiVolume,
 				FurniVolume = furniVolume,
 				TraxVolume = traxVolume,

@@ -134,7 +134,7 @@ internal sealed partial class PlacePostItPacketHandler<T>(IDbContextFactory<Skyl
 					await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false))
 					{
 						int itemId = inventoryItem.Id;
-						int userId = roomUnit.User.Profile.Id;
+						int userId = roomUnit.User.Id;
 						int roomId = privateRoom.Info.Id;
 
 						int count = await dbContext.WallItems

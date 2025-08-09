@@ -34,7 +34,7 @@ internal sealed class UnitEnterRoomTriggerInteractionHandler(IWiredEffectInterac
 	{
 		foreach (IUnitEnterRoomTriggerRoomItem trigger in this.triggers)
 		{
-			if (trigger.TriggerUsername is null || trigger.TriggerUsername == unit.User.Profile.Username)
+			if (trigger.TriggerUsername is null || trigger.TriggerUsername == unit.User.Info.Username)
 			{
 				this.wiredHandler.TriggerStack(trigger, unit);
 			}

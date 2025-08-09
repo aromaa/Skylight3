@@ -77,7 +77,7 @@ internal sealed partial class CreateFlatPacketHandler<T>(IDbContextFactory<Skyli
 
 					UsersMax = maxUserCount,
 
-					OwnerId = client.User!.Profile.Id
+					OwnerId = client.User!.Id
 				});
 
 				await dbContext.SaveChangesAsync().ConfigureAwait(false);

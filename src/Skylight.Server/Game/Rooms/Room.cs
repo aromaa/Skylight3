@@ -108,19 +108,21 @@ internal abstract class Room : IRoom
 		List<RoomUnitData> units = [];
 		foreach (IUserRoomUnit unit in this.UnitManager.Units)
 		{
+			IUserInfoView info = unit.User.Info.Snapshot;
+
 			units.Add(new RoomUnitData
 			{
-				IdentifierId = unit.User.Profile.Id,
-				Name = unit.User.Profile.Username,
-				Motto = unit.User.Profile.Motto,
-				Figure = unit.User.Profile.Avatar.Data.ToString(),
+				IdentifierId = info.Id,
+				Name = info.Username,
+				Motto = info.Motto,
+				Figure = info.Avatar.Data.ToString(),
 				RoomUnitId = unit.Id,
 				X = unit.Position.X,
 				Y = unit.Position.Y,
 				Z = unit.Position.Z,
 				Direction = unit.Rotation.X,
 				Type = 1,
-				Gender = unit.User.Profile.Avatar.Sex.ToNetwork(),
+				Gender = info.Avatar.Sex.ToNetwork(),
 				GroupId = 0,
 				GroupStatus = 0,
 				GroupName = string.Empty,

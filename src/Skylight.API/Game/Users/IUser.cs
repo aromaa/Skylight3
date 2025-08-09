@@ -12,8 +12,11 @@ namespace Skylight.API.Game.Users;
 
 public interface IUser : IPacketSender
 {
+	public int Id { get; }
+
 	public IClient Client { get; }
 	public IUserSettings Settings { get; }
+	public IUserInfo Info { get; }
 	public IUserProfile Profile { get; }
 	public IPermissionSubject PermissionSubject { get; }
 	public IPurse Purse { get; }

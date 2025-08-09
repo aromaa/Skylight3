@@ -22,7 +22,7 @@ internal sealed partial class DeleteSongPacketHandler<T>(IDbContextFactory<Skyli
 			await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
 			await dbContext.Songs
-				.Where(s => s.Id == songId && s.UserId == user.Profile.Id)
+				.Where(s => s.Id == songId && s.UserId == user.Id)
 				.ExecuteDeleteAsync()
 				.ConfigureAwait(false);
 		});

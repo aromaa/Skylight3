@@ -90,5 +90,5 @@ internal sealed class PrivateRoom : Room, IPrivateRoom
 		}
 	}
 
-	public bool IsOwner(IUser user) => this.Info.Owner.Id == user.Profile.Id;
+	public bool IsOwner(IUser user) => this.Info.Owner.Id == user.Id;
 }

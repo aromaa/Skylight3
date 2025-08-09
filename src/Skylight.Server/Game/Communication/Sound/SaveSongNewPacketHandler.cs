@@ -84,7 +84,7 @@ internal sealed partial class SaveSongNewPacketHandler<T>(IRegistryHolder regist
 
 			SongEntity songEntity = new()
 			{
-				UserId = client.User!.Profile.Id,
+				UserId = client.User!.Id,
 
 				ItemId = soundMachineId.Id,
 
