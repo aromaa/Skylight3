@@ -1,7 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Threading.Channels;
+﻿using System.Runtime.InteropServices;
 using Microsoft.EntityFrameworkCore;
 using Skylight.API.Collections.Cache;
 using Skylight.API.DependencyInjection;
@@ -17,7 +14,6 @@ using Skylight.Domain.Rooms.Public;
 using Skylight.Infrastructure;
 using Skylight.Server.Collections.Cache;
 using Skylight.Server.DependencyInjection;
-using Skylight.Server.Game.Rooms;
 using Skylight.Server.Game.Rooms.Private;
 
 namespace Skylight.Server.Game.Navigator;
@@ -26,34 +22,18 @@ internal sealed partial class NavigatorManager : VersionedLoadableServiceBase<IN
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
 
-	private readonly TimeProvider timeProvider;
-
 	private readonly IUserManager userManager;
 
 	private readonly AsyncCache<int, IPrivateRoomInfo> roomData;
 
-	private readonly ConcurrentDictionary<int, RoomActivity> roomActivity;
-	private readonly Channel<(int RoomId, int Activity)> roomActivityChannel;
-
-	public NavigatorManager(IDbContextFactory<SkylightContext> dbContextFactory, TimeProvider timeProvider, IUserManager userManager)
+	public NavigatorManager(IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager)
 		: base(NavigatorSnapshot.CreateBuilder().Build())
 	{
 		this.dbContextFactory = dbContextFactory;
 
-		this.timeProvider = timeProvider;
-
 		this.userManager = userManager;
 
 		this.roomData = new AsyncCache<int, IPrivateRoomInfo>(this.InternalLoadRoomDataAsync);
-
-		this.roomActivity = [];
-		this.roomActivityChannel = Channel.CreateUnbounded<ValueTuple<int, int>>(new UnboundedChannelOptions
-		{
-			AllowSynchronousContinuations = false,
-			SingleReader = true
-		});
-
-		_ = this.ProcessRoomActivityAsync();
 	}
 
 	internal override async Task<VersionedServiceSnapshot.Transaction<NavigatorSnapshot>> LoadAsyncCore(ILoadableServiceContext context, CancellationToken cancellationToken = default)
@@ -157,110 +137,5 @@ internal sealed partial class NavigatorManager : VersionedLoadableServiceBase<IN
 		};
 
 		return new PrivateRoomInfo(id, owner, layout, new PrivateRoomSettings(entity.Name, entity.Description, category, ImmutableCollectionsMarshal.AsImmutableArray(entity.Tags), entryMode, entity.UsersMax, tradeMode, entity.WalkThrough, entity.AllowPets, entity.AllowPetsToEat, new PrivateRoomCustomizationSettings(entity.HideWalls, entity.FloorThickness, entity.WallThickness), new PrivateRoomChatSettings(), new PrivateRoomModerationSettings()));
-	}
-
-	public void PushRoomActivity(int roomId, int activity)
-	{
-		this.roomActivityChannel.Writer.WriteAsync((roomId, activity));
-	}
-
-	private async Task ProcessRoomActivityAsync()
-	{
-		PeriodicTimer timer = new(TimeSpan.FromSeconds(30));
-
-		List<PrivateRoomActivityEntity> entities = [];
-		while (await timer.WaitForNextTickAsync().ConfigureAwait(false))
-		{
-			DateTimeOffset time = this.timeProvider.GetUtcNow();
-
-			(int week, int day) = RoomActivity.GetDateParts(time);
-
-			while (this.roomActivityChannel.Reader.TryRead(out (int RoomId, int Activity) value))
-			{
-				PrivateRoomActivityEntity entity = new()
-				{
-					RoomId = value.RoomId,
-					Week = week
-				};
-
-				switch (day)
-				{
-					case 0:
-						entity.Monday = value.Activity;
-						break;
-					case 1:
-						entity.Tuesday = value.Activity;
-						break;
-					case 2:
-						entity.Wednesday = value.Activity;
-						break;
-					case 3:
-						entity.Thursday = value.Activity;
-						break;
-					case 4:
-						entity.Friday = value.Activity;
-						break;
-					case 5:
-						entity.Saturday = value.Activity;
-						break;
-					case 6:
-						entity.Sunday = value.Activity;
-						break;
-				}
-
-				entities.Add(entity);
-			}
-
-			if (entities.Count > 0)
-			{
-				await using SkylightContext skylightContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
-
-				await skylightContext.PrivateRoomActivity
-					.UpsertRange(entities)
-					.On(e => new { e.RoomId, e.Week })
-					.WhenMatched((oldValue, newValue) => new PrivateRoomActivityEntity
-					{
-						Monday = oldValue.Monday + newValue.Monday,
-						Tuesday = oldValue.Tuesday + newValue.Tuesday,
-						Wednesday = oldValue.Wednesday + newValue.Wednesday,
-						Thursday = oldValue.Thursday + newValue.Thursday,
-						Friday = oldValue.Friday + newValue.Friday,
-						Saturday = oldValue.Saturday + newValue.Saturday,
-						Sunday = oldValue.Sunday + newValue.Sunday
-					}).RunAsync().ConfigureAwait(false);
-
-				foreach (PrivateRoomActivityEntity entity in entities)
-				{
-					if (this.roomActivity.TryGetValue(entity.RoomId, out RoomActivity? roomActivity))
-					{
-						int activity = day switch
-						{
-							0 => entity.Monday,
-							1 => entity.Tuesday,
-							2 => entity.Wednesday,
-							3 => entity.Thursday,
-							4 => entity.Friday,
-							5 => entity.Saturday,
-							6 => entity.Sunday,
-
-							_ => throw new UnreachableException()
-						};
-
-						roomActivity.Update(week, day, activity);
-					}
-					else
-					{
-						IAsyncEnumerable<PrivateRoomActivityEntity> query = skylightContext.PrivateRoomActivity
-							.Where(e => e.RoomId == entity.RoomId)
-							.OrderBy(e => e.Week)
-							.AsAsyncEnumerable();
-
-						this.roomActivity[entity.RoomId] = await RoomActivity.LoadAsync(week, day, query).ConfigureAwait(false);
-					}
-				}
-
-				entities.Clear();
-			}
-		}
 	}
 }

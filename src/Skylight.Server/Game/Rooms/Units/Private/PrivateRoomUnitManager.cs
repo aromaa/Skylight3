@@ -1,13 +1,13 @@
-﻿using Skylight.API.Game.Navigator;
+﻿using Skylight.Server.Game.Navigator;
 using Skylight.Server.Game.Rooms.Private;
 
 namespace Skylight.Server.Game.Rooms.Units.Private;
 
-internal sealed class PrivateRoomUnitManager(PrivateRoom room, INavigatorManager navigatorManager) : RoomUnitManager
+internal sealed class PrivateRoomUnitManager(PrivateRoom room, RoomActivityWorker roomActivityWorker) : RoomUnitManager
 {
 	protected override PrivateRoom Room { get; } = room;
 
-	private readonly INavigatorManager navigatorManager = navigatorManager;
+	private readonly RoomActivityWorker roomActivityWorker = roomActivityWorker;
 
 	private int pendingUnitActivityCounter;
 	private int pendingUnitActivityCounterTimer = Environment.TickCount;
@@ -21,7 +21,7 @@ internal sealed class PrivateRoomUnitManager(PrivateRoom room, INavigatorManager
 		{
 			if (this.pendingUnitActivityCounter > 0)
 			{
-				this.navigatorManager.PushRoomActivity(this.Room.Info.Id, this.pendingUnitActivityCounter);
+				this.roomActivityWorker.PushRoomActivity(this.Room.Info.Id, this.pendingUnitActivityCounter);
 			}
 
 			this.pendingUnitActivityCounterTimer = Environment.TickCount;

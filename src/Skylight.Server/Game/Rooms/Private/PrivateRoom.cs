@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Skylight.API.Game.Furniture;
-using Skylight.API.Game.Navigator;
 using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Interactions;
@@ -14,6 +13,7 @@ using Skylight.API.Registry;
 using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Data.Room.Engine;
 using Skylight.Protocol.Packets.Outgoing.Room.Engine;
+using Skylight.Server.Game.Navigator;
 using Skylight.Server.Game.Rooms.Items;
 using Skylight.Server.Game.Rooms.Map.Private;
 using Skylight.Server.Game.Rooms.Units.Private;
@@ -30,7 +30,7 @@ internal sealed class PrivateRoom : Room, IPrivateRoom
 
 	private readonly double[,] tileHeights;
 
-	public PrivateRoom(IPrivateRoomInfo info, IRoomLayout roomLayout, IRegistryHolder registryHolder, IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, IFloorRoomItemStrategy floorRoomItemStrategy, IWallRoomItemStrategy wallRoomItemStrategy, IUserManager userManager, IRoomItemInteractionManager itemInteractionManager, INavigatorManager navigatorManager)
+	public PrivateRoom(IPrivateRoomInfo info, IRoomLayout roomLayout, IRegistryHolder registryHolder, IDbContextFactory<SkylightContext> dbContextFactory, IFurnitureManager furnitureManager, IFloorRoomItemStrategy floorRoomItemStrategy, IWallRoomItemStrategy wallRoomItemStrategy, IUserManager userManager, IRoomItemInteractionManager itemInteractionManager, RoomActivityWorker roomActivityWorker)
 		: base(roomLayout)
 	{
 		this.Info = info;
@@ -38,7 +38,7 @@ internal sealed class PrivateRoom : Room, IPrivateRoom
 
 		this.ItemManager = new RoomItemManager(this, roomLayout, registryHolder, dbContextFactory, userManager, furnitureManager, floorRoomItemStrategy, wallRoomItemStrategy, itemInteractionManager);
 
-		this.UnitManager = new PrivateRoomUnitManager(this, navigatorManager);
+		this.UnitManager = new PrivateRoomUnitManager(this, roomActivityWorker);
 
 		this.tileHeights = new double[roomLayout.Size.X, roomLayout.Size.Y];
 

@@ -1,8 +1,8 @@
 ﻿using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Net.Communication.Attributes;
+using Skylight.API.Game.Inventory;
 using Skylight.API.Game.Navigator;
-using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
 using Skylight.Infrastructure;
@@ -16,13 +16,13 @@ using Skylight.Server.Extensions;
 namespace Skylight.Server.Game.Communication.NewNavigator;
 
 [PacketManagerRegister(typeof(IGamePacketManager))]
-internal sealed class NewNavigatorSearchPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory, INavigatorManager navigatorManager, IRoomManager roomManager) : UserPacketHandler<T>
+internal sealed class NewNavigatorSearchPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory, INavigatorManager navigatorManager, INavigatorSearch navigatorSearch) : UserPacketHandler<T>
 	where T : INewNavigatorSearchIncomingPacket
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
 	private readonly INavigatorManager navigatorManager = navigatorManager;
-	private readonly IRoomManager roomManager = roomManager;
+	private readonly INavigatorSearch navigatorSearch = navigatorSearch;
 
 	internal override void Handle(IUser user, in T packet)
 	{
@@ -46,9 +46,9 @@ internal sealed class NewNavigatorSearchPacketHandler<T>(IDbContextFactory<Skyli
 		}
 		else if (searchCode == "hotel_view")
 		{
-			foreach (IPrivateRoom room in this.roomManager.LoadedPrivateRooms.OrderByDescending(r => r.Info.UserCount))
+			foreach (IPrivateRoomInfo room in this.navigatorSearch.PopularRooms)
 			{
-				rooms.Add(room.Info.BuildGuestRoomData());
+				rooms.Add(room.BuildGuestRoomData());
 			}
 		}
 

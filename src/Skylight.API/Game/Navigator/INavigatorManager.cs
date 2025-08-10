@@ -13,7 +13,4 @@ public interface INavigatorManager : INavigator, ILoadableService<INavigatorSnap
 
 	public ValueTask<IPrivateRoomInfo?> GetPrivateRoomInfoAsync(int roomId, CancellationToken cancellationToken = default);
 	public ValueTask<ICacheReference<IPrivateRoomInfo>?> GetPrivateRoomInfoUnsafeAsync(int roomId, CancellationToken cancellationToken = default);
-
-	//TODO: Figure out better shape for this
-	public void PushRoomActivity(int roomId, int activity);
 }

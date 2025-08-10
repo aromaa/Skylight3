@@ -8,6 +8,7 @@ using Skylight.API.Game.Clients;
 using Skylight.API.Game.Figure;
 using Skylight.API.Game.Furniture;
 using Skylight.API.Game.Furniture.Floor;
+using Skylight.API.Game.Inventory;
 using Skylight.API.Game.Inventory.Items;
 using Skylight.API.Game.Navigator;
 using Skylight.API.Game.Permissions;
@@ -110,6 +111,7 @@ public static class HostBuilderExtensions
 		builder.AddLoadableSingleton<IRoomManager, RoomManager>();
 		builder.AddSingleton<IRoomItemInteractionManager, RoomItemInteractionManager>();
 		builder.AddLoadableSingleton<INavigatorManager, NavigatorManager>();
+		builder.AddSingleton<INavigatorSearch, NavigatorSearch>();
 
 		builder.AddSingleton<IFloorRoomItemStrategy, FloorRoomItemStrategy>();
 		builder.AddSingleton<IWallRoomItemStrategy, WallRoomItemStrategy>();
@@ -119,6 +121,7 @@ public static class HostBuilderExtensions
 		builder.AddSingleton(typeof(Lazy<>), typeof(LazyService<>));
 
 		builder.AddBackgroundWorker<DatabaseBackgroundWorker>();
+		builder.AddBackgroundWorker<RoomActivityWorker>();
 
 		//TODO: Figure out something nicer than this
 		builder.AddSingleton<IRegistry>(Registry<IFloorFurnitureKindType>.Create(RegistryTypes.FloorFurnitureKind,
