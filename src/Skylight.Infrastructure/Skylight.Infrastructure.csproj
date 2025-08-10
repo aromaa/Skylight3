@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(BuildingInsideVisualStudio)' == 'true'">
-		<EFOptimizeContext>true</EFOptimizeContext>
+		<EFOptimizeContext>false</EFOptimizeContext>
 	</PropertyGroup>
 
 	<ItemGroup>

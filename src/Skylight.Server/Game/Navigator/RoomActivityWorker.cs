@@ -102,7 +102,7 @@ internal sealed class RoomActivityWorker(IDbContextFactory<SkylightContext> dbCo
 					entities.Clear();
 				}
 			}
-			catch (Exception e)
+			catch
 			{
 				//TODO: Retry
 			}
