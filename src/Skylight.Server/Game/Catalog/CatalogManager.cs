@@ -30,25 +30,42 @@ internal sealed partial class CatalogManager(IDbContextFactory<SkylightContext> 
 
 		await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
 		{
-			await foreach (CatalogPageEntity page in dbContext.CatalogPages
+			await foreach (RetailCatalogEntity catalog in dbContext.RetailCatalogs
 				.AsNoTrackingWithIdentityResolution()
 				.AsSplitQuery()
-				.Include(p => p.Access!.OrderBy(a => a.Partition))
-				.Include(p => p.Children!)
-				.Include(o => o.Offers!)
-				.ThenInclude(o => o.Cost)
-				.Include(p => p.Offers!)
-				.ThenInclude(o => o.Products)
-				.OrderBy(p => p.ParentId)
-				.ThenBy(p => p.OrderNum)
-				.ThenBy(p => p.Name)
+				.Include(p => p.AccessSet!)
+					.ThenInclude(p => p.Rules)
+				.Include(p => p.Views!)
+					.ThenInclude(p => p.Parent!)
+				.Include(p => p.Views!)
+					.ThenInclude(p => p.Page!)
+					.ThenInclude(p => p.Localization!)
+					.ThenInclude(p => p.Entries)
+				.Include(p => p.Views!)
+					.ThenInclude(p => p.AccessSet!)
+					.ThenInclude(p => p.Rules!)
+				.Include(p => p.Views!.OrderBy(p => p.ParentId).ThenBy(p => p.OrderNum).ThenBy(p => p.Page!.Localization!.Code))
+					.ThenInclude(p => p.Children!)
+				.Include(p => p.Views!)
+					.ThenInclude(p => p.Offers!)
+					.ThenInclude(p => p.Offer)
+				.Include(p => p.Views!)
+					.ThenInclude(p => p.Offers!)
+					.ThenInclude(p => p.Offer!.Localization!)
+					.ThenInclude(p => p.Entries)
+				.Include(p => p.Views!)
+					.ThenInclude(p => p.Offers!)
+					.ThenInclude(p => p.Offer!.Products)
+				.Include(p => p.Views!)
+					.ThenInclude(p => p.Offers!.OrderBy(o => o.PageOrderNum))
+					.ThenInclude(p => p.Cost)
 				.AsAsyncEnumerable()
 				.WithCancellation(cancellationToken)
 				.ConfigureAwait(false))
 			{
 				cancellationToken.ThrowIfCancellationRequested();
 
-				builder.AddPage(page);
+				builder.AddRetailCatalog(catalog);
 			}
 		}
 

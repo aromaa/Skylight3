@@ -13,28 +13,6 @@ internal sealed class CatalogPageEntityTypeConfiguration : IEntityTypeConfigurat
 
 		builder.HasKey(p => p.Id);
 
-		builder.Property(p => p.Type)
-			.HasMaxLength(32)
-			.HasDefaultValue("NORMAL");
-
-		builder.Property(p => p.Name)
-			.HasMaxLength(32);
-
-		builder.Property(p => p.Localization)
-			.HasMaxLength(32);
-
-		builder.Property(p => p.OrderNum)
-			.HasDefaultValue(0)
-			.ValueGeneratedNever();
-
-		builder.Property(p => p.Enabled)
-			.HasDefaultValue(true)
-			.ValueGeneratedNever();
-
-		builder.Property(p => p.Visible)
-			.HasDefaultValue(true)
-			.ValueGeneratedNever();
-
 		builder.Property(p => p.IconColor)
 			.HasDefaultValue(1);
 
@@ -42,16 +20,11 @@ internal sealed class CatalogPageEntityTypeConfiguration : IEntityTypeConfigurat
 			.HasDefaultValue(1);
 
 		builder.Property(p => p.Layout)
-			.HasDefaultValue("default_3x3");
+			.HasDefaultValue("default_3x3")
+			.HasMaxLength(32);
 
-		builder.Property(p => p.Texts)
-			.HasDefaultValue(new List<string>());
-
-		builder.Property(p => p.Images)
-			.HasDefaultValue(new List<string>());
-
-		builder.HasOne(p => p.Parent)
-			.WithMany(p => p.Children)
-			.HasForeignKey(p => p.ParentId);
+		builder.HasOne(e => e.Localization)
+			.WithMany()
+			.HasForeignKey(e => e.LocalizationId);
 	}
 }

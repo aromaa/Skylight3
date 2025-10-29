@@ -74,7 +74,7 @@ internal partial class FurnitureManager
 							"sound_machine" => new SoundMachineFurniture(entity.Id, kind, dimensions, entity.Height[0]),
 							"sound_set" => CreateSoundSet(entity, kind, dimensions),
 							"roller" => new RollerFurniture(entity.Id, kind, dimensions, entity.Height[0]),
-							"basic" => new BasicFloorFurniture(entity.Id, kind, dimensions, entity.Height[0], int.Parse(entity.InteractionData)),
+							"basic" => new BasicFloorFurniture(entity.Id, kind, dimensions, entity.Height[0], entity.InteractionData!.RootElement.GetInt32()),
 							"wired_on_say" => new UnitSayTriggerFurniture(entity.Id, kind, dimensions, entity.Height[0]),
 							"wired_show_message" => new ShowMessageEffectFurniture(entity.Id, kind, dimensions, entity.Height[0]),
 							"wired_unit_enter_room" => new UnitEnterRoomTriggerFurniture(entity.Id, kind, dimensions, entity.Height[0]),
@@ -83,7 +83,7 @@ internal partial class FurnitureManager
 							"wired_teleport_unit" => new TeleportUnitEffectFurniture(entity.Id, kind, dimensions, entity.Height[0]),
 							"wired_unit_walk_on" => new UnitWalkOnTriggerFurniture(entity.Id, kind, dimensions, entity.Height[0]),
 							"wired_unit_walk_off" => new UnitWalkOffTriggerFurniture(entity.Id, kind, dimensions, entity.Height[0]),
-							"variable_height" => new VariableHeightFurniture(entity.Id, kind, dimensions, [.. entity.Height], int.Parse(entity.InteractionData)),
+							"variable_height" => new VariableHeightFurniture(entity.Id, kind, dimensions, [.. entity.Height], entity.InteractionData!.RootElement.GetInt32()),
 
 							_ => new StaticFloorFurniture(entity.Id, kind, dimensions, entity.Height[0])
 						};

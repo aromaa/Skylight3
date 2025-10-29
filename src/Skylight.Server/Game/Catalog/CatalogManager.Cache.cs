@@ -12,6 +12,7 @@ using Skylight.API.Game.Permissions;
 using Skylight.API.Game.Purse;
 using Skylight.API.Registry;
 using Skylight.Domain.Catalog;
+using Skylight.Domain.Permissions;
 using Skylight.Server.Game.Catalog.Products;
 
 namespace Skylight.Server.Game.Catalog;
@@ -43,24 +44,16 @@ internal partial class CatalogManager
 
 		internal sealed class Builder
 		{
-			private readonly List<CatalogPageEntity> rootPages;
+			private readonly List<RetailCatalogEntity> catalogs;
 
 			internal Builder()
 			{
-				this.rootPages = [];
+				this.catalogs = [];
 			}
 
-			internal void AddPage(CatalogPageEntity page)
+			internal void AddRetailCatalog(RetailCatalogEntity catalog)
 			{
-				if (page.Id < 0)
-				{
-					throw new ArgumentException("Negative ids are not supported by the client.", nameof(page));
-				}
-
-				if (page.ParentId is null)
-				{
-					this.rootPages.Add(page);
-				}
+				this.catalogs.Add(catalog);
 			}
 
 			internal Cache ToImmutable(IRegistryHolder registryHolder, IFurnitureSnapshot furnitures)
@@ -75,12 +68,17 @@ internal partial class CatalogManager
 				Dictionary<int, ICatalogPage> catalogPages = [];
 				Dictionary<int, ICatalogOffer> catalogOffers = [];
 
-				async Task<CatalogPage> CreatePageAsync(CatalogPageEntity pageEntity, ImmutableArray<ImmutableArray<IPermissionSubject>> parentAccess)
+				async Task<CatalogPage> CreatePageAsync(RetailCatalogPageViewEntity pageEntity, ImmutableArray<ImmutableArray<IPermissionSubject>> parentAccess)
 				{
+					if (pageEntity.Id < 0)
+					{
+						throw new ArgumentException("Negative ids are not supported by the client.", nameof(pageEntity));
+					}
+
 					ImmutableArray<ImmutableArray<IPermissionSubject>> access = await ResolveAccessAsync(pageEntity, parentAccess).ConfigureAwait(false);
 
 					Dictionary<int, ICatalogOffer> offers = [];
-					foreach (CatalogOfferEntity offerEntity in pageEntity.Offers!)
+					foreach (RetailCatalogPageOfferEntity offerEntity in pageEntity.Offers!)
 					{
 						CatalogOffer offer = await CreateOfferAsync(offerEntity).ConfigureAwait(false);
 
@@ -88,70 +86,25 @@ internal partial class CatalogManager
 					}
 
 					OrderedDictionary<int, ICatalogPage> children = [];
-					foreach (CatalogPageEntity childEntity in pageEntity.Children!)
+					foreach (RetailCatalogPageViewEntity childEntity in pageEntity.Children!)
 					{
 						CatalogPage child = await CreatePageAsync(childEntity, access).ConfigureAwait(false);
 
 						children.Add(child.Id, child);
 					}
 
-					CatalogPage page = new(pageEntity.Id, pageEntity.Name, pageEntity.Localization, pageEntity.OrderNum, pageEntity.Enabled, pageEntity.Visible, pageEntity.IconColor, pageEntity.IconImage, pageEntity.Layout, [.. pageEntity.Texts], [.. pageEntity.Images], access, offers, children);
+					CatalogPageLocalizationEntryEntity localization = pageEntity.Page!.Localization!.Entries!.First();
 
+					CatalogPage page = new(pageEntity.Id, pageEntity.Page!.Localization!.Code, localization.Name, pageEntity.OrderNum, pageEntity.Visiblity > CatalogPageVisiblity.Disabled, pageEntity.Visiblity >= CatalogPageVisiblity.Visible, pageEntity.Page.IconColor, pageEntity.Page.IconImage, pageEntity.Page.Layout, [.. localization.Texts], [.. localization.Images], access, offers, children);
 					catalogPages.Add(page.Id, page);
 
 					return page;
-
-					async Task<ImmutableArray<ImmutableArray<IPermissionSubject>>> ResolveAccessAsync(CatalogPageEntity pageEntity, ImmutableArray<ImmutableArray<IPermissionSubject>> parentAccess)
-					{
-						if (pageEntity.Access!.Count <= 0)
-						{
-							return parentAccess;
-						}
-
-						ImmutableArray<ImmutableArray<IPermissionSubject>>.Builder access = ImmutableArray.CreateBuilder<ImmutableArray<IPermissionSubject>>(parentAccess.Length + pageEntity.Access.Count);
-						access.AddRange(parentAccess);
-
-						string? lastPartition = null;
-						ImmutableArray<IPermissionSubject>.Builder accessSubjects = ImmutableArray.CreateBuilder<IPermissionSubject>();
-						foreach (CatalogPageAccessEntity accessEntity in pageEntity.Access)
-						{
-							if (accessEntity.Partition != lastPartition || accessEntity.Operation == CatalogPageAccessEntity.OperationType.Or)
-							{
-								lastPartition = accessEntity.Partition;
-
-								if (accessSubjects.Count > 0)
-								{
-									access.Add(accessSubjects.DrainToImmutable());
-								}
-							}
-
-							IPermissionSubject? permissionSubject = await ranksDirectory.GetSubjectAsync(accessEntity.RankId).ConfigureAwait(false);
-							if (permissionSubject is null)
-							{
-								throw new InvalidOperationException($"The page {pageEntity.Id} is referring to non-existent rank {accessEntity.RankId}!");
-							}
-
-							accessSubjects.Add(permissionSubject);
-
-							if (accessEntity.Operation == CatalogPageAccessEntity.OperationType.Or)
-							{
-								access.Add(accessSubjects.DrainToImmutable());
-							}
-						}
-
-						if (accessSubjects.Count > 0)
-						{
-							access.Add(accessSubjects.DrainToImmutable());
-						}
-
-						return access.ToImmutable();
-					}
 				}
 
-				async Task<CatalogOffer> CreateOfferAsync(CatalogOfferEntity offerEntity)
+				async Task<CatalogOffer> CreateOfferAsync(RetailCatalogPageOfferEntity offerEntity)
 				{
 					Dictionary<ICurrency, int> cost = [];
-					foreach (CatalogOfferCostEntity costEntity in offerEntity.Cost!)
+					foreach (RetailCatalogOfferCostEntity costEntity in offerEntity.Cost!)
 					{
 						ICurrency currency = currencyRegistry.Value(ResourceKey.Parse(costEntity.CurrencyType)).Create(costEntity.CurrencyData is { } currencyData ? JsonDocument.Parse(currencyData) : null);
 
@@ -173,8 +126,8 @@ internal partial class CatalogManager
 						}
 					}
 
-					ImmutableArray<ICatalogProduct>.Builder products = ImmutableArray.CreateBuilder<ICatalogProduct>(offerEntity.Products!.Count);
-					foreach (CatalogProductEntity productEntity in offerEntity.Products)
+					ImmutableArray<ICatalogProduct>.Builder products = ImmutableArray.CreateBuilder<ICatalogProduct>(offerEntity.Offer!.Products!.Count);
+					foreach (CatalogProductEntity productEntity in offerEntity.Offer.Products)
 					{
 						if (productEntity is CatalogFloorProductEntity floorProduct)
 						{
@@ -217,20 +170,73 @@ internal partial class CatalogManager
 						}
 					}
 
-					CatalogOffer offer = new(offerEntity.Id, offerEntity.OrderNum, offerEntity.Name, permissionRequirement, cost.ToFrozenDictionary(), offerEntity.RentTime, offerEntity.HasOffer, products.MoveToImmutable());
+					CatalogOffer offer = new(offerEntity.Id, offerEntity.PageOrderNum, offerEntity.Offer.Localization!.Code, permissionRequirement, cost.ToFrozenDictionary(), offerEntity.RentTime, offerEntity.BulkDiscount, products.MoveToImmutable());
 
 					catalogOffers.Add(offer.Id, offer);
 
 					return offer;
 				}
 
-				ImmutableArray<ICatalogPage>.Builder rootPages = ImmutableArray.CreateBuilder<ICatalogPage>(this.rootPages.Count);
-				foreach (CatalogPageEntity pageEntity in this.rootPages)
+				async Task<ImmutableArray<ImmutableArray<IPermissionSubject>>> ResolveAccessAsync(RetailCatalogPageViewEntity pageEntity, ImmutableArray<ImmutableArray<IPermissionSubject>> parentAccess)
 				{
-					rootPages.Add(await CreatePageAsync(pageEntity, []).ConfigureAwait(false));
+					if (pageEntity.AccessSet is null)
+					{
+						return parentAccess;
+					}
+
+					ImmutableArray<ImmutableArray<IPermissionSubject>>.Builder access = ImmutableArray.CreateBuilder<ImmutableArray<IPermissionSubject>>(parentAccess.Length + pageEntity.AccessSet.Rules!.Count);
+					access.AddRange(parentAccess);
+
+					string? lastPartition = null;
+					ImmutableArray<IPermissionSubject>.Builder accessSubjects = ImmutableArray.CreateBuilder<IPermissionSubject>();
+					foreach (AccessSetRankRuleEntity accessEntity in pageEntity.AccessSet.Rules)
+					{
+						if (accessEntity.Partition != lastPartition || accessEntity.Operation == AccessSetRankRuleEntity.OperationType.Or)
+						{
+							lastPartition = accessEntity.Partition;
+
+							if (accessSubjects.Count > 0)
+							{
+								access.Add(accessSubjects.DrainToImmutable());
+							}
+						}
+
+						IPermissionSubject? permissionSubject = await ranksDirectory.GetSubjectAsync(accessEntity.RankId).ConfigureAwait(false);
+						if (permissionSubject is null)
+						{
+							throw new InvalidOperationException($"The page {pageEntity.Id} is referring to non-existent rank {accessEntity.RankId}!");
+						}
+
+						accessSubjects.Add(permissionSubject);
+
+						if (accessEntity.Operation == AccessSetRankRuleEntity.OperationType.Or)
+						{
+							access.Add(accessSubjects.DrainToImmutable());
+						}
+					}
+
+					if (accessSubjects.Count > 0)
+					{
+						access.Add(accessSubjects.DrainToImmutable());
+					}
+
+					return access.ToImmutable();
 				}
 
-				return new Cache(currencyRegistry, furnitures, catalogPages, catalogOffers, rootPages.MoveToImmutable());
+				RetailCatalogEntity catalogEntity = this.catalogs.Single();
+
+				ImmutableArray<ICatalogPage>.Builder rootPages = ImmutableArray.CreateBuilder<ICatalogPage>();
+				foreach (RetailCatalogPageViewEntity pageEntity in catalogEntity.Views!)
+				{
+					if (pageEntity.ParentId is null)
+					{
+						ImmutableArray<ImmutableArray<IPermissionSubject>> access = await ResolveAccessAsync(pageEntity, []).ConfigureAwait(false);
+
+						rootPages.Add(await CreatePageAsync(pageEntity, access).ConfigureAwait(false));
+					}
+				}
+
+				return new Cache(currencyRegistry, furnitures, catalogPages, catalogOffers, rootPages.DrainToImmutable());
 			}
 		}
 	}

@@ -4,18 +4,14 @@ using Skylight.Domain.Furniture;
 
 namespace Skylight.Infrastructure.EntityConfigurations.Furniture;
 
-internal class WallFurnitureEntityTypeConfiguration : IEntityTypeConfiguration<WallFurnitureEntity>
+internal class WallFurnitureEntityTypeConfiguration : FurnitureEntityTypeConfiguration<WallFurnitureEntity>
 {
-	public void Configure(EntityTypeBuilder<WallFurnitureEntity> builder)
+	public override void Configure(EntityTypeBuilder<WallFurnitureEntity> builder)
 	{
 		builder.ToTable("furniture_wall");
 
 		builder.HasKey(f => f.Id);
 
-		builder.Property(f => f.InteractionType)
-			.HasDefaultValue("default");
-
-		builder.Property(f => f.InteractionData)
-			.HasDefaultValueSql("'1'::jsonb");
+		base.Configure(builder);
 	}
 }

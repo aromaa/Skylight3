@@ -10,25 +10,14 @@ internal sealed class CatalogOfferEntityTypeConfiguration : IEntityTypeConfigura
 	{
 		builder.ToTable("catalog_offers");
 
-		builder.HasKey(o => o.Id);
+		builder.HasKey(e => e.Id);
 
-		builder.Property(o => o.Name)
-			.HasMaxLength(64);
+		builder.HasOne(e => e.Localization)
+			.WithMany()
+			.HasForeignKey(e => e.LocalizationId);
 
-		builder.Property(o => o.OrderNum)
-			.HasDefaultValue(0)
-			.ValueGeneratedNever();
-
-		builder.Property(o => o.RentTime)
-			.HasDefaultValue(TimeSpan.Zero)
-			.ValueGeneratedNever();
-
-		builder.Property(o => o.HasOffer)
-			.HasDefaultValue(false)
-			.ValueGeneratedNever();
-
-		builder.HasOne(o => o.Page)
-			.WithMany(p => p.Offers)
-			.HasForeignKey(o => o.PageId);
+		builder.HasMany(e => e.Products)
+			.WithOne()
+			.HasForeignKey(e => e.OfferId);
 	}
 }

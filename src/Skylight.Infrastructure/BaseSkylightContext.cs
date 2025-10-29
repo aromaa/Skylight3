@@ -44,11 +44,16 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 	public DbSet<UserWardrobeSlotFigureColorEntity> UserWardrobeSlotFigureColors { get; init; } = null!;
 	public DbSet<UserWardrobeSlotFigureEntity> UserWardrobeSlotFigure { get; init; } = null!;
 
+	public DbSet<CatalogEntity> Catalogs { get; init; } = null!;
+	public DbSet<RetailCatalogEntity> RetailCatalogs { get; init; } = null!;
 	public DbSet<CatalogBadgeProductEntity> CatalogBadgeProducts { get; init; } = null!;
 	public DbSet<CatalogFloorProductEntity> CatalogFloorProducts { get; init; } = null!;
-	public DbSet<CatalogOfferCostEntity> CatalogOffersCost { get; init; } = null!;
+	public DbSet<RetailCatalogOfferCostEntity> CatalogOffersCost { get; init; } = null!;
 	public DbSet<CatalogOfferEntity> CatalogOffers { get; init; } = null!;
-	public DbSet<CatalogPageAccessEntity> CatalogPageAccess { get; init; } = null!;
+	public DbSet<RetailCatalogPageOfferEntity> RetailCatalogOffers { get; init; } = null!;
+	public DbSet<LeaseCatalogPageOfferEntity> LeaseCatalogPageOffers { get; init; } = null!;
+	public DbSet<CatalogOfferLocalizationEntity> CatalogOfferLocalizations { get; init; } = null!;
+	public DbSet<AccessSetRankRuleEntity> CatalogPageAccess { get; init; } = null!;
 	public DbSet<CatalogPageEntity> CatalogPages { get; init; } = null!;
 	public DbSet<CatalogProductEntity> CatalogProducts { get; init; } = null!;
 	public DbSet<CatalogWallProductEntity> CatalogWallProducts { get; init; } = null!;
@@ -116,6 +121,7 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 	{
 		modelBuilder.HasPostgresEnum<PrivateRoomEntryMode>();
 		modelBuilder.HasPostgresEnum<PrivateRoomTradeMode>();
+		modelBuilder.HasPostgresEnum<CatalogPageVisiblity>();
 
 		modelBuilder.ApplyConfiguration(new AchievementEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new AchievementLevelEntityTypeConfiguration());
@@ -124,13 +130,23 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 		modelBuilder.ApplyConfiguration(new UserBadgeEntityTypeConfiguration());
 
 		modelBuilder.ApplyConfiguration(new CatalogBadgeProductEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new CatalogEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogFloorProductEntityTypeConfiguration());
-		modelBuilder.ApplyConfiguration(new CatalogOfferCostEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogOfferEntityTypeConfiguration());
-		modelBuilder.ApplyConfiguration(new CatalogPageAccessEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new CatalogOfferLocalizationEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new CatalogOfferLocalizationEntryEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogPageEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new CatalogPageLocalizationEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new CatalogPageLocalizationEntryEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogProductEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new CatalogWallProductEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new LeaseCatalogEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new LeaseCatalogPageOfferEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new LeaseCatalogPageViewEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new RetailCatalogEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new RetailCatalogOfferCostEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new RetailCatalogPageOfferEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new RetailPageViewEntityTypeConfiguration());
 
 		modelBuilder.ApplyConfiguration(new FigureAssetLibraryEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new FigureAssetPartEntityTypeConfiguration());
@@ -147,6 +163,8 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 		modelBuilder.ApplyConfiguration(new FigureValidationSetTypeRuleExemptRankEntityTypeConfiguration());
 
 		modelBuilder.ApplyConfiguration(new FloorFurnitureEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new FurnitureLocalizationEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new FurnitureLocalizationEntryEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new WallFurnitureEntityTypeConfiguration());
 
 		modelBuilder.ApplyConfiguration(new FloorItemDataEntityTypeConfiguration());
@@ -159,6 +177,9 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 		modelBuilder.ApplyConfiguration(new NavigatorNodeEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new NavigatorPublicRoomNodeEntityTypeConfiguration());
 
+		modelBuilder.ApplyConfiguration(new AccessSetEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new AccessSetRankRuleEntityTypeConfiguration());
+		modelBuilder.ApplyConfiguration(new AccessSetRuleEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new PrincipalDefaultsEntitlementEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new PrincipalDefaultsPermissionEntityTypeConfiguration());
 		modelBuilder.ApplyConfiguration(new PrincipalDefaultsRankEntityTypeConfiguration());

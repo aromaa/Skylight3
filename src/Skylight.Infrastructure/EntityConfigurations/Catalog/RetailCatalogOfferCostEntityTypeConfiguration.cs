@@ -5,16 +5,17 @@ using Skylight.Infrastructure.Extensions;
 
 namespace Skylight.Infrastructure.EntityConfigurations.Catalog;
 
-internal sealed class CatalogOfferCostEntityTypeConfiguration : IEntityTypeConfiguration<CatalogOfferCostEntity>
+internal sealed class RetailCatalogOfferCostEntityTypeConfiguration : IEntityTypeConfiguration<RetailCatalogOfferCostEntity>
 {
-	public void Configure(EntityTypeBuilder<CatalogOfferCostEntity> builder)
+	public void Configure(EntityTypeBuilder<RetailCatalogOfferCostEntity> builder)
 	{
-		builder.ToTable("catalog_offer_costs");
+		builder.ToTable("catalog_page_offers_retail_costs");
 
 		builder.HasKey(c => c.Id);
 
 		builder.Property(c => c.CurrencyType)
-			.AddCheckConstraint(c => $"{c} LIKE '%_:_%'"); // Ambiguous without a valid key
+			.HasMaxLength(64)
+			.AddCheckConstraint(c => $"{c} LIKE '%_:_%'"); // Ambiguous with unspecified namespace
 
 		builder.Property(c => c.CurrencyData)
 			.HasColumnType("jsonb");

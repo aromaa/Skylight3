@@ -15,7 +15,6 @@ internal sealed class BadgeEntityTypeConfiguration : IEntityTypeConfiguration<Ba
 		builder.Property(b => b.Code)
 			.HasMaxLength(64);
 
-		builder.HasIndex(b => b.Code)
-			.IsUnique();
+		builder.HasAlternateKey(b => b.Code);
 	}
 }
