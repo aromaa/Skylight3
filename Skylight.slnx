@@ -1,0 +1,24 @@
+<Solution>
+  <Folder Name="/Plugins/">
+    <Project Path="src/plugins/Skylight.Plugin.WebSockets/Skylight.Plugin.WebSockets.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Skylight.API/Skylight.API.csproj" />
+    <Project Path="src/Skylight.Bootstrap/Skylight.Bootstrap.csproj" />
+    <Project Path="src/Skylight.Domain/Skylight.Domain.csproj" />
+    <Project Path="src/Skylight.Infrastructure/Skylight.Infrastructure.csproj" />
+    <Project Path="src/Skylight.Server.Tests/Skylight.Server.Tests.csproj" />
+    <Project Path="src/Skylight.Server/Skylight.Server.csproj" />
+  </Folder>
+  <Folder Name="/Submodules/" />
+  <Folder Name="/Submodules/Net/">
+    <Project Path="src/submodules/Skylight.Protocol/src/submodules/Net/Net.Buffers/Net.Buffers.csproj" />
+    <Project Path="src/submodules/Skylight.Protocol/src/submodules/Net/Net.Collections/Net.Collections.csproj" />
+    <Project Path="src/submodules/Skylight.Protocol/src/submodules/Net/Net.Communication.SourceGenerator/Net.Communication.SourceGenerator.csproj" />
+    <Project Path="src/submodules/Skylight.Protocol/src/submodules/Net/Net.Communication/Net.Communication.csproj" />
+    <Project Path="src/submodules/Skylight.Protocol/src/submodules/Net/Net/Net.csproj" />
+  </Folder>
+  <Folder Name="/Submodules/Protocol/">
+    <Project Path="src/submodules/Skylight.Protocol/src/Skylight.Protocol/Skylight.Protocol.csproj" />
+  </Folder>
+</Solution>

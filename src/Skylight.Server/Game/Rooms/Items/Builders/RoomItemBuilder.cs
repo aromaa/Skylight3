@@ -20,7 +20,7 @@ internal abstract class RoomItemBuilder<TFurniture, TTarget, TBuilder> : Furnitu
 		return (TBuilder)this;
 	}
 
-	[MemberNotNull(nameof(this.RoomValue))]
+	[MemberNotNull(nameof(RoomValue))]
 	protected override void CheckValid()
 	{
 		base.CheckValid();

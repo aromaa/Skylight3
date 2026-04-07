@@ -202,7 +202,7 @@ internal abstract class RoomMap : IRoomMap
 			{
 				if (this.overflowLayers is null)
 				{
-					return ref this.layers[this.Indexes.IndexOf(z)];
+					return ref this.layers[((ReadOnlySpan<double>)this.Indexes).IndexOf(z)];
 				}
 
 				return ref CollectionsMarshal.GetValueRefOrNullRef(this.overflowLayers, z);
@@ -214,7 +214,7 @@ internal abstract class RoomMap : IRoomMap
 		{
 			if (this.overflowLayers is null)
 			{
-				int index = this.Indexes.IndexOf(z);
+				int index = ((ReadOnlySpan<double>)this.Indexes).IndexOf(z);
 				if (index != -1)
 				{
 					return ref this.layers[index];

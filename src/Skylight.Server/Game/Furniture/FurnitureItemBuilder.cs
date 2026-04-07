@@ -51,7 +51,7 @@ internal abstract class FurnitureItemBuilder<TFurniture, TItemId, TTarget, TBuil
 
 	public abstract TTarget Build();
 
-	[MemberNotNull(nameof(this.FurnitureValue), nameof(this.OwnerValue))]
+	[MemberNotNull(nameof(FurnitureValue), nameof(OwnerValue))]
 	protected virtual void CheckValid()
 	{
 		if (!this.ValidId(this.IdValue))
