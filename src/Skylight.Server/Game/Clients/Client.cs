@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Net.Sockets;
 using Skylight.API.Game.Clients;
+using Skylight.API.Game.Figure;
 using Skylight.API.Game.Purse;
 using Skylight.API.Game.Users;
 using Skylight.API.Registry;
@@ -117,7 +118,7 @@ internal sealed class Client : IClient
 	{
 		IUserInfo info = (IUserInfo)sender!;
 
-		this.SendAsync(new UserChangeOutgoingPacket(-1, info.Avatar.Data.ToString(), info.Avatar.Sex.ToNetwork(), info.Motto, 666));
+		this.SendAsync(new UserChangeOutgoingPacket<IFigureDataContainer>(-1, info.Avatar.Data, info.Avatar.Sex.ToNetwork(), info.Motto, 666));
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using Skylight.API.Game.Figure;
 using Skylight.API.Game.Rooms.Items.Interactions.Wired.Triggers;
 using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Rooms.Units;
@@ -114,14 +115,14 @@ internal abstract class RoomUnitManager : IRoomUnitManager
 		{
 			IUserInfoView view = this.unit.User.Info.Snapshot;
 
-			this.unit.Room.SendAsync(new UsersOutgoingPacket(
+			this.unit.Room.SendAsync(new UsersOutgoingPacket<IFigureDataContainer>(
 			[
-				new RoomUnitData
+				new RoomUnitData<IFigureDataContainer>
 				{
 					IdentifierId = view.Id,
 					Name = view.Username,
 					Motto = view.Motto,
-					Figure = view.Avatar.Data.ToString(),
+					Figure = view.Avatar.Data,
 					RoomUnitId = this.unit.Id,
 					X = this.unit.Position.X,
 					Y = this.unit.Position.Y,
@@ -155,7 +156,7 @@ internal abstract class RoomUnitManager : IRoomUnitManager
 		{
 			IUserInfo info = (IUserInfo)sender!;
 
-			this.unit.Room.SendAsync(new UserChangeOutgoingPacket(this.unit.Id, info.Avatar.Data.ToString(), info.Avatar.Sex.ToNetwork(), info.Motto, 666));
+			this.unit.Room.SendAsync(new UserChangeOutgoingPacket<IFigureDataContainer>(this.unit.Id, info.Avatar.Data, info.Avatar.Sex.ToNetwork(), info.Motto, 666));
 		}
 	}
 }

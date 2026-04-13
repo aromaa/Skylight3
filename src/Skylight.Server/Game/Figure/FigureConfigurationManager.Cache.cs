@@ -1,5 +1,7 @@
 ﻿using System.Collections.Frozen;
+using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using Skylight.API.Game.Figure;
 using Skylight.API.Game.Permissions;
@@ -74,7 +76,7 @@ internal partial class FigureConfigurationManager
 						}
 
 						ref IFigureColorPaletteColor? colorPaletteColor = ref CollectionsMarshal.GetValueRefOrAddDefault(colorPaletteColors, figureColorEntity.Id, out _);
-						colorPaletteColor ??= new FigureColorPaletteColor(figureColorEntity.Id, permissionRequirement);
+						colorPaletteColor ??= new FigureColorPaletteColor(figureColorEntity.Id, Color.FromArgb(figureColorEntity.Color), permissionRequirement);
 
 						colors.Add(figureColorEntity.Id, colorPaletteColor);
 					}
@@ -85,6 +87,8 @@ internal partial class FigureConfigurationManager
 				Dictionary<string, IFigureSetType> figureSetTypes = [];
 				Dictionary<int, IFigureSetType> figureSetTypesById = [];
 				Dictionary<int, IFigureSet> figureSets = [];
+				Dictionary<int, IFigurePart> parts = [];
+				Dictionary<int, IFigurePartType> partTypes = [];
 				foreach (FigureSetTypeEntity figureSetTypeEntity in this.figureTypeSets.Values)
 				{
 					if (!colorPalettes.TryGetValue(figureSetTypeEntity.ColorPaletteId, out IFigureColorPalette? palette))
@@ -117,8 +121,23 @@ internal partial class FigureConfigurationManager
 							_ => throw new UnreachableException(),
 						};
 
+						ImmutableArray<IFigureSetPart>.Builder setParts = ImmutableArray.CreateBuilder<IFigureSetPart>(figureSetEntity.Parts!.Count);
+						foreach (FigureSetPartEntity partEntity in figureSetEntity.Parts)
+						{
+							ref IFigurePart? part = ref CollectionsMarshal.GetValueRefOrAddDefault(parts, partEntity.PartId, out bool exists);
+							if (part is null)
+							{
+								ref IFigurePartType? partType = ref CollectionsMarshal.GetValueRefOrAddDefault(partTypes, partEntity.Part!.PartTypeId, out _);
+								partType ??= new FigurePartType(partEntity.Part!.PartType!.Type);
+
+								part = new FigurePart(partEntity.Part.Key, partType);
+							}
+
+							setParts.Add(new FigureSetPart(part));
+						}
+
 						ref IFigureSet? figureSet = ref CollectionsMarshal.GetValueRefOrAddDefault(figureSets, figureSetEntity.Id, out _);
-						figureSet ??= new FigureSet(figureSetEntity.Id, setType, sex, permissionRequirement, figureSetEntity.Parts!.Max(e => e.ColorIndex));
+						figureSet ??= new FigureSet(figureSetEntity.Id, setType, sex, permissionRequirement, figureSetEntity.Parts!.Max(e => e.ColorIndex), setParts.MoveToImmutable());
 
 						sets.Add(figureSetEntity.Id, figureSet);
 					}

@@ -1,11 +1,14 @@
-﻿using Skylight.API.Game.Figure;
+﻿using System.Drawing;
+using Skylight.API.Game.Figure;
 using Skylight.API.Game.Permissions;
 
 namespace Skylight.Server.Game.Figure;
 
-internal sealed class FigureColorPaletteColor(int id, IPermissionSubject? permissionRequirement) : IFigureColorPaletteColor
+internal sealed class FigureColorPaletteColor(int id, Color color, IPermissionSubject? permissionRequirement) : IFigureColorPaletteColor
 {
 	public int Id { get; } = id;
+
+	public Color Color { get; } = color;
 
 	private readonly IPermissionSubject? permissionRequirement = permissionRequirement;
 

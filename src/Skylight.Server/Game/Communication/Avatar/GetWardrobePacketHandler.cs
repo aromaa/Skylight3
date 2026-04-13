@@ -30,7 +30,7 @@ internal sealed class GetWardrobePacketHandler<T>(IDbContextFactory<SkylightCont
 
 			IFigureConfigurationSnapshot figureConfigurationSnapshot = this.figureConfigurationManager.Current;
 
-			List<WardrobeSlotData> wardrobe = dbContext.UserWardrobeSlots
+			List<WardrobeSlotData<IFigureDataContainer>> wardrobe = dbContext.UserWardrobeSlots
 				.Where(e => e.UserId == user.Id)
 				.Include(e => e.FigureSets!)
 				.ThenInclude(e => e.Colors)
@@ -46,10 +46,10 @@ internal sealed class GetWardrobePacketHandler<T>(IDbContextFactory<SkylightCont
 						}
 					}
 
-					return new WardrobeSlotData(s.SlotId, s.Sex == FigureSexType.Male ? "M" : "F", new FigureDataContainer(figureSets.ToFrozenDictionary()).ToString());
+					return new WardrobeSlotData<IFigureDataContainer>(s.SlotId, s.Sex == FigureSexType.Male ? "M" : "F", new FigureDataContainer(figureSets.ToFrozenDictionary()));
 				}).ToList();
 
-			client.SendAsync(new WardrobeOutgoingPacket(wardrobe));
+			client.SendAsync(new WardrobeOutgoingPacket<IFigureDataContainer>(wardrobe));
 		});
 	}
 }

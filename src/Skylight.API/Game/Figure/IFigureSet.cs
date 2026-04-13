@@ -1,4 +1,5 @@
-﻿using Skylight.API.Game.Permissions;
+﻿using System.Collections.Immutable;
+using Skylight.API.Game.Permissions;
 
 namespace Skylight.API.Game.Figure;
 
@@ -12,4 +13,6 @@ public interface IFigureSet
 	public bool CanWear(IPermissionSubject subject);
 
 	public int ColorLayers { get; }
+
+	public ImmutableArray<IFigureSetPart> Parts { get; }
 }

@@ -1,4 +1,5 @@
 ﻿using Net.Communication.Attributes;
+using Skylight.API.Game.Figure;
 using Skylight.API.Game.Users;
 using Skylight.Protocol.Packets.Data.Users;
 using Skylight.Protocol.Packets.Incoming.Users;
@@ -27,7 +28,7 @@ internal sealed partial class GetExtendedProfilePacketHandler<T>(IUserManager us
 
 			IUserInfoView info = profile.Info.Snapshot;
 
-			client.SendAsync(new ExtendedProfileOutgoingPacket(new ExtendedProfileData(userId, info.Username, info.Avatar.Data.ToString(), info.Motto, "08-03-2001", 666, 0, false, false, true, [], (int)(DateTime.Now - info.LastOnline).TotalSeconds, true, false, 69, 8, 420, true, false)));
+			client.SendAsync(new ExtendedProfileOutgoingPacket<IFigureDataContainer>(new ExtendedProfileData<IFigureDataContainer>(userId, info.Username, info.Avatar.Data, info.Motto, "08-03-2001", 666, 0, false, false, true, [], (int)(DateTime.Now - info.LastOnline).TotalSeconds, true, false, 69, 8, 420, true, false)));
 		});
 	}
 }

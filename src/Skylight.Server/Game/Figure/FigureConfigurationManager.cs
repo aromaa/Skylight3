@@ -32,7 +32,9 @@ internal sealed partial class FigureConfigurationManager(IDbContextFactory<Skyli
 			await foreach (FigureSetTypeEntity figureSetTypeEntity in dbContext.FigureSetTypes
 				.AsSplitQuery()
 				.Include(s => s.Sets!)
-				.ThenInclude(s => s.Parts)
+				.ThenInclude(s => s.Parts!)
+				.ThenInclude(s => s.Part!)
+				.ThenInclude(s => s.PartType)
 				.AsAsyncEnumerable()
 				.WithCancellation(cancellationToken)
 				.ConfigureAwait(false))

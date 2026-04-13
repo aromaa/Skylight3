@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Net.Communication.Attributes;
 using Skylight.API.DependencyInjection;
 using Skylight.API.Game.Clients;
+using Skylight.API.Game.Figure;
 using Skylight.API.Game.Users;
 using Skylight.API.Game.Users.Authentication;
 using Skylight.Protocol.Packets.Incoming.Handshake;
@@ -70,11 +71,11 @@ internal sealed class InfoRetrievePacketHandler<T>(IUserAuthentication userAuthe
 	{
 		IUserInfoView info = user.Info.Snapshot;
 
-		user.SendAsync(new UserObjectOutgoingPacket
+		user.SendAsync(new UserObjectOutgoingPacket<IFigureDataContainer>
 		{
 			UserId = info.Id,
 			Username = info.Username,
-			Figure = info.Avatar.Data.ToString(),
+			Figure = info.Avatar.Data,
 			Gender = info.Avatar.Sex.ToNetwork(),
 			CustomData = string.Empty,
 			Tickets = 0,

@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using CommunityToolkit.HighPerformance;
 using Net.Collections;
+using Skylight.API.Game.Figure;
 using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
@@ -105,17 +106,17 @@ internal abstract class Room : IRoom
 		user.SendAsync(new ObjectsOutgoingPacket<RoomItemId>(objects, Array.Empty<(int, string)>()));
 		user.SendAsync(new ItemsOutgoingPacket<RoomItemId>(items, Array.Empty<(int, string)>()));
 
-		List<RoomUnitData> units = [];
+		List<RoomUnitData<IFigureDataContainer>> units = [];
 		foreach (IUserRoomUnit unit in this.UnitManager.Units)
 		{
 			IUserInfoView info = unit.User.Info.Snapshot;
 
-			units.Add(new RoomUnitData
+			units.Add(new RoomUnitData<IFigureDataContainer>
 			{
 				IdentifierId = info.Id,
 				Name = info.Username,
 				Motto = info.Motto,
-				Figure = info.Avatar.Data.ToString(),
+				Figure = info.Avatar.Data,
 				RoomUnitId = unit.Id,
 				X = unit.Position.X,
 				Y = unit.Position.Y,
@@ -132,7 +133,7 @@ internal abstract class Room : IRoom
 			});
 		}
 
-		user.SendAsync(new UsersOutgoingPacket(units));
+		user.SendAsync(new UsersOutgoingPacket<IFigureDataContainer>(units));
 
 		if (this.Info is IPrivateRoomInfo privateRoomInfo)
 		{
