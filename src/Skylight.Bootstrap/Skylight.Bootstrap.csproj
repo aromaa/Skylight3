@@ -28,11 +28,10 @@
 	</ItemGroup>
 
 	<Target Name="ResolveProtocolReferences"
-			Condition="'@(ProtocolReference)' != ''"
 			Returns="@(ResolvedProtocolReference)">
 
 		<ItemGroup>
-			<ResolvedProtocolReference Include="..\submodules\Skylight.Protocol\src\Skylight.Protocol.X\Skylight.Protocol.%(ProtocolReference.Identity)\packets.json">
+			<ResolvedProtocolReference Include="..\submodules\Skylight.Protocol\src\Skylight.Protocol.X\Skylight.Protocol.%(ProtocolReference.Identity)\packets.json" Condition="'%(ProtocolReference.Identity)' != ''">
 				<ProtocolName>%(ProtocolReference.Identity)</ProtocolName>
 				<ProjectPath>..\submodules\Skylight.Protocol\src\Skylight.Protocol.X\Skylight.Protocol.%(ProtocolReference.Identity)\Skylight.Protocol.%(ProtocolReference.Identity).csproj</ProjectPath>
 				<TouchCachePath>$(IntermediateOutputPath)Skylight.Protocol.%(ProtocolReference.Identity).cache</TouchCachePath>
@@ -67,6 +66,7 @@
 
 	<Target Name="RebuildBuildProtocols"
 			AfterTargets="BeforeCompile"
+			Condition="'@(ResolvedProtocolReference)' != ''"
 			Inputs="$(IntermediateOutputPath)Skylight.Protocols.LastRebuild.cache"
 			Outputs="@(CachedProtocolDll)">
 
@@ -90,6 +90,7 @@
 
 	<Target Name="IncrementalBuildProtocols"
 			AfterTargets="RebuildBuildProtocols"
+			Condition="'@(ResolvedProtocolReference)' != ''"
 			Inputs="@(ResolvedProtocolReference)"
 			Outputs="@(ResolvedProtocolReference->'%(TouchCachePath)')">
 
@@ -110,7 +111,7 @@
 			Inputs="$(IntermediateOutputPath)Skylight.Protocols.Selected.cache;@(ResolvedProtocolReference->'%(DllLocationCachePath)')"
 			Outputs="$(IntermediateOutputPath)Skylight.Protocols.Dlls.cache">
 
-		<ReadLinesFromFile File="%(ResolvedProtocolReference.DllLocationCachePath)">
+		<ReadLinesFromFile File="%(ResolvedProtocolReference.DllLocationCachePath)" Condition="'%(ResolvedProtocolReference.DllLocationCachePath)' != ''">
 			<Output TaskParameter="Lines" ItemName="ProtocolDll" />
 		</ReadLinesFromFile>
 
