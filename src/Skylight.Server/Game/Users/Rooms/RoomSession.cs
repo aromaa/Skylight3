@@ -9,6 +9,8 @@ using Skylight.Protocol.Packets.Outgoing.RoomSettings;
 
 namespace Skylight.Server.Game.Users.Rooms;
 
+// TODO: This needs some clean up after all the revisions
+// have their room entry sequences examined.
 internal sealed partial class RoomSession : IRoomSession
 {
 	private readonly IRoomManager roomManager;
@@ -17,7 +19,8 @@ internal sealed partial class RoomSession : IRoomSession
 	private readonly Lock stateLock;
 	private volatile SessionState state;
 
-	private ICacheReference<IRoom>? room;
+	private ICacheReference<IRoom>? roomReference;
+	private IRoom? room;
 
 	public IUser User { get; }
 
@@ -42,7 +45,7 @@ internal sealed partial class RoomSession : IRoomSession
 		this.WorldId = worldId;
 	}
 
-	public IRoom? Room => this.room?.Value;
+	public IRoom? Room => this.room;
 
 	internal SessionState State => this.state;
 
@@ -112,14 +115,28 @@ internal sealed partial class RoomSession : IRoomSession
 			}
 
 			this.state = SessionState.Ready;
-			this.room = roomReference;
+			this.roomReference = roomReference;
+			this.room = roomReference.Value;
 
-			IRoom room = roomReference.Value;
-
-			this.User.SendAsync(new RoomReadyOutgoingPacket(room.Map.Layout.Id, room.Info.Id));
-			this.User.SendAsync(new YouAreControllerOutgoingPacket(room.Info.Id, 4)); //0 = No rights, 1 = Basic rights, 2 = Can place, 3 = Can pickup, 4 = Can remove rights, 5 = IDK
-			this.User.SendAsync(new YouAreOwnerOutgoingPacket(room.Info.Id));
+			this.User.SendAsync(new RoomReadyOutgoingPacket(this.room.Map.Layout.Id, this.room.Info.Id));
+			this.User.SendAsync(new YouAreControllerOutgoingPacket(this.room.Info.Id, 4)); //0 = No rights, 1 = Basic rights, 2 = Can place, 3 = Can pickup, 4 = Can remove rights, 5 = IDK
+			this.User.SendAsync(new YouAreOwnerOutgoingPacket(this.room.Info.Id));
 		}
+	}
+
+	public void TryEnterRoom()
+	{
+		lock (this.stateLock)
+		{
+			if (this.state != SessionState.Ready)
+			{
+				return;
+			}
+
+			this.state = SessionState.EnterRoom;
+		}
+
+		this.EnterRoomCore();
 	}
 
 	public void EnterRoom()
@@ -132,7 +149,12 @@ internal sealed partial class RoomSession : IRoomSession
 			}
 		}
 
-		this.Room!.PostTask(room =>
+		this.EnterRoomCore();
+	}
+
+	private void EnterRoomCore()
+	{
+		this.room!.PostTask(room =>
 		{
 			lock (this.stateLock)
 			{
@@ -159,11 +181,12 @@ internal sealed partial class RoomSession : IRoomSession
 			(SessionState state, this.state) = (this.state, SessionState.Disconnected);
 			if (state != SessionState.InRoom)
 			{
-				this.room?.Dispose();
+				this.roomReference?.Dispose();
+
 				return;
 			}
 
-			this.Room!.PostTask(room =>
+			this.room!.PostTask(room =>
 			{
 				room.Exit(this.User);
 
@@ -171,10 +194,10 @@ internal sealed partial class RoomSession : IRoomSession
 				{
 					room.UnitManager.RemoveUnit(unit);
 				}
+
+				this.roomReference!.Dispose();
 			});
 		}
-
-		this.room?.Dispose();
 	}
 
 	internal enum SessionState : uint

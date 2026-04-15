@@ -16,6 +16,7 @@ public interface IRoomSession
 
 	public ValueTask OpenRoomAsync();
 	public void EnterRoom();
+	public void TryEnterRoom();
 
 	public bool Close();
 }

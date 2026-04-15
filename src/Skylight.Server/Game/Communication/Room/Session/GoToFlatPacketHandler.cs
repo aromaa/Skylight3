@@ -8,8 +8,8 @@ using Skylight.Protocol.Packets.Manager;
 namespace Skylight.Server.Game.Communication.Room.Session;
 
 [PacketManagerRegister(typeof(IGamePacketManager))]
-internal sealed partial class OpenFlatConnectionPacketHandler<T> : ClientPacketHandler<T>
-	where T : IOpenFlatConnectionIncomingPacket
+internal sealed class GoToFlatPacketHandler<T> : ClientPacketHandler<T>
+	where T : IGoToFlatIncomingPacket
 {
 	internal override void Handle(IClient client, in T packet)
 	{
@@ -42,11 +42,16 @@ internal sealed partial class OpenFlatConnectionPacketHandler<T> : ClientPacketH
 
 	private void OpenSession(IUser user, int roomId)
 	{
-		if (!user.TryOpenRoomSession(0, roomId, out IRoomSession session))
-		{
-			return;
-		}
+		IRoomSession session = user.GetOrOpenRoomSession(0, roomId, out bool opened);
 
-		user.Client.ScheduleTask(async _ => await session.OpenRoomAsync().ConfigureAwait(false));
+		user.Client.ScheduleTask(async _ =>
+		{
+			if (opened)
+			{
+				await session.OpenRoomAsync().ConfigureAwait(false);
+			}
+
+			session.TryEnterRoom();
+		});
 	}
 }

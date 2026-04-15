@@ -57,6 +57,7 @@ internal sealed class FigureDataConverter : IFigureDataConverter<IFigureDataCont
 		}
 
 		// Client will crash if these are not present
+		AddRequired("sd", 1); // Shadow
 		AddRequired("bd");
 		AddRequired("rh");
 		AddRequired("sh");
@@ -72,7 +73,7 @@ internal sealed class FigureDataConverter : IFigureDataConverter<IFigureDataCont
 
 		return stringBuilder.ToString();
 
-		void AddRequired(string key)
+		void AddRequired(string key, int value = 0)
 		{
 			if (!parts.Contains(key))
 			{
@@ -83,7 +84,7 @@ internal sealed class FigureDataConverter : IFigureDataConverter<IFigureDataCont
 
 				stringBuilder.Append(key);
 				stringBuilder.Append('=');
-				stringBuilder.Append(0);
+				stringBuilder.Append($"{value:000}");
 			}
 		}
 	}

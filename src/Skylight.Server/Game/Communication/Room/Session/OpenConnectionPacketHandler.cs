@@ -12,7 +12,7 @@ internal sealed class OpenConnectionPacketHandler<T> : UserPacketHandler<T>
 {
 	internal override void Handle(IUser user, in T packet)
 	{
-		if (!user.TryOpenRoomSession(packet.InstanceType, packet.InstanceId, out IRoomSession? session))
+		if (!user.TryOpenRoomSession(packet.InstanceType, packet.InstanceId, out IRoomSession session))
 		{
 			return;
 		}

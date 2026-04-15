@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Skylight.API.Game.Clients;
+﻿using Skylight.API.Game.Clients;
 using Skylight.API.Game.Inventory;
 using Skylight.API.Game.Permissions;
 using Skylight.API.Game.Purse;
@@ -23,11 +22,20 @@ public interface IUser : IPacketSender
 	public IInventory Inventory { get; }
 	public IRoomSession? RoomSession { get; }
 
+	public IRoomSession OpenRoomSession(int instanceType, int instanceId);
 	public IRoomSession OpenRoomSession(int instanceType, int instanceId, Func<IRoom, IUser, IUserRoomUnit> unitFactory);
+
+	public IRoomSession OpenRoomSession(int instanceType, int instanceId, int worldId);
 	public IRoomSession OpenRoomSession(int instanceType, int instanceId, int worldId, Func<IRoom, IUser, IUserRoomUnit> unitFactory);
 
-	public bool TryOpenRoomSession(int instanceType, int instanceId, [NotNullWhen(true)] out IRoomSession? session);
-	public bool TryOpenRoomSession(int instanceType, int instanceId, int worldId, [NotNullWhen(true)] out IRoomSession? session);
+	public bool TryOpenRoomSession(int instanceType, int instanceId, out IRoomSession session);
+	public bool TryOpenRoomSession(int instanceType, int instanceId, int worldId, out IRoomSession session);
+
+	public IRoomSession GetOrOpenRoomSession(int instanceType, int instanceId);
+	public IRoomSession GetOrOpenRoomSession(int instanceType, int instanceId, out bool opened);
+
+	public IRoomSession GetOrOpenRoomSession(int instanceType, int instanceId, int worldId);
+	public IRoomSession GetOrOpenRoomSession(int instanceType, int instanceId, int worldId, out bool opened);
 
 	public bool CloseRoomSession(IRoomSession session);
 

@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using Skylight.API.Game.Clients;
 using Skylight.API.Game.Inventory;
 using Skylight.API.Game.Permissions;
@@ -62,7 +61,9 @@ internal sealed class User : IUser
 		where T : IGameOutgoingPacket
 		=> this.Client.SendAsync(packet);
 
+	public IRoomSession OpenRoomSession(int instanceType, int instanceId) => this.OpenRoomSession(instanceType, instanceId, 0);
 	public IRoomSession OpenRoomSession(int instanceType, int instanceId, Func<IRoom, IUser, IUserRoomUnit> unitFactory) => this.OpenRoomSession(instanceType, instanceId, 0, unitFactory);
+	public IRoomSession OpenRoomSession(int instanceType, int instanceId, int worldId) => this.OpenRoomSession(instanceType, instanceId, worldId, static (room, user) => room.UnitManager.CreateUnit(user));
 
 	public IRoomSession OpenRoomSession(int instanceType, int instanceId, int worldId, Func<IRoom, IUser, IUserRoomUnit> unitFactory)
 	{
@@ -74,21 +75,37 @@ internal sealed class User : IUser
 		return newSession;
 	}
 
-	public bool TryOpenRoomSession(int instanceType, int instanceId, [NotNullWhen(true)] out IRoomSession? session) => this.TryOpenRoomSession(instanceType, instanceId, 0, out session);
+	public bool TryOpenRoomSession(int instanceType, int instanceId, out IRoomSession session) => this.TryOpenRoomSession(instanceType, instanceId, 0, out session);
 
-	public bool TryOpenRoomSession(int instanceType, int instanceId, int worldId, [NotNullWhen(true)] out IRoomSession? session)
+	public bool TryOpenRoomSession(int instanceType, int instanceId, int worldId, out IRoomSession session)
 	{
 		if (this.roomSession is { State: <= Rooms.RoomSession.SessionState.Ready } roomSession)
 		{
 			if (roomSession.InstanceType == instanceType && roomSession.InstanceId == instanceId)
 			{
-				session = null;
+				session = roomSession;
 				return false;
 			}
 		}
 
-		session = this.OpenRoomSession(instanceType, instanceId, worldId, static (room, user) => room.UnitManager.CreateUnit(user));
+		session = this.OpenRoomSession(instanceType, instanceId, worldId);
 		return true;
+	}
+
+	public IRoomSession GetOrOpenRoomSession(int instanceType, int instanceId) => this.GetOrOpenRoomSession(instanceType, instanceId, out bool _);
+	public IRoomSession GetOrOpenRoomSession(int instanceType, int instanceId, out bool created) => this.GetOrOpenRoomSession(instanceType, instanceId, 0, out created);
+	public IRoomSession GetOrOpenRoomSession(int instanceType, int instanceId, int worldId) => this.GetOrOpenRoomSession(instanceType, instanceId, worldId, out bool _);
+
+	public IRoomSession GetOrOpenRoomSession(int instanceType, int instanceId, int worldId, out bool created)
+	{
+		if (this.roomSession is { } session && session.InstanceType == instanceType && session.InstanceId == instanceId)
+		{
+			created = false;
+			return session;
+		}
+
+		created = true;
+		return this.OpenRoomSession(instanceType, instanceId, worldId);
 	}
 
 	public bool CloseRoomSession(IRoomSession session)
