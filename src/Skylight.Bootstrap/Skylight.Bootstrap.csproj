@@ -24,6 +24,7 @@
 		<ProtocolReference Include="RELEASE4" />
 		<ProtocolReference Include="RELEASE5" />
 		<ProtocolReference Include="RELEASE6" />
+		<ProtocolReference Include="RELEASE7" />
 		<ProtocolReference Include="RELEASE9" />
 		<ProtocolReference Include="RELEASE39-200910220522-22363" />
 		<ProtocolReference Include="RELEASE63-201211141113-913728051" />
