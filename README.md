@@ -80,9 +80,9 @@ All of the configuration nobs:
 	- ConnectionString - The connection string for Redis.
 
 ## RC4 encryption
-- RELEASE5:
+- RELEASE4:
 	- CryptoKey: bLPYQrOR6XJyXTXYb8r3n2v/ojU=
-- RELEASE9:
+- RELEASE5:
 	- CryptoKey: LDKRLDtvBVJS8x1I69gfmBYsy1s=
 - RELEASE39-200910220522-22363:
 	- CryptoPrime: 71312178008343951072484563026069418184188158030081109761458956729410724992257
