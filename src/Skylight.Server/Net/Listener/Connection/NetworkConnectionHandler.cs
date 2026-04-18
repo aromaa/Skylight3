@@ -55,17 +55,20 @@ internal sealed class NetworkConnectionHandler(IServiceProvider serviceProvider,
 		}
 		else
 		{
-			if (packetManager.Capabilities.Contains("PACKET_LENGTH_STRING_PREFIXED"))
+			if (packetManager.Capabilities.Contains("STRING_PACKET_ID"))
 			{
-				socket.Pipeline.AddHandlerFirst(new FusePacketHeaderHandler<string>(packetManagerGetter, cryptoKey!));
-			}
-			else if (packetManager.Capabilities.Contains("PACKET_LENGTH_BASE128_PREFIXED"))
-			{
-				socket.Pipeline.AddHandlerFirst(new FusePacketHeaderHandler<int>(packetManagerGetter, cryptoKey!));
+				if (packetManager.Capabilities.Contains("PACKET_LENGTH_STRING_PREFIXED"))
+				{
+					socket.Pipeline.AddHandlerFirst(new FusePacketHeaderHandler<string>(packetManagerGetter, cryptoKey!));
+				}
+				else if (packetManager.Capabilities.Contains("PACKET_LENGTH_BASE128_PREFIXED"))
+				{
+					socket.Pipeline.AddHandlerFirst(new FusePacketHeaderHandler<int>(packetManagerGetter, cryptoKey!));
+				}
 			}
 			else
 			{
-				socket.Pipeline.AddHandlerFirst(new Base64PacketHeaderHandler(this.serviceProvider.GetRequiredService<ILogger<Base64PacketHeaderHandler>>(), packetManagerGetter, BigInteger.Parse(cryptoPrime ?? "0"), BigInteger.Parse(cryptoGenerator ?? "0"), cryptoKey!, cryptoPremix!));
+				socket.Pipeline.AddHandlerFirst(new Base64PacketHeaderHandler(this.serviceProvider.GetRequiredService<ILogger<Base64PacketHeaderHandler>>(), packetManagerGetter, packetManager.Capabilities.Contains("PACKET_LENGTH_BASE128_PREFIXED"), BigInteger.Parse(cryptoPrime ?? "0"), BigInteger.Parse(cryptoGenerator ?? "0"), cryptoKey!, cryptoPremix!));
 			}
 
 			Task.Run(async () =>

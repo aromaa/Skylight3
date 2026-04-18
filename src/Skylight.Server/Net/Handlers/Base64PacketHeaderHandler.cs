@@ -35,15 +35,19 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 	private int incomingPaddingDecoder;
 	private int outgoingPaddingEncoder;
 
+	private bool base128;
+
 	internal BigInteger CryptoPrime { get; }
 	internal BigInteger CryptoGenerator { get; }
 	internal string CryptoKey { get; }
 	internal string CryptoPremix { get; }
 
-	internal Base64PacketHeaderHandler(ILogger<Base64PacketHeaderHandler> logger, Func<IGamePacketManager> packetManager, BigInteger cryptoPrime, BigInteger cryptoGenerator, string cryptoKey, string cryptoPremix)
+	internal Base64PacketHeaderHandler(ILogger<Base64PacketHeaderHandler> logger, Func<IGamePacketManager> packetManager, bool base128, BigInteger cryptoPrime, BigInteger cryptoGenerator, string cryptoKey, string cryptoPremix)
 	{
 		this.logger = logger;
 		this.packetManager = () => (PacketManager<uint>)packetManager();
+
+		this.base128 = base128;
 
 		this.CryptoPrime = cryptoPrime;
 		this.CryptoGenerator = cryptoGenerator;
@@ -70,7 +74,14 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 					headerReader.Skip(1); //Random, nice one
 				}
 
-				headerReader.TryReadBase64UInt32(3, out this.currentPacketLength);
+				if (!this.base128)
+				{
+					headerReader.TryReadBase64UInt32(3, out this.currentPacketLength);
+				}
+				else
+				{
+					headerReader.TryReadBase128UInt32(3, out this.currentPacketLength);
+				}
 
 				if (this.incomingHeaderDecoder == this.incomingMessageDecoder)
 				{
@@ -82,10 +93,21 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 		}
 		else
 		{
-			//We haven't read the next packet length, wait for it
-			if (this.currentPacketLength == 0 && !reader.TryReadBase64UInt32(3, out this.currentPacketLength))
+			if (!this.base128)
 			{
-				return;
+				//We haven't read the next packet length, wait for it
+				if (this.currentPacketLength == 0 && !reader.TryReadBase64UInt32(3, out this.currentPacketLength))
+				{
+					return;
+				}
+			}
+			else
+			{
+				//We haven't read the next packet length, wait for it
+				if (this.currentPacketLength == 0 && !reader.TryReadBase128UInt32(3, out this.currentPacketLength))
+				{
+					return;
+				}
 			}
 		}
 
@@ -114,7 +136,9 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 			}
 		}
 
-		uint header = reader.ReadBase64UInt32(2);
+		uint header = this.base128
+			? reader.ReadBase128UInt32(2)
+			: reader.ReadBase64UInt32(2);
 
 		if (this.packetManager().TryGetConsumer(header, out IIncomingPacketConsumer? consumer))
 		{
@@ -220,7 +244,14 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 
 	internal void SetSecretKey()
 	{
-		this.incomingHeaderDecoder = this.incomingMessageDecoder = new RC4Hex(this.CryptoKey);
+		if (this.base128)
+		{
+			this.incomingHeaderDecoder = this.incomingMessageDecoder = new RC4Hex(this.CryptoKey);
+		}
+		else
+		{
+			this.incomingHeaderDecoder = this.incomingMessageDecoder = new RC4Hex(this.CryptoKey);
+		}
 	}
 
 	internal void SetToken(BigInteger integer)

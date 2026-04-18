@@ -21,6 +21,7 @@
 		<ProtocolReference Include="MOBILES-DISCO" />
 		<ProtocolReference Include="RELEASE1" />
 		<ProtocolReference Include="RELEASE3" />
+		<ProtocolReference Include="RELEASE4" />
 		<ProtocolReference Include="RELEASE5" />
 		<ProtocolReference Include="RELEASE9" />
 		<ProtocolReference Include="RELEASE39-200910220522-22363" />
