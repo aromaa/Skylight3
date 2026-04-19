@@ -30,6 +30,7 @@
 		<ProtocolReference Include="RELEASE10" />
 		<ProtocolReference Include="RELEASE11" />
 		<ProtocolReference Include="RELEASE12" />
+		<ProtocolReference Include="RELEASE13" />
 		<ProtocolReference Include="RELEASE39-200910220522-22363" />
 		<ProtocolReference Include="RELEASE63-201211141113-913728051" />
 		<ProtocolReference Include="WIN63-202111081545-75921380" />

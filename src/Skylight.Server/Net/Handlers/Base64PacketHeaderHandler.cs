@@ -37,17 +37,20 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 
 	private bool base128;
 
+	public bool RC44Hex { get; }
+
 	internal BigInteger CryptoPrime { get; }
 	internal BigInteger CryptoGenerator { get; }
 	internal string CryptoKey { get; }
 	internal string CryptoPremix { get; }
 
-	internal Base64PacketHeaderHandler(ILogger<Base64PacketHeaderHandler> logger, Func<IGamePacketManager> packetManager, bool base128, BigInteger cryptoPrime, BigInteger cryptoGenerator, string cryptoKey, string cryptoPremix)
+	internal Base64PacketHeaderHandler(ILogger<Base64PacketHeaderHandler> logger, Func<IGamePacketManager> packetManager, bool base128, bool rc4Hex, BigInteger cryptoPrime, BigInteger cryptoGenerator, string cryptoKey, string cryptoPremix)
 	{
 		this.logger = logger;
 		this.packetManager = () => (PacketManager<uint>)packetManager();
 
 		this.base128 = base128;
+		this.RC44Hex = rc4Hex;
 
 		this.CryptoPrime = cryptoPrime;
 		this.CryptoGenerator = cryptoGenerator;
@@ -231,8 +234,18 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 	{
 		byte[] rc4Table = sharedKey.ToByteArray(isUnsigned: true, isBigEndian: true);
 
-		this.incomingHeaderDecoder = new RC4Base64(rc4Table, this.CryptoKey, this.CryptoPremix);
-		this.incomingMessageDecoder = new RC4Base64(rc4Table, this.CryptoKey, this.CryptoPremix);
+		if (this.RC44Hex)
+		{
+			this.incomingMessageDecoder = this.incomingHeaderDecoder = new RC4Hex(rc4Table, this.CryptoPremix);
+
+			// TODO: Enable later
+			incomingOnly = true;
+		}
+		else
+		{
+			this.incomingHeaderDecoder = new RC4Base64(rc4Table, this.CryptoKey, this.CryptoPremix);
+			this.incomingMessageDecoder = new RC4Base64(rc4Table, this.CryptoKey, this.CryptoPremix);
+		}
 
 		if (!incomingOnly)
 		{
@@ -246,11 +259,11 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 	{
 		if (this.base128)
 		{
-			this.incomingHeaderDecoder = this.incomingMessageDecoder = new RC4Hex(this.CryptoKey);
+			this.incomingHeaderDecoder = this.incomingMessageDecoder = new RC4Hex(this.CryptoKey, this.CryptoPremix);
 		}
 		else
 		{
-			this.incomingHeaderDecoder = this.incomingMessageDecoder = new RC4Hex(this.CryptoKey);
+			this.incomingHeaderDecoder = this.incomingMessageDecoder = new RC4Hex(this.CryptoKey, this.CryptoPremix);
 		}
 	}
 

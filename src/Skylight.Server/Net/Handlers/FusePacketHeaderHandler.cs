@@ -104,7 +104,7 @@ internal sealed class FusePacketHeaderHandler<TLength> : IncomingBytesHandler, I
 
 	internal void SetSecretKey()
 	{
-		this.incomingMessageDecoder = new RC4Hex(this.cryptoKey);
+		this.incomingMessageDecoder = new RC4Hex(this.cryptoKey, string.Empty);
 	}
 
 	private void Read(IPipelineHandlerContext context, string header, ref PacketReader reader)

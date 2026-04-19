@@ -86,6 +86,9 @@ All of the configuration nobs:
 	- CryptoKey: LDKRLDtvBVJS8x1I69gfmBYsy1s=
 - RELEASE9:
 	- CryptoKey: FC3eYws210fPqnhzrd7GGjwElw4
+- RELEASE13:
+	- CryptoKey: zDVKbT8Eo7bSuhOioHOLU+uxDg8=
+	- CryptoPremix: eb11nmhdwbn733c2xjv1qln3ukpe0hvce0ylr02s12sv96rus2ohexr9cp8rufbmb1mdb732j1l3kehc0l0s2v6u2hx9prfmu
 - RELEASE39-200910220522-22363:
 	- CryptoPrime: 71312178008343951072484563026069418184188158030081109761458956729410724992257
 	- CryptoGenerator: 770272

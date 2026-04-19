@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Globalization;
+using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 using Net.Communication.Attributes;
@@ -33,12 +34,12 @@ internal sealed class CompleteDiffieHandshakePacketHandler<T> : ClientPacketHand
 				BigInteger privateKey = new(privateKeyBytes, isUnsigned: true);
 				BigInteger serverPublicKey = BigInteger.ModPow(handler.CryptoGenerator, privateKey, handler.CryptoPrime);
 
-				BigInteger clientPublicKey = BigInteger.Parse(Encoding.ASCII.GetString(packet.PublicKey));
+				BigInteger clientPublicKey = BigInteger.Parse(Encoding.ASCII.GetString(packet.PublicKey), handler.RC44Hex ? NumberStyles.HexNumber : NumberStyles.Integer);
 				BigInteger sharedKey = BigInteger.ModPow(clientPublicKey, privateKey, handler.CryptoPrime);
 
 				handler.EnableEncryption(sharedKey, incomingOnly: false);
 
-				client.SendAsync(new CompleteDiffieHandshakeOutgoingPacket(serverPublicKey.ToString(), false));
+				client.SendAsync(new CompleteDiffieHandshakeOutgoingPacket(serverPublicKey.ToString(handler.RC44Hex ? "x" : null), false));
 
 				return;
 			}
