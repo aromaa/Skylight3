@@ -168,7 +168,7 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 
 			if (this.decodePremix is not null)
 			{
-				messageDecoder.PremixTable(this.decodePremix, 10);
+				messageDecoder.PremixTable(this.decodePremix, this.CryptoKey is null ? 10 : 1);
 			}
 		}
 	}
@@ -247,7 +247,7 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 
 		if (this.RC44Hex)
 		{
-			this.incomingMessageDecoder = this.incomingHeaderDecoder = new RC4Hex(rc4Table, this.CryptoPremix);
+			this.incomingMessageDecoder = this.incomingHeaderDecoder = new RC4Hex(rc4Table, this.CryptoKey, this.CryptoPremix);
 
 			// TODO: Enable later
 			incomingOnly = true;
