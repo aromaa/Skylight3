@@ -131,7 +131,7 @@ internal sealed class RC4Base64 : RC4
 		return default;
 	}
 
-	private void PremixTable(string data, int count)
+	internal override void PremixTable(string data, int count)
 	{
 		for (int a = 0; a < count; a++)
 		{

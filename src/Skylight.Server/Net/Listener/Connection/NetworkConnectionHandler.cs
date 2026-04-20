@@ -26,7 +26,7 @@ internal sealed class NetworkConnectionHandler(IServiceProvider serviceProvider,
 	private readonly IClientManager clientManager = clientManager;
 	private readonly PacketManagerCache packetManagerCache = packetManagerCache;
 
-	public void Accept(ISocket socket, Encoding encoding, string revision, string? cryptoPrime = null, string? cryptoGenerator = null, string? cryptoKey = null, string? cryptoPremix = null)
+	public void Accept(ISocket socket, Encoding encoding, string revision, string? cryptoPrime = null, string? cryptoGenerator = null, string? cryptoKey = null, string? cryptoPremix = null, string? decodePremix = null)
 	{
 		if (!this.packetManagerCache.TryCreatePacketManager(revision, out Func<IGamePacketManager>? packetManagerGetter))
 		{
@@ -68,7 +68,7 @@ internal sealed class NetworkConnectionHandler(IServiceProvider serviceProvider,
 			}
 			else
 			{
-				socket.Pipeline.AddHandlerFirst(new Base64PacketHeaderHandler(this.serviceProvider.GetRequiredService<ILogger<Base64PacketHeaderHandler>>(), packetManagerGetter, packetManager.Capabilities.Contains("PACKET_LENGTH_BASE128_PREFIXED"), packetManager.Capabilities.Contains("RC4_HEX"), BigInteger.Parse(cryptoPrime ?? "0"), BigInteger.Parse(cryptoGenerator ?? "0"), cryptoKey!, cryptoPremix!));
+				socket.Pipeline.AddHandlerFirst(new Base64PacketHeaderHandler(this.serviceProvider.GetRequiredService<ILogger<Base64PacketHeaderHandler>>(), packetManagerGetter, packetManager.Capabilities.Contains("PACKET_LENGTH_BASE128_PREFIXED"), packetManager.Capabilities.Contains("RC4_HEX"), BigInteger.Parse(cryptoPrime ?? "0"), BigInteger.Parse(cryptoGenerator ?? "0"), cryptoKey!, cryptoPremix!, decodePremix));
 			}
 
 			Task.Run(async () =>

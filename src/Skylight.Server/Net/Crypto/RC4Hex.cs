@@ -75,7 +75,7 @@ internal sealed class RC4Hex : RC4
 
 	internal override void Write(ReadOnlySpan<byte> data, ref PacketWriter writer) => throw new NotImplementedException();
 
-	private void PremixTable(string data, int count)
+	internal override void PremixTable(string data, int count)
 	{
 		for (int a = 0; a < count; a++)
 		{

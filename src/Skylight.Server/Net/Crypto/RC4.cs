@@ -22,5 +22,7 @@ internal abstract class RC4
 	internal abstract PacketReader Read(scoped ref PacketReader reader);
 	internal abstract void Write(ReadOnlySpan<byte> data, ref PacketWriter writer);
 
+	internal abstract void PremixTable(string data, int count);
+
 	internal void AdvanceReader(SequencePosition consumed) => this.DecodePipe.Reader.AdvanceTo(consumed);
 }

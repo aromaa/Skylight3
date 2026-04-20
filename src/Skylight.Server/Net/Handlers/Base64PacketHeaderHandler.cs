@@ -44,7 +44,9 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 	internal string CryptoKey { get; }
 	internal string CryptoPremix { get; }
 
-	internal Base64PacketHeaderHandler(ILogger<Base64PacketHeaderHandler> logger, Func<IGamePacketManager> packetManager, bool base128, bool rc4Hex, BigInteger cryptoPrime, BigInteger cryptoGenerator, string cryptoKey, string cryptoPremix)
+	private string? decodePremix;
+
+	internal Base64PacketHeaderHandler(ILogger<Base64PacketHeaderHandler> logger, Func<IGamePacketManager> packetManager, bool base128, bool rc4Hex, BigInteger cryptoPrime, BigInteger cryptoGenerator, string cryptoKey, string cryptoPremix, string? decodePremix)
 	{
 		this.logger = logger;
 		this.packetManager = () => (PacketManager<uint>)packetManager();
@@ -56,6 +58,7 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 		this.CryptoGenerator = cryptoGenerator;
 		this.CryptoKey = cryptoKey;
 		this.CryptoPremix = cryptoPremix;
+		this.decodePremix = decodePremix;
 	}
 
 	protected override void Decode(IPipelineHandlerContext context, ref PacketReader reader)
@@ -159,7 +162,15 @@ internal sealed class Base64PacketHeaderHandler : IncomingBytesHandler, IOutgoin
 			this.logger.LogDebug($"Unknown packet: {header}");
 		}
 
-		messageDecoder?.AdvanceReader(reader.UnreadSequence.End);
+		if (messageDecoder is not null)
+		{
+			messageDecoder.AdvanceReader(reader.UnreadSequence.End);
+
+			if (this.decodePremix is not null)
+			{
+				messageDecoder.PremixTable(this.decodePremix, 10);
+			}
+		}
 	}
 
 	public void Handle<T>(IPipelineHandlerContext context, ref PacketWriter writer, in T packet)

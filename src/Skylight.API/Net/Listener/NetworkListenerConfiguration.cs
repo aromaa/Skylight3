@@ -11,4 +11,5 @@ public sealed class NetworkListenerConfiguration
 	public string? CryptoGenerator { get; init; }
 	public string? CryptoPremix { get; init; }
 	public string? CryptoKey { get; init; }
+	public string? DecodePremix { get; init; }
 }
