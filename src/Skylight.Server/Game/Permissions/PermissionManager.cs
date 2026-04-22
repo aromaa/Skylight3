@@ -7,42 +7,18 @@ using Skylight.Infrastructure;
 
 namespace Skylight.Server.Game.Permissions;
 
-internal sealed class PermissionManager : IPermissionManager
+internal sealed class PermissionManager(IDbContextFactory<SkylightContext> dbContextFactory) : IPermissionManager
 {
-	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
+	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
-	private PermissionDirectory<string> defaults;
-	private PermissionDirectory<string> ranks;
-	private PermissionDirectory<int> users;
-
-	public PermissionManager(IDbContextFactory<SkylightContext> dbContextFactory)
-	{
-		this.dbContextFactory = dbContextFactory;
-		this.defaults = new PermissionDirectory<string>(this, "defaults", null, i => default);
-		this.ranks = new PermissionDirectory<string>(this, "ranks", null, i => default);
-		this.users = new PermissionDirectory<int>(this, "users", null, i => default);
-	}
-
-	public IPermissionSubject Defaults => this.defaults.Defaults;
+	private readonly TaskCompletionSource<Data> data = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
 	public async Task LoadAsync(ILoadableServiceContext context, CancellationToken cancellationToken = default)
 	{
-		PermissionDirectory<string> defaults;
-		PermissionDirectory<string> ranks;
-		PermissionDirectory<int> users;
-
 		await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
 		{
-			defaults = await LoadDefaultsAsync(dbContext, cancellationToken).ConfigureAwait(false);
-
-			IPermissionSubject ranksDefaults = (await defaults.GetSubjectAsync("ranks").ConfigureAwait(false)) ?? new PermissionSubject<string>(defaults, "ranks");
-			IPermissionSubject usersDefaults = (await defaults.GetSubjectAsync("users").ConfigureAwait(false)) ?? new PermissionSubject<string>(defaults, "users");
-
-			Dictionary<string, PermissionSubject<string>> cachedRanks = [];
-
-			ranks = new PermissionDirectory<string>(this, "ranks", () => ranksDefaults, i => !cachedRanks.TryGetValue(i, out PermissionSubject<string>? value)
-				? default
-				: ValueTask.FromResult<IPermissionSubject?>(value));
+			Dictionary<string, PermissionContainer> defaults = await LoadDefaultsAsync(dbContext, cancellationToken).ConfigureAwait(false);
+			Dictionary<string, PermissionContainer> ranks = [];
 
 			await foreach (RankEntity rankEntity in dbContext.Ranks
 				.Include(e => e.Permissions)
@@ -53,52 +29,44 @@ internal sealed class PermissionManager : IPermissionManager
 				.WithCancellation(cancellationToken)
 				.ConfigureAwait(false))
 			{
-				PermissionSubject<string> rank = new(ranks, rankEntity.Id);
+				PermissionContainer rank = new();
 
 				foreach (RankPermissionEntity permissionEntity in rankEntity.Permissions!)
 				{
-					rank.Container.SetPermission(permissionEntity.Permission, permissionEntity.Value);
+					rank.SetPermission(permissionEntity.Permission, permissionEntity.Value);
 				}
 
 				foreach (RankEntitlementEntity entitlementEntity in rankEntity.Entitlements!)
 				{
-					rank.Container.SetEntitlement(entitlementEntity.Entitlement, entitlementEntity.Value);
+					rank.SetEntitlement(entitlementEntity.Entitlement, entitlementEntity.Value);
 				}
 
 				foreach (RankChildEntity childEntity in rankEntity.Children!)
 				{
-					rank.Container.AddParent(new PermissionSubjectReference<string>(this, "ranks", childEntity.ChildRankId));
+					rank.AddParent(new PermissionSubjectReference<string>(this, "ranks", childEntity.ChildRankId));
 				}
 
-				cachedRanks[rankEntity.Id] = rank;
+				ranks[rankEntity.Id] = rank;
 			}
 
-			users = new PermissionDirectory<int>(this, "users", () => usersDefaults, this.LoadUser);
+			DefaultsPermissionDirectory defaultsDirectory = new(this, "defaults", defaults);
+			RanksPermissionDirectory ranksDirectory = new(this, "ranks", defaultsDirectory.GetOrAddDefault("ranks"), ranks);
+
+			this.data.SetResult(new Data(this, defaultsDirectory, ranksDirectory));
 		}
 
-		context.Commit(() =>
+		async Task<Dictionary<string, PermissionContainer>> LoadDefaultsAsync(SkylightContext dbContext, CancellationToken cancellationToken)
 		{
-			this.defaults = defaults;
-			this.ranks = ranks;
-			this.users = users;
-		});
-
-		async Task<PermissionDirectory<string>> LoadDefaultsAsync(SkylightContext dbContext, CancellationToken cancellationToken)
-		{
-			Dictionary<string, PermissionSubject<string>> containers = [];
-
-			PermissionDirectory<string> directory = new(this, "defaults", () => containers["defaults"], i => !containers.TryGetValue(i, out PermissionSubject<string>? value)
-				? default
-				: ValueTask.FromResult<IPermissionSubject?>(value));
+			Dictionary<string, PermissionContainer> containers = [];
 
 			await foreach (PrincipalDefaultsPermissionEntity entity in dbContext.PrincipalDefaultsPermissions
 				.AsAsyncEnumerable()
 				.WithCancellation(cancellationToken)
 				.ConfigureAwait(false))
 			{
-				ref PermissionSubject<string>? subject = ref CollectionsMarshal.GetValueRefOrAddDefault(containers, entity.Identifier, out _);
-				subject ??= new PermissionSubject<string>(directory, entity.Identifier);
-				subject.Container.SetPermission(entity.Permission, entity.Value);
+				ref PermissionContainer? container = ref CollectionsMarshal.GetValueRefOrAddDefault(containers, entity.Identifier, out _);
+				container ??= new PermissionContainer();
+				container.SetPermission(entity.Permission, entity.Value);
 			}
 
 			await foreach (PrincipalDefaultsEntitlementEntity entity in dbContext.PrincipalDefaultsEntitlements
@@ -106,9 +74,9 @@ internal sealed class PermissionManager : IPermissionManager
 				.WithCancellation(cancellationToken)
 				.ConfigureAwait(false))
 			{
-				ref PermissionSubject<string>? container = ref CollectionsMarshal.GetValueRefOrAddDefault(containers, entity.Identifier, out _);
-				container ??= new PermissionSubject<string>(directory, entity.Identifier);
-				container.Container.SetEntitlement(entity.Entitlement, entity.Value);
+				ref PermissionContainer? container = ref CollectionsMarshal.GetValueRefOrAddDefault(containers, entity.Identifier, out _);
+				container ??= new PermissionContainer();
+				container.SetEntitlement(entity.Entitlement, entity.Value);
 			}
 
 			await foreach (PrincipalDefaultsRankEntity entity in dbContext.PrincipalDefaultsRanks
@@ -116,19 +84,17 @@ internal sealed class PermissionManager : IPermissionManager
 				.WithCancellation(cancellationToken)
 				.ConfigureAwait(false))
 			{
-				ref PermissionSubject<string>? container = ref CollectionsMarshal.GetValueRefOrAddDefault(containers, entity.Identifier, out _);
-				container ??= new PermissionSubject<string>(directory, entity.Identifier);
-				container.Container.AddParent(new PermissionSubjectReference<string>(this, "ranks", entity.RankId));
+				ref PermissionContainer? container = ref CollectionsMarshal.GetValueRefOrAddDefault(containers, entity.Identifier, out _);
+				container ??= new PermissionContainer();
+				container.AddParent(new PermissionSubjectReference<string>(this, "ranks", entity.RankId));
 			}
 
-			if (!containers.ContainsKey("defaults"))
-			{
-				containers["defaults"] = new PermissionSubject<string>(directory, "defaults");
-			}
-
-			return directory;
+			return containers;
 		}
 	}
+
+	public async ValueTask<IPermissionSubject> GetDefaultsAsync(CancellationToken cancellationToken = default)
+		=> (await this.GetDefaultsDirectoryAsync(cancellationToken).ConfigureAwait(false)).Defaults;
 
 	public async ValueTask<IPermissionDirectory?> GetDirectoryAsync(string identifier, CancellationToken cancellationToken = default)
 		=> identifier switch
@@ -140,40 +106,65 @@ internal sealed class PermissionManager : IPermissionManager
 			_ => null
 		};
 
-	public ValueTask<IPermissionDirectory<string>> GetDefaultsDirectoryAsync(CancellationToken cancellationToken = default) => ValueTask.FromResult<IPermissionDirectory<string>>(this.defaults);
-	public ValueTask<IPermissionDirectory<string>> GetRanksDirectoryAsync(CancellationToken cancellationToken = default) => ValueTask.FromResult<IPermissionDirectory<string>>(this.ranks);
-	public ValueTask<IPermissionDirectory<int>> GetUserDirectoryAsync(CancellationToken cancellationToken = default) => ValueTask.FromResult<IPermissionDirectory<int>>(this.users);
+	public async ValueTask<IPermissionDirectory<string>> GetDefaultsDirectoryAsync(CancellationToken cancellationToken = default)
+		=> (await this.data.Task.ConfigureAwait(false)).Defaults;
 
-	private async ValueTask<IPermissionSubject?> LoadUser(int id)
+	public async ValueTask<IPermissionDirectory<string>> GetRanksDirectoryAsync(CancellationToken cancellationToken = default)
+		=> (await this.data.Task.ConfigureAwait(false)).Ranks;
+	public async ValueTask<IPermissionDirectory<int>> GetUserDirectoryAsync(CancellationToken cancellationToken = default)
+		=> (await this.data.Task.ConfigureAwait(false)).Users;
+
+	private sealed class Data
 	{
-		await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
+		private readonly PermissionManager permissionManager;
 
-		PermissionSubject<int> user = new(this.users, id);
+		internal DefaultsPermissionDirectory Defaults { get; }
+		internal RanksPermissionDirectory Ranks { get; }
+		internal AsyncPermissionDirectory<int> Users { get; }
 
-		await foreach (UserPermissionEntity permissionEntity in dbContext.UserPermissions
-			.Where(e => e.UserId == id)
-			.AsAsyncEnumerable()
-			.ConfigureAwait(false))
+		internal Data(PermissionManager permissionManager, DefaultsPermissionDirectory defaults, RanksPermissionDirectory ranks)
 		{
-			user.Container.SetPermission(permissionEntity.Permission, permissionEntity.Value);
+			this.permissionManager = permissionManager;
+
+			this.Defaults = defaults;
+			this.Ranks = ranks;
+			this.Users = new(permissionManager, "users", defaults.GetOrAddDefault("users"), this.LoadUser);
 		}
 
-		await foreach (UserEntitlementEntity entitlementEntity in dbContext.UserEntitlements
-			.Where(e => e.UserId == id)
-			.AsAsyncEnumerable()
-			.ConfigureAwait(false))
-		{
-			user.Container.SetEntitlement(entitlementEntity.Entitlement, entitlementEntity.Value);
-		}
+		public async ValueTask<IPermissionSubject> GetDefaultsAsync(string identifier, CancellationToken cancellationToken = default)
+			=> await this.Defaults.GetSubjectAsync(identifier).ConfigureAwait(false) ?? new PermissionSubject<string>(this.Defaults, identifier);
 
-		await foreach (UserRankEntity rankEntity in dbContext.UserRanks
-			.Where(e => e.UserId == id)
-			.AsAsyncEnumerable()
-			.ConfigureAwait(false))
+		private async ValueTask<IPermissionSubject?> LoadUser(int id)
 		{
-			user.Container.AddParent(new PermissionSubjectReference<string>(this, "ranks", rankEntity.RankId));
-		}
+			await using SkylightContext dbContext = await this.permissionManager.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
-		return user;
+			PermissionSubject<int> user = new(this.Users, id);
+
+			await foreach (UserPermissionEntity permissionEntity in dbContext.UserPermissions
+				.Where(e => e.UserId == id)
+				.AsAsyncEnumerable()
+				.ConfigureAwait(false))
+			{
+				user.Container.SetPermission(permissionEntity.Permission, permissionEntity.Value);
+			}
+
+			await foreach (UserEntitlementEntity entitlementEntity in dbContext.UserEntitlements
+				.Where(e => e.UserId == id)
+				.AsAsyncEnumerable()
+				.ConfigureAwait(false))
+			{
+				user.Container.SetEntitlement(entitlementEntity.Entitlement, entitlementEntity.Value);
+			}
+
+			await foreach (UserRankEntity rankEntity in dbContext.UserRanks
+				.Where(e => e.UserId == id)
+				.AsAsyncEnumerable()
+				.ConfigureAwait(false))
+			{
+				user.Container.AddParent(new PermissionSubjectReference<string>(this.permissionManager, "ranks", rankEntity.RankId));
+			}
+
+			return user;
+		}
 	}
 }

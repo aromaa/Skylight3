@@ -4,7 +4,7 @@ namespace Skylight.API.Game.Permissions;
 
 public interface IPermissionManager : ILoadableService
 {
-	public IPermissionSubject Defaults { get; }
+	public ValueTask<IPermissionSubject> GetDefaultsAsync(CancellationToken cancellationToken = default);
 
 	public ValueTask<IPermissionDirectory?> GetDirectoryAsync(string identifier, CancellationToken cancellationToken = default);
 

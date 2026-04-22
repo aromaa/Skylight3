@@ -4,12 +4,12 @@ using Skylight.Server.Extensions;
 
 namespace Skylight.Server.Game.Permissions;
 
-internal sealed class PermissionSubject<T>(IPermissionDirectory<T> directory, T identifier) : IPermissionSubject
+internal sealed class PermissionSubject<T>(IPermissionDirectory<T> directory, T identifier, PermissionContainer? container = null) : IPermissionSubject
 {
 	public IPermissionDirectory Directory { get; } = directory;
 	public IPermissionSubjectReference Reference { get; } = directory.CreateSubjectReference(identifier);
 
-	internal PermissionContainer Container { get; } = new();
+	internal PermissionContainer Container { get; } = container ?? new PermissionContainer();
 	internal PermissionContainer TransientContainer { get; } = new();
 
 	public bool TryGetPermission(string permission, out bool value)
