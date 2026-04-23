@@ -6,7 +6,7 @@ public abstract class FurnitureEntity
 {
 	public int Id { get; init; }
 
-	public string Revision { get; set; } = null!;
+	public int Revision { get; set; }
 
 	public string ClassName { get; set; } = null!;
 

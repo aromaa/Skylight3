@@ -10,7 +10,7 @@ internal abstract class FurnitureEntityTypeConfiguration<T> : IEntityTypeConfigu
 	public virtual void Configure(EntityTypeBuilder<T> builder)
 	{
 		builder.Property(f => f.Revision)
-			.HasMaxLength(16);
+			.HasDefaultValue(0);
 
 		builder.Property(f => f.ClassName)
 			.HasMaxLength(128);
