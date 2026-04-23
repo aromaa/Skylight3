@@ -119,6 +119,8 @@ public abstract class BaseSkylightContext(DbContextOptions options) : DbContext(
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
+		modelBuilder.HasCollation("case_insensitive", "und-u-ks-level2", provider: "icu", deterministic: false);
+
 		modelBuilder.HasPostgresEnum<PrivateRoomEntryMode>();
 		modelBuilder.HasPostgresEnum<PrivateRoomTradeMode>();
 		modelBuilder.HasPostgresEnum<CatalogPageVisiblity>();

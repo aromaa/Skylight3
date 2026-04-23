@@ -13,7 +13,8 @@ internal sealed class UserEntityTypeConfiguration : IEntityTypeConfiguration<Use
 		builder.HasKey(u => u.Id);
 
 		builder.Property(u => u.Username)
-			.HasMaxLength(16);
+			.HasMaxLength(16)
+			.UseCollation("case_insensitive");
 
 		builder.Property(u => u.Motto)
 			.HasMaxLength(38)
