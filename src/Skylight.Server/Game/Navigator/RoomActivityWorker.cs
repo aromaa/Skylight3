@@ -17,6 +17,8 @@ internal sealed class RoomActivityWorker(IDbContextFactory<SkylightContext> dbCo
 
 	private readonly TimeProvider timeProvider = timeProvider;
 
+	private readonly PeriodicTimer timer = new(Timeout.InfiniteTimeSpan, timeProvider);
+
 	private readonly Lock popularRoomsMutationLock = new();
 	private readonly SortedValueSet<int, int> popularRooms = new(Comparer<int>.Default, Comparer<int>.Create((x, y) => -x.CompareTo(y)));
 
@@ -27,7 +29,9 @@ internal sealed class RoomActivityWorker(IDbContextFactory<SkylightContext> dbCo
 		SingleReader = true
 	});
 
-	private protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+	private readonly Dictionary<(int RoomId, int Day), PrivateRoomActivityEntity> pendingEntities = [];
+
+	private protected override async Task<Task> ExecuteAsync(CancellationToken cancellationToken)
 	{
 		await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
 		{
@@ -46,70 +50,86 @@ internal sealed class RoomActivityWorker(IDbContextFactory<SkylightContext> dbCo
 			}
 		}
 
-		PeriodicTimer timer = new(TimeSpan.FromSeconds(30));
+		return this.ExecuteAsyncCore(cancellationToken);
+	}
 
-		Dictionary<int, PrivateRoomActivityEntity> entities = [];
-		while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
+	private async Task ExecuteAsyncCore(CancellationToken cancellationToken)
+	{
+		this.timer.Period = TimeSpan.FromSeconds(30);
+
+		while (await this.timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
 		{
-			try
+			await this.SaveAsync(cancellationToken).ConfigureAwait(false);
+		}
+
+		await this.SaveAsync(cancellationToken).ConfigureAwait(false);
+	}
+
+	private async Task SaveAsync(CancellationToken cancellationToken)
+	{
+		try
+		{
+			int day = RoomActivity.GetDay(this.timeProvider.GetUtcNow());
+
+			while (this.roomActivityChannel.Reader.TryRead(out (int RoomId, int Activity) value))
 			{
-				int day = RoomActivity.GetDay(this.timeProvider.GetUtcNow());
-
-				while (this.roomActivityChannel.Reader.TryRead(out (int RoomId, int Activity) value))
+				ref PrivateRoomActivityEntity? entity = ref CollectionsMarshal.GetValueRefOrAddDefault(this.pendingEntities, (value.RoomId, day), out _);
+				entity ??= new PrivateRoomActivityEntity
 				{
-					ref PrivateRoomActivityEntity? entity = ref CollectionsMarshal.GetValueRefOrAddDefault(entities, value.RoomId, out _);
-					entity ??= new PrivateRoomActivityEntity
+					RoomId = value.RoomId,
+					Day = day,
+				};
+
+				entity.Value += value.Activity;
+			}
+
+			if (this.pendingEntities.Count > 0)
+			{
+				await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+				await dbContext.PrivateRoomActivity
+					.UpsertRange(this.pendingEntities.Values)
+					.On(e => new { e.RoomId, e.Day })
+					.WhenMatched((oldValue, newValue) => new PrivateRoomActivityEntity
 					{
-						RoomId = value.RoomId,
-						Day = day,
-					};
+						Value = oldValue.Value + newValue.Value,
+					}).RunAsync(cancellationToken)
+					.ConfigureAwait(false);
 
-					entity.Value += value.Activity;
-				}
-
-				if (entities.Count > 0)
+				foreach (PrivateRoomActivityEntity entity in this.pendingEntities.Values)
 				{
-					await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
-
-					await dbContext.PrivateRoomActivity
-						.UpsertRange(entities.Values)
-						.On(e => new { e.RoomId, e.Day })
-						.WhenMatched((oldValue, newValue) => new PrivateRoomActivityEntity
-						{
-							Value = oldValue.Value + newValue.Value,
-						}).RunAsync(cancellationToken)
-						.ConfigureAwait(false);
-
-					foreach (PrivateRoomActivityEntity entity in entities.Values)
+					if (this.roomActivity.TryGetValue(entity.RoomId, out RoomActivity? roomActivity))
 					{
-						if (this.roomActivity.TryGetValue(entity.RoomId, out RoomActivity? roomActivity))
-						{
-							roomActivity.Update(entity.Day, entity.Value);
-						}
-						else
-						{
-							IAsyncEnumerable<PrivateRoomActivityEntity> query = dbContext.PrivateRoomActivity
-								.Where(e => e.RoomId == entity.RoomId)
-								.OrderBy(e => e.Value)
-								.AsAsyncEnumerable();
+						roomActivity.Update(entity.Day, entity.Value);
+					}
+					else
+					{
+						IAsyncEnumerable<PrivateRoomActivityEntity> query = dbContext.PrivateRoomActivity
+							.Where(e => e.RoomId == entity.RoomId)
+							.OrderBy(e => e.Value)
+							.AsAsyncEnumerable();
 
-							this.roomActivity[entity.RoomId] = roomActivity = await RoomActivity.LoadAsync(7, 2, day, query).ConfigureAwait(false);
-						}
-
-						this.UpdateRoomActivity(entity.RoomId, roomActivity.Score);
+						this.roomActivity[entity.RoomId] = roomActivity = await RoomActivity.LoadAsync(7, 2, day, query).ConfigureAwait(false);
 					}
 
-					entities.Clear();
+					this.UpdateRoomActivity(entity.RoomId, roomActivity.Score);
 				}
+
+				this.pendingEntities.Clear();
 			}
-			catch
-			{
-				//TODO: Retry
-			}
+		}
+		catch
+		{
+			//TODO: Retry
 		}
 	}
 
-	private protected override void Complete() => this.roomActivityChannel.Writer.Complete();
+	private protected override void Complete()
+	{
+		this.roomActivityChannel.Writer.Complete();
+
+		this.timer.Dispose();
+	}
 
 	internal void PushRoomActivity(int roomId, int activity)
 	{

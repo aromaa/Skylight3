@@ -17,7 +17,10 @@ internal sealed class DatabaseBackgroundWorker(ILogger<DatabaseBackgroundWorker>
 		SingleReader = true
 	});
 
-	private protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+	private protected override async Task<Task> ExecuteAsync(CancellationToken cancellationToken) =>
+		this.ExecuteAsyncCore(cancellationToken);
+
+	private async Task ExecuteAsyncCore(CancellationToken cancellationToken)
 	{
 		await foreach (Func<IDbContextFactory<SkylightContext>, CancellationToken, Task> func in this.queue.Reader.ReadAllAsync(cancellationToken))
 		{

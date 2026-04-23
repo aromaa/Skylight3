@@ -5,18 +5,19 @@ internal abstract class BackgroundWorker
 	private CancellationTokenSource? cancellationTokenSource;
 	private Task? executeTask;
 
-	private protected abstract Task ExecuteAsync(CancellationToken cancellationToken);
+	private protected abstract Task<Task> ExecuteAsync(CancellationToken cancellationToken);
 
 	private protected abstract void Complete();
 
 	internal Task StartAsync(CancellationToken cancellationToken)
 	{
 		this.cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-		this.executeTask = this.ExecuteAsync(this.cancellationTokenSource.Token);
 
-		return this.executeTask.IsCompleted
-			? this.executeTask
-			: Task.CompletedTask;
+		Task<Task> startTask = this.ExecuteAsync(this.cancellationTokenSource.Token);
+
+		this.executeTask = startTask.Unwrap();
+
+		return startTask;
 	}
 
 	internal async Task StopAsync(CancellationToken cancellationToken)
