@@ -17,5 +17,7 @@ internal sealed class FigureAssetPartEntityTypeConfiguration : IEntityTypeConfig
 			.HasForeignKey(e => e.AssetLibraryId);
 
 		builder.HasOne(e => e.Part);
+
+		builder.HasAlternateKey(e => new { e.AssetLibraryId, e.PartId });
 	}
 }
