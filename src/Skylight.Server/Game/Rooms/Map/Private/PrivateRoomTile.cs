@@ -1,6 +1,5 @@
 ﻿using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Rooms.Items.Floor;
-using Skylight.API.Game.Rooms.Items.Interactions.Wired.Triggers;
 using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Rooms.Map.Private;
 using Skylight.API.Game.Rooms.Units;
@@ -16,7 +15,7 @@ internal sealed class PrivateRoomTile : RoomTile, IPrivateRoomTile
 {
 	private readonly PrivateRoom room;
 
-	private readonly IntervalTree<double, IFloorRoomItem> heightMap;
+	private readonly IntervalTree<double, PrivateRoomTileSection> heightMap;
 
 	private readonly IFloorFurnitureKind? walkable;
 
@@ -25,7 +24,8 @@ internal sealed class PrivateRoomTile : RoomTile, IPrivateRoomTile
 	{
 		this.room = room;
 
-		this.heightMap = new IntervalTree<double, IFloorRoomItem>();
+		this.heightMap = new IntervalTree<double, PrivateRoomTileSection>();
+		this.heightMap.GetOrAdd(layoutTile.Height, layoutTile.Height, p => new PrivateRoomTileSection(p.Tile.room, p.Position), (Tile: this, Position: new Point3D(location, layoutTile.Height)));
 
 		if (FloorFurnitureKindTypes.Walkable.TryGet(registryHolder, out IFloorFurnitureKindType? walkableType))
 		{
@@ -33,62 +33,41 @@ internal sealed class PrivateRoomTile : RoomTile, IPrivateRoomTile
 		}
 	}
 
-	public IEnumerable<IFloorRoomItem> FloorItems => this.heightMap.Values;
+	public override bool HasRoomUnit => this.heightMap.Values.Any(i => i.RoomUnits.Count > 0);
 
-	public IEnumerable<IFloorRoomItem> GetFloorItemsBetween(double minZ, double maxZ) => this.heightMap.GetItemsBetween(minZ, maxZ);
+	public IEnumerable<IFloorRoomItem> FloorItems => this.heightMap.Values.SelectMany(i => i.Items);
+	public override IEnumerable<IRoomUnit> Units => this.heightMap.Values.SelectMany(i => i.RoomUnits);
 
-	public override double? GetStepHeight(double z) => this.GetStepHeight(z, 2, 2);
-	internal override double? GetStepHeight(double z, double range, double emptySpace)
+	public IEnumerable<IFloorRoomItem> GetFloorItemsBetween(double minZ, double maxZ) => this.heightMap.GetItemsBetween(minZ, maxZ).SelectMany(i => i.Items);
+
+	public override IRoomTileSection? FindSection(double z, Func<IFloorFurniture, bool> func) => this.FindSection(z, 2, 2, func);
+
+	internal override IRoomTileSection? FindSection(double z, double range, double emptySpace) => this.FindSection(z, range, emptySpace, f => f.Kind == this.walkable);
+
+	public override IRoomTileSection? GetSection(double z) => this.heightMap.Get(z);
+
+	private IRoomTileSection? FindSection(double z, double range, double emptySpace, Func<IFloorFurniture, bool> func)
 	{
-		switch (this.heightMap.FindGabGreedy(z + range, emptySpace, item => item.Furniture.Kind == this.walkable, out double value))
+		if (this.heightMap.FindGabGreedy(z + range, emptySpace, s => s.Items.Count <= 0 || func(s.Items.First().Furniture), out PrivateRoomTileSection? item))
 		{
-			case IntervalTree<double, IFloorRoomItem>.SearchResult.Success:
-				return value;
-			case IntervalTree<double, IFloorRoomItem>.SearchResult.Fallback:
-				if (value - this.LayoutTile.Height < 0)
-				{
-					return null;
-				}
-
-				goto default;
-			default:
-				return this.LayoutTile.Height;
+			return item;
 		}
+
+		return null;
 	}
 
 	public void AddItem(IFloorRoomItem item)
 	{
-		this.heightMap.Add(item.Position.Z, item.Position.Z + item.Height, item);
+		PrivateRoomTileSection section = this.heightMap.GetOrAdd(item.Position.Z, item.Position.Z + item.Height, static p => new PrivateRoomTileSection(p.Tile.room, p.Position), (Tile: this, Position: new Point3D(this.Position.XY, item.Position.Z + item.Height)));
+		section.Items.Add(item);
 
 		this.Position = new Point3D(this.Position.XY, this.heightMap.Max);
 	}
 
 	public void RemoveItem(IFloorRoomItem item)
 	{
-		this.heightMap.Remove(item.Position.Z, item.Position.Z + item.Height, item);
+		this.heightMap.RemoveIf(item.Position.Z, item.Position.Z + item.Height, (s, i) => s.Items.Remove(i) && s is { Floor: false, Items.Count: <= 0 }, item);
 
 		this.Position = new Point3D(this.Position.XY, this.heightMap.Count > 0 ? this.heightMap.Max : this.LayoutTile.Height);
-	}
-
-	public override void WalkOff(IRoomUnit unit)
-	{
-		base.WalkOff(unit);
-
-		IFloorRoomItem? item = this.FloorItems.FirstOrDefault(i => i.Position.Z + i.Height == unit.Position.Z);
-		if (item is not null && this.room.ItemManager.TryGetInteractionHandler(out IUnitWalkOffTriggerInteractionHandler? handler))
-		{
-			handler.OnWalkOff((IUserRoomUnit)unit, item);
-		}
-	}
-
-	public override void WalkOn(IRoomUnit unit)
-	{
-		base.WalkOn(unit);
-
-		IFloorRoomItem? item = this.FloorItems.FirstOrDefault(i => i.Position.Z + i.Height == unit.Position.Z);
-		if (item is not null && this.room.ItemManager.TryGetInteractionHandler(out IUnitWalkOnTriggerInteractionHandler? handler))
-		{
-			handler.OnWalkOn((IUserRoomUnit)unit, item);
-		}
 	}
 }

@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿using Skylight.API.Game.Furniture.Floor;
 using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Numerics;
@@ -11,8 +11,6 @@ internal abstract class RoomTile : IRoomTile
 	public IRoomMap Map { get; }
 	public Point3D Position { get; protected set; }
 
-	private readonly Dictionary<int, IRoomUnit> roomUnits;
-
 	internal RoomLayoutTile LayoutTile { get; }
 
 	internal RoomTile(IRoomMap map, Point2D location, RoomLayoutTile layoutTile)
@@ -20,30 +18,16 @@ internal abstract class RoomTile : IRoomTile
 		this.Map = map;
 		this.Position = new Point3D(location, layoutTile.Height);
 
-		this.roomUnits = [];
-
 		this.LayoutTile = layoutTile;
 	}
 
 	public bool IsHole => this.LayoutTile.IsHole;
-	public bool HasRoomUnit => this.roomUnits.Count > 0;
+	public abstract bool HasRoomUnit { get; }
 
-	public IEnumerable<IRoomUnit> Units => this.roomUnits.Values;
+	public abstract IEnumerable<IRoomUnit> Units { get; }
 
-	public abstract double? GetStepHeight(double z);
-	internal abstract double? GetStepHeight(double z, double range, double emptySpace);
+	public abstract IRoomTileSection? GetSection(double z);
 
-	public virtual void WalkOff(IRoomUnit unit)
-	{
-		bool result = this.roomUnits.Remove(unit.Id);
-
-		Debug.Assert(result);
-	}
-
-	public virtual void WalkOn(IRoomUnit unit)
-	{
-		bool result = this.roomUnits.TryAdd(unit.Id, unit);
-
-		Debug.Assert(result);
-	}
+	public abstract IRoomTileSection? FindSection(double z, Func<IFloorFurniture, bool> func);
+	internal abstract IRoomTileSection? FindSection(double z, double range, double emptySpace);
 }

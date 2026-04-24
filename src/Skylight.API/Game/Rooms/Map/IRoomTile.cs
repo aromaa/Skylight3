@@ -1,4 +1,5 @@
-﻿using Skylight.API.Game.Rooms.Units;
+﻿using Skylight.API.Game.Furniture.Floor;
+using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Numerics;
 
 namespace Skylight.API.Game.Rooms.Map;
@@ -14,8 +15,6 @@ public interface IRoomTile
 
 	public IEnumerable<IRoomUnit> Units { get; }
 
-	public double? GetStepHeight(double z);
-
-	public void WalkOn(IRoomUnit unit);
-	public void WalkOff(IRoomUnit unit);
+	public IRoomTileSection? GetSection(double z);
+	public IRoomTileSection? FindSection(double z, Func<IFloorFurniture, bool> func);
 }

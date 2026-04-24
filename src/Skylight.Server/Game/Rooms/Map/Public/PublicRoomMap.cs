@@ -27,4 +27,6 @@ internal sealed class PublicRoomMap : RoomMap, IPublicRoomMap
 
 	public override IPublicRoomTile GetTile(int x, int y) => this.tiles[x, y];
 	public override IPublicRoomTile GetTile(Point2D point) => this.tiles[point.X, point.Y];
+
+	public override IRoomTileSection? FindSection(IRoomTile tile, Point3D target, double z) => tile.FindSection(z, f => true);
 }

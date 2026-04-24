@@ -12,5 +12,7 @@ public interface IRoomMap
 	public IRoomTile GetTile(int x, int y);
 	public IRoomTile GetTile(Point2D location);
 
+	public IRoomTileSection? FindSection(IRoomTile tile, Point3D target, double z);
+
 	public Stack<Point2D> PathfindTo(Point3D start, Point3D target, IRoomUnit unit);
 }

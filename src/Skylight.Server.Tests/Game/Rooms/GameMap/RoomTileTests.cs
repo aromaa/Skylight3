@@ -19,7 +19,7 @@ public class RoomTileTests
 	[MemberData(nameof(RoomTileTests.StepHeightData))]
 	internal static void FindStepHeight(RoomTile tile, double target, double range, double emptySpace, double expected)
 	{
-		Assert.Equal(expected, tile.GetStepHeight(target, range, emptySpace));
+		Assert.Equal(expected, tile.FindSection(target, range, emptySpace)?.Position.Z);
 	}
 
 	public static IEnumerable<object[]> StepHeightData()

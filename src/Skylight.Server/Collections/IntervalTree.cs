@@ -12,17 +12,17 @@ internal sealed class IntervalTree<TKey, TValue>
 
 	internal int Count => this.count;
 
-	internal bool Add(TKey from, TKey to, TValue value)
+	internal TValue GetOrAdd<TArg>(TKey from, TKey to, Func<TArg, TValue> valueFunc, TArg arg)
 	{
 		Interval interval = new(from, to);
 
 		Node? current = this.root;
 		if (current is null)
 		{
-			this.root = new Node(interval, value);
+			this.root = new Node(interval, valueFunc(arg));
 			this.count++;
 
-			return true;
+			return this.root.Value;
 		}
 
 		Node parent;
@@ -32,7 +32,7 @@ internal sealed class IntervalTree<TKey, TValue>
 			compare = interval.CompareTo(current.Interval);
 			if (compare == 0)
 			{
-				return current.Add(value);
+				return current.Value;
 			}
 
 			parent = current;
@@ -40,7 +40,7 @@ internal sealed class IntervalTree<TKey, TValue>
 		}
 		while (current is not null);
 
-		Node node = new(parent, interval, value);
+		Node node = new(parent, interval, valueFunc(arg));
 		if (compare < 0)
 		{
 			parent.Left = node;
@@ -55,13 +55,51 @@ internal sealed class IntervalTree<TKey, TValue>
 
 		this.count++;
 
-		return true;
+		return node.Value;
 	}
 
-	internal void Remove(TKey min, TKey max, TValue value)
+	internal TValue? Get(TKey value)
+	{
+		Node? candidate = null;
+
+		Node? node = this.root;
+		while (node is not null)
+		{
+			if (candidate is null || candidate.Interval.Min < node.Interval.Min)
+			{
+				if (node.Interval.Max == value)
+				{
+					candidate = node;
+				}
+				else if (candidate is not null)
+				{
+					break;
+				}
+			}
+			else
+			{
+				break;
+			}
+
+			if (node.Left is null || node.Left.Interval.Max < value)
+			{
+				node = node.Right;
+
+				continue;
+			}
+
+			node = node.Left;
+		}
+
+		return candidate is null
+			? default
+			: candidate.Value;
+	}
+
+	internal void RemoveIf<TArg>(TKey min, TKey max, Func<TValue, TArg, bool> func, TArg arg)
 	{
 		Node? node = this.GetNode(new Interval(min, max));
-		if (node is not null && node.Remove(value) && node.Items.Count <= 0)
+		if (node is not null && func(node.Value, arg))
 		{
 			this.Remove(node);
 			this.Fixup(node);
@@ -93,10 +131,7 @@ internal sealed class IntervalTree<TKey, TValue>
 
 		while (stack.TryPop(out node))
 		{
-			foreach (TValue item in node.Items)
-			{
-				yield return item;
-			}
+			yield return node.Value;
 
 			node = node.Right;
 			while (node is not null)
@@ -115,13 +150,13 @@ internal sealed class IntervalTree<TKey, TValue>
 		}
 	}
 
-	internal SearchResult FindGabGreedy(TKey from, TKey emptySpace, Predicate<TValue> predicate, out TKey value)
+	internal bool FindGabGreedy(TKey from, TKey emptySpace, Predicate<TValue> predicate, out TValue? value)
 	{
+		Unsafe.SkipInit(out value);
+
 		if (this.root is null)
 		{
-			Unsafe.SkipInit(out value);
-
-			return SearchResult.Fail;
+			return false;
 		}
 
 		Stack<Node> stack = new(2 * BitOperations.Log2((uint)this.count + 1));
@@ -147,17 +182,14 @@ internal sealed class IntervalTree<TKey, TValue>
 		{
 			if (node.Interval.Max <= from)
 			{
-				if (predicate(node.Items.First()))
+				if (predicate(node.Value))
 				{
 					Node? compareAgainst = this.Successor(node);
 					if (compareAgainst is null || compareAgainst.Interval.Min - node.Interval.Max >= emptySpace)
 					{
-						if (compareAgainst?.Left is null || compareAgainst.Left.Max <= from)
-						{
-							value = node.Interval.Max;
+						value = node.Value;
 
-							return SearchResult.Success;
-						}
+						return true;
 					}
 				}
 
@@ -181,13 +213,7 @@ internal sealed class IntervalTree<TKey, TValue>
 			}
 		}
 
-		for (node = this.root; node.Left is not null; node = node.Left)
-		{
-		}
-
-		value = node.Interval.Min - emptySpace;
-
-		return SearchResult.Fallback;
+		return false;
 	}
 
 	internal TKey? Max
@@ -244,10 +270,7 @@ internal sealed class IntervalTree<TKey, TValue>
 
 			while (stack.TryPop(out node))
 			{
-				foreach (TValue item in node.Items)
-				{
-					yield return item;
-				}
+				yield return node.Value;
 
 				node = node.Right;
 				while (node is not null)
@@ -647,7 +670,7 @@ internal sealed class IntervalTree<TKey, TValue>
 		internal Interval Interval { get; }
 		internal TKey Max { get; set; }
 
-		internal HashSet<TValue> Items { get; set; }
+		internal TValue Value { get; set; }
 
 		internal Node? Parent { get; set; }
 		internal Node? Left { get; set; }
@@ -655,12 +678,12 @@ internal sealed class IntervalTree<TKey, TValue>
 
 		internal int Balance { get; set; }
 
-		internal Node(Interval interval, TValue item)
+		internal Node(Interval interval, TValue value)
 		{
 			this.Interval = interval;
 			this.Max = interval.Max;
 
-			this.Items = [item];
+			this.Value = value;
 		}
 
 		internal Node(Node parent, Interval interval, TValue item)
@@ -668,9 +691,6 @@ internal sealed class IntervalTree<TKey, TValue>
 		{
 			this.Parent = parent;
 		}
-
-		internal bool Add(TValue value) => this.Items.Add(value);
-		internal bool Remove(TValue value) => this.Items.Remove(value);
 	}
 
 	internal readonly struct Interval(TKey min, TKey max) : IComparable<Interval>
@@ -686,12 +706,5 @@ internal sealed class IntervalTree<TKey, TValue>
 		}
 
 		public override string ToString() => $"{this.Min} - {this.Max}";
-	}
-
-	internal enum SearchResult
-	{
-		Fail,
-		Success,
-		Fallback
 	}
 }

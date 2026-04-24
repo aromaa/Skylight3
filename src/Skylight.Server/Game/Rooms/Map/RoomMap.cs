@@ -37,6 +37,8 @@ internal abstract class RoomMap : IRoomMap
 	public abstract IRoomTile GetTile(int x, int y);
 	public abstract IRoomTile GetTile(Point2D point);
 
+	public abstract IRoomTileSection? FindSection(IRoomTile tile, Point3D target, double z);
+
 	public Stack<Point2D> PathfindTo(Point3D start, Point3D target, IRoomUnit unit)
 	{
 		//Check if valid target
@@ -75,13 +77,13 @@ internal abstract class RoomMap : IRoomMap
 			{
 				(IRoomTile neighborTile, PathfinderEdge.EdgeDirection neighborDirection) = nextPoints[i];
 
-				double? nextZ = neighborTile.GetStepHeight(current.Z);
+				IRoomTileSection? nextZ = this.FindSection(neighborTile, target, current.Z);
 				if (nextZ is null)
 				{
 					continue;
 				}
 
-				double difference = nextZ.Value - current.Z;
+				double difference = nextZ.Position.Z - current.Z;
 				if (difference > 2)
 				{
 					//continue;
@@ -97,10 +99,10 @@ internal abstract class RoomMap : IRoomMap
 
 				int neighborWeight = priority + distance;
 
-				ref PathfinderEdge pathData = ref pathfinderData.Get(neighborPosition.X, neighborPosition.Y, nextZ.Value);
+				ref PathfinderEdge pathData = ref pathfinderData.Get(neighborPosition.X, neighborPosition.Y, nextZ.Position.Z);
 				if (pathData.TrySuggestCandidate(neighborWeight, neighborDirection, current.Z))
 				{
-					points.Enqueue(new Point3D(neighborPosition, nextZ.Value), neighborWeight);
+					points.Enqueue(new Point3D(neighborPosition, nextZ.Position.Z), neighborWeight);
 				}
 			}
 		}

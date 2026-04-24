@@ -90,7 +90,7 @@ internal abstract class RoomUnitManager : IRoomUnitManager
 	public void RemoveUnit(IRoomUnit unit)
 	{
 		IRoomTile lastTile = this.Room.Map.GetTile(unit.Moving ? unit.NextStepPosition.XY : unit.Position.XY);
-		lastTile.WalkOff(unit);
+		lastTile.GetSection(unit.Position.Z)?.WalkOff(unit);
 
 		this.roomUnits.Remove(unit.Id);
 		this.movingUnits.Remove(unit);

@@ -79,10 +79,13 @@ internal sealed class RoomUnit : IUserRoomUnit
 			IRoomTile lastTile = this.Room.Map.GetTile(this.Position.XY);
 			IRoomTile nextTile = this.Room.Map.GetTile(to);
 
-			this.NextStepPosition = new Point3D(to, nextTile.GetStepHeight(this.Position.Z).GetValueOrDefault());
+			IRoomTileSection? lastSection = lastTile.GetSection(this.Position.Z);
+			IRoomTileSection? nextSection = this.Room.Map.FindSection(nextTile, new Point3D(this.TargetLocation, double.NaN), this.Position.Z);
 
-			lastTile.WalkOff(this);
-			nextTile.WalkOn(this);
+			this.NextStepPosition = new Point3D(to, nextSection?.Position.Z ?? 0);
+
+			lastSection?.WalkOff(this);
+			nextSection?.WalkOn(this);
 
 			int calculatedRotation = CalculateDirection(this.Position.XY, this.NextStepPosition.XY);
 			this.Rotation = new Point2D(calculatedRotation, calculatedRotation);
@@ -91,8 +94,8 @@ internal sealed class RoomUnit : IUserRoomUnit
 
 	internal void SetPosition(Point3D position)
 	{
-		IRoomTile nextTile = this.Room.Map.GetTile(this.Moving ? this.NextStepPosition.XY : this.Position.XY);
-		nextTile.WalkOff(this);
+		IRoomTile lastTile = this.Room.Map.GetTile(this.Moving ? this.NextStepPosition.XY : this.Position.XY);
+		lastTile.GetSection(this.Position.Z)?.WalkOff(this);
 
 		this.SetPositionInternal(position);
 	}
@@ -104,7 +107,7 @@ internal sealed class RoomUnit : IUserRoomUnit
 		this.TargetLocation = position.XY;
 
 		IRoomTile nextTile = this.Room.Map.GetTile(this.Position.XY);
-		nextTile.WalkOn(this);
+		nextTile.GetSection(position.Z)?.WalkOn(this);
 	}
 
 	public void PathfindTo(Point2D target)
