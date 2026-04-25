@@ -11,6 +11,7 @@ using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.Protocol.Packets.Data.Room.Engine;
+using Skylight.Protocol.Packets.Data.Room.Engine.Unit;
 using Skylight.Protocol.Packets.Data.Room.Object.Data.Wall;
 using Skylight.Protocol.Packets.Outgoing;
 using Skylight.Protocol.Packets.Outgoing.Room.Engine;

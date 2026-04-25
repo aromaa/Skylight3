@@ -1,11 +1,11 @@
-﻿using System.Globalization;
-using Skylight.API.Game.Figure;
+﻿using Skylight.API.Game.Figure;
 using Skylight.API.Game.Rooms.Items.Interactions.Wired.Triggers;
 using Skylight.API.Game.Rooms.Map;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
-using Skylight.Protocol.Packets.Data.Room.Engine;
+using Skylight.Protocol.Packets.Data.Room.Engine.Unit;
+using Skylight.Protocol.Packets.Data.Room.Engine.Unit.Action;
 using Skylight.Protocol.Packets.Outgoing.Room.Engine;
 using Skylight.Server.Extensions;
 using Skylight.Server.Game.Rooms.Private;
@@ -39,7 +39,7 @@ internal abstract class RoomUnitManager : IRoomUnitManager
 
 				this.Room.SendAsync(new UserUpdateOutgoingPacket(
 				[
-					new RoomUnitUpdateData(roomUnit.Id, ((IUserRoomUnit)roomUnit).User.Info.Username, roomUnit.Position.X, roomUnit.Position.Y, roomUnit.Position.Z, roomUnit.Rotation.X, roomUnit.Rotation.Y, roomUnit.Moving ? $"mv {roomUnit.NextStepPosition.X},{roomUnit.NextStepPosition.Y},{roomUnit.NextStepPosition.Z.ToString(CultureInfo.InvariantCulture)}" : string.Empty)
+					new RoomUnitUpdateData(roomUnit.Id, ((IUserRoomUnit)roomUnit).User.Info.Username, roomUnit.Position.X, roomUnit.Position.Y, roomUnit.Position.Z, roomUnit.Rotation.X, roomUnit.Rotation.Y, roomUnit.Moving ? [new RoomUnitMoveAction(roomUnit.NextStepPosition.X, roomUnit.NextStepPosition.Y, roomUnit.NextStepPosition.Z)] : [])
 				]));
 
 				if (!roomUnit.Moving)

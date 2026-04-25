@@ -5,7 +5,7 @@ using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Numerics;
-using Skylight.Protocol.Packets.Data.Room.Engine;
+using Skylight.Protocol.Packets.Data.Room.Engine.Unit;
 using Skylight.Protocol.Packets.Outgoing.Room.Chat;
 using Skylight.Protocol.Packets.Outgoing.Room.Engine;
 using Skylight.Server.Game.Users;
@@ -35,7 +35,7 @@ internal sealed class RoomUnit : IUserRoomUnit
 
 			this.Room.SendAsync(new UserUpdateOutgoingPacket(
 			[
-				new RoomUnitUpdateData(this.Id, this.User.Info.Username, this.Position.X, this.Position.Y, this.Position.Z, this.Rotation.X, this.Rotation.Y, string.Empty)
+				new RoomUnitUpdateData(this.Id, this.User.Info.Username, this.Position.X, this.Position.Y, this.Position.Z, this.Rotation.X, this.Rotation.Y, [])
 			]));
 		}
 	}
@@ -172,7 +172,7 @@ internal sealed class RoomUnit : IUserRoomUnit
 
 			this.Room.SendAsync(new UserUpdateOutgoingPacket(
 			[
-				new RoomUnitUpdateData(this.Id, this.User.Info.Username, this.Position.X, this.Position.Y, this.Position.Z, this.Rotation.X, this.Rotation.Y, string.Empty)
+				new RoomUnitUpdateData(this.Id, this.User.Info.Username, this.Position.X, this.Position.Y, this.Position.Z, this.Rotation.X, this.Rotation.Y, [])
 			]));
 		}
 	}
