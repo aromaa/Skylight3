@@ -19,6 +19,8 @@ using Skylight.API.Game.Rooms.Items;
 using Skylight.API.Game.Rooms.Items.Floor;
 using Skylight.API.Game.Rooms.Items.Interactions;
 using Skylight.API.Game.Rooms.Items.Wall;
+using Skylight.API.Game.Rooms.Private;
+using Skylight.API.Game.Rooms.Public;
 using Skylight.API.Game.Users;
 using Skylight.API.Game.Users.Authentication;
 using Skylight.API.Net.Connection;
@@ -139,6 +141,11 @@ public static class HostBuilderExtensions
 			(RoomItemDomains.Normal.Key, new NormalRoomItemDomain()),
 			(RoomItemDomains.BuildersClub.Key, new BuildersClubRoomItemDomain()),
 			(RoomItemDomains.Transient.Key, new TransientRoomItemDomain())));
+
+		builder.AddSingleton<IRegistry>(Registry<IRoomType>.Create(RegistryTypes.RoomType,
+			(RoomTypes.Private.Key, new RoomType<IPrivateRoom, IPrivateRoomInfo, int>()),
+			(RoomTypes.PublicInstance.Key, new RoomType<IPublicRoomInstance, IPublicRoomInfo, int>()),
+			(RoomTypes.PublicWorld.Key, new RoomType<IPublicRoom, IPublicRoomInfo, PublicRoomId>())));
 
 		builder.AddSingleton<IRegistryHolder>(l => l.GetRequiredService<IServer>());
 

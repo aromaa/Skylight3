@@ -10,6 +10,7 @@ using Skylight.API.Game.Navigator.Nodes;
 using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Private;
 using Skylight.API.Game.Users;
+using Skylight.API.Registry;
 using Skylight.Domain.Rooms.Private;
 using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Data.Room.Engine;
@@ -23,9 +24,10 @@ using Skylight.Server.Game.Rooms.Private;
 namespace Skylight.Server.Game.Communication.RoomSettings;
 
 [PacketManagerRegister(typeof(IGamePacketManager))]
-internal sealed class SaveRoomSettingsPacketHandler<T>(IDbContextFactory<SkylightContext> dbContextFactory, INavigatorManager navigatorManager, IRoomManager roomManager) : UserPacketHandler<T>
+internal sealed class SaveRoomSettingsPacketHandler<T>(IRegistryHolder registryHolder, IDbContextFactory<SkylightContext> dbContextFactory, INavigatorManager navigatorManager, IRoomManager roomManager) : UserPacketHandler<T>
 	where T : ISaveRoomSettingsIncomingPacket
 {
+	private readonly IRegistryHolder registryHolder = registryHolder;
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 
 	private readonly INavigatorManager navigatorManager = navigatorManager;
@@ -139,7 +141,7 @@ internal sealed class SaveRoomSettingsPacketHandler<T>(IDbContextFactory<Skyligh
 					.ConfigureAwait(false);
 			}
 
-			if (!this.roomManager.TryGetPrivateRoom(roomId, out IPrivateRoom? room))
+			if (!this.roomManager.TryGetInstance(RoomTypes.Private.Get(this.registryHolder), roomId, out IPrivateRoom? room))
 			{
 				return;
 			}

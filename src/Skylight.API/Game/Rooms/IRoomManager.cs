@@ -1,19 +1,15 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Skylight.API.Collections.Cache;
-using Skylight.API.Game.Rooms.Private;
-using Skylight.API.Game.Rooms.Public;
 
 namespace Skylight.API.Game.Rooms;
 
 public interface IRoomManager
 {
 	public IEnumerable<IRoom> LoadedRooms { get; }
-	public IEnumerable<IPrivateRoom> LoadedPrivateRooms { get; }
 
-	public ValueTask<ICacheReference<IPrivateRoom>?> GetPrivateRoomAsync(int roomId, CancellationToken cancellationToken = default);
+	public IEnumerable<TInstance> GetLoadedInstances<TInstance, TInfo, TId>(IRoomType<TInstance, TInfo, TId> roomType);
 
-	public ValueTask<ICacheReference<IPublicRoomInstance>?> GetPublicRoomAsync(int instanceId, CancellationToken cancellationToken = default);
-	public ValueTask<ICacheReference<IPublicRoom>?> GetPublicRoomAsync(int instanceId, int worldId, CancellationToken cancellationToken = default);
+	public ValueTask<ICacheReference<TInstance>?> GetInstanceAsync<TInstance, TInfo, TId>(IRoomType<TInstance, TInfo, TId> roomType, TId roomId, CancellationToken cancellationToken = default);
 
-	public bool TryGetPrivateRoom(int roomId, [NotNullWhen(true)] out IPrivateRoom? room);
+	public bool TryGetInstance<TInstance, TInfo, TId>(IRoomType<TInstance, TInfo, TId> roomType, TId roomId, [NotNullWhen(true)] out TInstance? instance);
 }

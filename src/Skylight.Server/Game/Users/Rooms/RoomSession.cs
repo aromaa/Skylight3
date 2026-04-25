@@ -1,8 +1,10 @@
 ﻿using Skylight.API.Collections.Cache;
 using Skylight.API.Game.Rooms;
+using Skylight.API.Game.Rooms.Public;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Game.Users.Rooms;
+using Skylight.API.Registry;
 using Skylight.Protocol.Packets.Outgoing.Room.Permissions;
 using Skylight.Protocol.Packets.Outgoing.Room.Session;
 using Skylight.Protocol.Packets.Outgoing.RoomSettings;
@@ -13,6 +15,7 @@ namespace Skylight.Server.Game.Users.Rooms;
 // have their room entry sequences examined.
 internal sealed partial class RoomSession : IRoomSession
 {
+	private readonly IRegistryHolder registryHolder;
 	private readonly IRoomManager roomManager;
 	private readonly Func<IRoom, IUser, IUserRoomUnit> unitFactory;
 
@@ -30,8 +33,9 @@ internal sealed partial class RoomSession : IRoomSession
 
 	public IUserRoomUnit? Unit { get; set; }
 
-	internal RoomSession(IRoomManager roomManager, IUser user, int instanceType, int instanceId, int worldId, Func<IRoom, IUser, IUserRoomUnit> unitFactory)
+	internal RoomSession(IRegistryHolder registryHolder, IRoomManager roomManager, IUser user, int instanceType, int instanceId, int worldId, Func<IRoom, IUser, IUserRoomUnit> unitFactory)
 	{
+		this.registryHolder = registryHolder;
 		this.roomManager = roomManager;
 		this.unitFactory = unitFactory;
 
@@ -80,8 +84,8 @@ internal sealed partial class RoomSession : IRoomSession
 
 		ICacheReference<IRoom>? roomReference = this.InstanceType switch
 		{
-			0 => await this.roomManager.GetPrivateRoomAsync(this.InstanceId).ConfigureAwait(false),
-			1 => await this.roomManager.GetPublicRoomAsync(this.InstanceId, this.WorldId).ConfigureAwait(false),
+			0 => await this.roomManager.GetInstanceAsync(RoomTypes.Private.Get(this.registryHolder), this.InstanceId).ConfigureAwait(false),
+			1 => await this.roomManager.GetInstanceAsync(RoomTypes.PublicWorld.Get(this.registryHolder), new PublicRoomId(this.InstanceId, this.WorldId)).ConfigureAwait(false),
 			_ => null
 		};
 

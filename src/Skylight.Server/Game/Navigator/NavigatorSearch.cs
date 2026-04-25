@@ -2,11 +2,13 @@
 using Skylight.API.Game.Navigator;
 using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Private;
+using Skylight.API.Registry;
 
 namespace Skylight.Server.Game.Navigator;
 
-internal sealed class NavigatorSearch(INavigatorManager navigatorManager, IRoomManager roomManager, RoomActivityWorker roomActivityWorker) : INavigatorSearch
+internal sealed class NavigatorSearch(IRegistryHolder registryHolder, INavigatorManager navigatorManager, IRoomManager roomManager, RoomActivityWorker roomActivityWorker) : INavigatorSearch
 {
+	private readonly IRegistryHolder registryHolder = registryHolder;
 	private readonly INavigatorManager navigatorManager = navigatorManager;
 	private readonly IRoomManager roomManager = roomManager;
 
@@ -19,7 +21,7 @@ internal sealed class NavigatorSearch(INavigatorManager navigatorManager, IRoomM
 			const int count = 50;
 
 			HashSet<int> rooms = [];
-			foreach (IPrivateRoom room in this.roomManager.LoadedPrivateRooms
+			foreach (IPrivateRoom room in this.roomManager.GetLoadedInstances(RoomTypes.Private.Get(this.registryHolder))
 				.Where(r => r.Info.UserCount > 0)
 				.OrderByDescending(r => r.Info.UserCount)
 				.ThenBy(r => r.Info.Id))

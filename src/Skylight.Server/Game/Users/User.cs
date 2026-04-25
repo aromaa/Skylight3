@@ -7,6 +7,7 @@ using Skylight.API.Game.Rooms;
 using Skylight.API.Game.Rooms.Units;
 using Skylight.API.Game.Users;
 using Skylight.API.Game.Users.Rooms;
+using Skylight.API.Registry;
 using Skylight.Infrastructure;
 using Skylight.Protocol.Packets.Outgoing;
 using Skylight.Server.Game.Users.Authentication;
@@ -17,6 +18,7 @@ namespace Skylight.Server.Game.Users;
 
 internal sealed class User : IUser
 {
+	private readonly IRegistryHolder registryHolder;
 	private readonly IRoomManager roomManager;
 
 	private readonly UserInventory inventory;
@@ -33,8 +35,9 @@ internal sealed class User : IUser
 
 	private RoomSession? roomSession;
 
-	public User(IRoomManager roomManager, IClient client, IUserProfile profile, IPermissionSubject permissionSubject, IPurse purse, IUserSettings settings)
+	public User(IRegistryHolder registryHolder, IRoomManager roomManager, IClient client, IUserProfile profile, IPermissionSubject permissionSubject, IPurse purse, IUserSettings settings)
 	{
+		this.registryHolder = registryHolder;
 		this.roomManager = roomManager;
 
 		this.inventory = new UserInventory(this);
@@ -67,7 +70,7 @@ internal sealed class User : IUser
 
 	public IRoomSession OpenRoomSession(int instanceType, int instanceId, int worldId, Func<IRoom, IUser, IUserRoomUnit> unitFactory)
 	{
-		RoomSession newSession = new(this.roomManager, this, instanceType, instanceId, worldId, static (room, user) => room.UnitManager.CreateUnit(user));
+		RoomSession newSession = new(this.registryHolder, this.roomManager, this, instanceType, instanceId, worldId, static (room, user) => room.UnitManager.CreateUnit(user));
 
 		RoomSession? oldSession = Interlocked.Exchange(ref this.roomSession, newSession);
 		oldSession?.OnClose();
