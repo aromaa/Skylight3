@@ -63,7 +63,7 @@ internal partial class FigureConfigurationManager
 				foreach (FigureColorPaletteEntity paletteEntity in this.palettes.Values)
 				{
 					Dictionary<int, IFigureColorPaletteColor> colors = [];
-					foreach (FigureColorPaletteColorEntity figureColorEntity in paletteEntity.Colors!)
+					foreach ((int figureColorIndex, FigureColorPaletteColorEntity figureColorEntity) in paletteEntity.Colors!.Index())
 					{
 						IPermissionSubject? permissionRequirement = null;
 						if (figureColorEntity.RankId is { } rank)
@@ -76,7 +76,7 @@ internal partial class FigureConfigurationManager
 						}
 
 						ref IFigureColorPaletteColor? colorPaletteColor = ref CollectionsMarshal.GetValueRefOrAddDefault(colorPaletteColors, figureColorEntity.Id, out _);
-						colorPaletteColor ??= new FigureColorPaletteColor(figureColorEntity.Id, Color.FromArgb(figureColorEntity.Color), permissionRequirement);
+						colorPaletteColor ??= new FigureColorPaletteColor(figureColorEntity.Id, figureColorIndex, Color.FromArgb(figureColorEntity.Color), permissionRequirement);
 
 						colors.Add(figureColorEntity.Id, colorPaletteColor);
 					}

@@ -22,10 +22,20 @@ internal sealed class FigureDataContainer(FrozenDictionary<IFigureSetType, Figur
 			stringBuilder.Append('-');
 			stringBuilder.Append(value.Set.Id);
 
-			foreach (IFigureColorPaletteColor color in value.Colors)
+			if (value.Colors.Length > 0)
 			{
+				foreach (IFigureColorPaletteColor color in value.Colors)
+				{
+					stringBuilder.Append('-');
+					stringBuilder.Append(color.Id);
+				}
+			}
+			else
+			{
+				// Shockwave client requires at least three parts,
+				// whatever it will actually use the color or not.
+				// Just send a dash to fill this requirement.
 				stringBuilder.Append('-');
-				stringBuilder.Append(color.Id);
 			}
 		}
 

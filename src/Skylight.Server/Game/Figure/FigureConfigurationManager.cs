@@ -21,7 +21,7 @@ internal sealed partial class FigureConfigurationManager(IDbContextFactory<Skyli
 		{
 			await foreach (FigureColorPaletteEntity paletteEntity in dbContext.FigurePalettes
 				.AsSplitQuery()
-				.Include(p => p.Colors)
+				.Include(p => p.Colors!.OrderBy(c => c.OrderNum).ThenBy(c => c.Id))
 				.AsAsyncEnumerable()
 				.WithCancellation(cancellationToken)
 				.ConfigureAwait(false))

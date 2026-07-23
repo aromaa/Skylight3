@@ -119,7 +119,8 @@ internal sealed class FigureDataConverter : IFigureDataConverter<IFigureDataCont
 
 					if (!setValue.Colors.IsEmpty)
 					{
-						int.Min(setValue.Colors[0].Id, 99).TryFormat(span.Slice((index * 5) + 3), out _, "00");
+						// Lingo lists are 1-based.
+						int.Min(setValue.Colors[0].Index + 1, 99).TryFormat(span.Slice((index * 5) + 3), out _, "00");
 					}
 				}
 			}

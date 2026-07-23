@@ -4,9 +4,10 @@ using Skylight.API.Game.Permissions;
 
 namespace Skylight.Server.Game.Figure;
 
-internal sealed class FigureColorPaletteColor(int id, Color color, IPermissionSubject? permissionRequirement) : IFigureColorPaletteColor
+internal sealed class FigureColorPaletteColor(int id, int index, Color color, IPermissionSubject? permissionRequirement) : IFigureColorPaletteColor
 {
 	public int Id { get; } = id;
+	public int Index { get; } = index;
 
 	public Color Color { get; } = color;
 
