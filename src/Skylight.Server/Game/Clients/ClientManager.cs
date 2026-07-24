@@ -7,8 +7,8 @@ using Skylight.API.Game.Clients;
 using Skylight.API.Game.Users;
 using Skylight.API.Game.Users.Authentication;
 using Skylight.Protocol.Packets.Outgoing.Handshake;
-using Skylight.Server.Net;
 using Skylight.Server.Net.Listener.Connection;
+using Skylight.Settings.Net;
 
 namespace Skylight.Server.Game.Clients;
 

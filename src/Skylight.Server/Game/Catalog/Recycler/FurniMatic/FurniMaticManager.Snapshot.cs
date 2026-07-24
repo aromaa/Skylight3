@@ -16,6 +16,7 @@ using Skylight.API.Registry;
 using Skylight.Domain.Items;
 using Skylight.Domain.Recycler.FurniMatic;
 using Skylight.Infrastructure;
+using Skylight.Settings.Game.Catalog.Recycler;
 
 namespace Skylight.Server.Game.Catalog.Recycler.FurniMatic;
 

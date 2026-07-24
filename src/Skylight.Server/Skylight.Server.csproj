@@ -20,6 +20,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Skylight.API\Skylight.API.csproj" />
 		<ProjectReference Include="..\Skylight.Infrastructure\Skylight.Infrastructure.csproj" />
+		<ProjectReference Include="..\Skylight.Settings\Skylight.Settings.csproj" />
 		<ProjectReference Include="..\submodules\Skylight.Protocol\src\Skylight.Protocol\Skylight.Protocol.csproj" />
 		<ProjectReference Include="..\submodules\Skylight.Protocol\src\submodules\Net\Net.Collections\Net.Collections.csproj" />
 		<ProjectReference Include="..\submodules\Skylight.Protocol\src\submodules\Net\Net.Communication.SourceGenerator\Net.Communication.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />

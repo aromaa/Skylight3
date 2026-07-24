@@ -11,6 +11,7 @@ using Skylight.API.Registry;
 using Skylight.Infrastructure;
 using Skylight.Server.Game.Rooms.Private;
 using Skylight.Server.Game.Rooms.Public;
+using Skylight.Settings.Game.Rooms;
 
 namespace Skylight.Server.Game.Rooms;
 

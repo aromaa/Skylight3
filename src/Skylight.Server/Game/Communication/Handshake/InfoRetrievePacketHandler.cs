@@ -10,7 +10,7 @@ using Skylight.Protocol.Packets.Incoming.Handshake;
 using Skylight.Protocol.Packets.Manager;
 using Skylight.Protocol.Packets.Outgoing.Handshake;
 using Skylight.Server.Extensions;
-using Skylight.Server.Net;
+using Skylight.Settings.Net;
 
 namespace Skylight.Server.Game.Communication.Handshake;
 

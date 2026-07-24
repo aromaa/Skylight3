@@ -3,6 +3,7 @@
     <Project Path="src/plugins/Skylight.Plugin.WebSockets/Skylight.Plugin.WebSockets.csproj" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/Skylight.Settings/Skylight.Settings.csproj" />
     <Project Path="src/Skylight.API/Skylight.API.csproj" />
     <Project Path="src/Skylight.Bootstrap/Skylight.Bootstrap.csproj" />
     <Project Path="src/Skylight.Domain/Skylight.Domain.csproj" />

@@ -59,6 +59,7 @@ using Skylight.Server.Net.Listener.Ip;
 using Skylight.Server.Net.Listener.XmlSocket;
 using Skylight.Server.Registry;
 using Skylight.Server.Scheduling;
+using Skylight.Settings;
 
 namespace Skylight.Server.Extensions;
 
@@ -70,9 +71,7 @@ public static class HostBuilderExtensions
 		builder.AddHostedService<ServerHostService>();
 		builder.AddHostedService<BackgroundWorkerService>();
 
-		builder.Configure<FurniMaticSettings>(configuration.GetSection("FurniMatic"));
-		builder.Configure<NetworkSettings>(configuration.GetSection("Network"));
-		builder.Configure<RoomSettings>(configuration.GetSection("Room"));
+		builder.ConfigureSkylightSettings(configuration);
 
 		builder.AddSingleton(_ => TimeProvider.System);
 

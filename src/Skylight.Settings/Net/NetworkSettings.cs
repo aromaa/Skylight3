@@ -1,6 +1,6 @@
-﻿namespace Skylight.Server.Net;
+﻿namespace Skylight.Settings.Net;
 
-internal sealed class NetworkSettings
+public sealed class NetworkSettings
 {
 	public bool EarlyBind { get; set; } = false;
 	public bool EarlyAccept { get; set; } = false;
@@ -11,7 +11,7 @@ internal sealed class NetworkSettings
 
 	public List<string> AdditionalProtocols { get; set; } = [];
 
-	internal sealed class ListenerSettings
+	public sealed class ListenerSettings
 	{
 		public List<string> EndPoints { get; set; } = null!;
 

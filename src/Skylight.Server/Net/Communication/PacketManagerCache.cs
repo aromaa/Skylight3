@@ -11,6 +11,7 @@ using Net.Communication.Manager;
 using Skylight.Protocol.Attributes;
 using Skylight.Protocol.Packets.Manager;
 using Skylight.Server.Net.Communication;
+using Skylight.Settings.Net;
 
 [assembly: MetadataUpdateHandler(typeof(PacketManagerCache.MetadataUpdateHandler))]
 
