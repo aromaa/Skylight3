@@ -8,7 +8,7 @@ using Skylight.Server.Net.Communication;
 
 namespace Skylight.Server.Net.Listener.Ip;
 
-internal sealed class TcpNetworkListener(IServiceProvider serviceProvider, ILogger<TcpNetworkListener> logger, INetworkConnectionHandler connectionHandler, PacketManagerCache packetManagerCache, IPEndPoint endPoint) : INetworkListener
+internal sealed class TcpNetworkListener(IServiceProvider serviceProvider, ILogger<TcpNetworkListener> logger, INetworkConnectionHandler connectionHandler, PacketManagerCache packetManagerCache, Uri endPoint) : INetworkListener
 {
 	private readonly IServiceProvider serviceProvider = serviceProvider;
 	private readonly ILogger<TcpNetworkListener> logger = logger;
@@ -17,7 +17,7 @@ internal sealed class TcpNetworkListener(IServiceProvider serviceProvider, ILogg
 
 	private readonly PacketManagerCache packetManagerCache = packetManagerCache;
 
-	private readonly IPEndPoint endPoint = endPoint;
+	private readonly Uri endPoint = endPoint;
 
 	public void Start(NetworkListenerConfiguration configuration)
 	{
@@ -28,9 +28,11 @@ internal sealed class TcpNetworkListener(IServiceProvider serviceProvider, ILogg
 			return;
 		}
 
-		this.logger.LogInformation($"Listening on {this.endPoint}");
+		IPEndPoint ipEndPoint = IPEndPoint.Parse(this.endPoint.Authority);
 
-		IListener.CreateTcpListener(this.endPoint, socket =>
+		this.logger.LogInformation($"Listening on {ipEndPoint}");
+
+		IListener.CreateTcpListener(ipEndPoint, socket =>
 		{
 			this.connectionHandler.Accept(socket, configuration.Encoding, configuration.Revision!, configuration.CryptoPrime, configuration.CryptoGenerator, configuration.CryptoKey, configuration.CryptoPremix, configuration.DecodePremix);
 		}, this.serviceProvider);

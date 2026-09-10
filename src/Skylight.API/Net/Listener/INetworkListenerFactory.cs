@@ -1,10 +1,8 @@
-﻿using Skylight.API.Net.EndPoint;
-
-namespace Skylight.API.Net.Listener;
+﻿namespace Skylight.API.Net.Listener;
 
 public interface INetworkListenerFactory
 {
-	public bool CanHandle(INetworkEndPoint endPoint);
+	public bool CanHandle(Uri endPoint);
 
-	public INetworkListener CreateListener(INetworkEndPoint endPoint);
+	public INetworkListener CreateListener(Uri endPoint);
 }

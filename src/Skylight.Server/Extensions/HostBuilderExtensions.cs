@@ -24,7 +24,6 @@ using Skylight.API.Game.Rooms.Public;
 using Skylight.API.Game.Users;
 using Skylight.API.Game.Users.Authentication;
 using Skylight.API.Net.Connection;
-using Skylight.API.Net.EndPoint;
 using Skylight.API.Net.Listener;
 using Skylight.API.Registry;
 using Skylight.API.Server;
@@ -52,7 +51,6 @@ using Skylight.Server.Game.Users.Authentication;
 using Skylight.Server.Host;
 using Skylight.Server.Net;
 using Skylight.Server.Net.Communication;
-using Skylight.Server.Net.EndPoint;
 using Skylight.Server.Net.Listener;
 using Skylight.Server.Net.Listener.Connection;
 using Skylight.Server.Net.Listener.Ip;
@@ -76,10 +74,6 @@ public static class HostBuilderExtensions
 		builder.AddSingleton(_ => TimeProvider.System);
 
 		builder.AddSingleton<IServer, SkylightServer>();
-
-		builder.AddSingleton<INetworkEndPointStrategy, NetworkEndPointStrategy>();
-		builder.AddSingleton<INetworkEndPointParser, IpNetworkEndPointParser>();
-		builder.AddSingleton<INetworkEndPointParser, UriNetworkEndPointParser>();
 
 		builder.AddSingleton<INetworkListenerStrategy, NetworkListenerStrategy>();
 		builder.AddSingleton<INetworkListenerFactory, XmlSocketNetworkListenerFactory>();

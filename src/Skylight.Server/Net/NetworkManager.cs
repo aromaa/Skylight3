@@ -1,19 +1,17 @@
 ﻿using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Skylight.API.Net.EndPoint;
 using Skylight.API.Net.Listener;
 using Skylight.Settings.Net;
 
 namespace Skylight.Server.Net;
 
-internal sealed class NetworkManager(ILogger<NetworkManager> logger, IOptions<NetworkSettings> settings, INetworkEndPointStrategy endPointStrategy, INetworkListenerStrategy networkListenerStrategy)
+internal sealed class NetworkManager(ILogger<NetworkManager> logger, IOptions<NetworkSettings> settings, INetworkListenerStrategy networkListenerStrategy)
 {
 	private readonly ILogger<NetworkManager> logger = logger;
 
 	internal NetworkSettings Settings { get; } = settings.Value;
 
-	private readonly INetworkEndPointStrategy endPointStrategy = endPointStrategy;
 	private readonly INetworkListenerStrategy networkListenerStrategy = networkListenerStrategy;
 
 	public void Start()
@@ -22,16 +20,14 @@ internal sealed class NetworkManager(ILogger<NetworkManager> logger, IOptions<Ne
 		{
 			foreach (string endPoint in listenerSettings.EndPoints)
 			{
-				if (!this.endPointStrategy.TryParse(endPoint, out INetworkEndPoint? endPointInstance))
+				if (!Uri.TryCreate(endPoint, UriKind.Absolute, out Uri? uri))
 				{
-					this.logger.LogWarning($"Unrecognized end point {endPoint}");
-
-					continue;
+					uri = new Uri("tcp://" + endPoint, UriKind.Absolute);
 				}
 
-				if (!this.networkListenerStrategy.TryCreateListener(endPointInstance, out INetworkListener? listener))
+				if (!this.networkListenerStrategy.TryCreateListener(uri, out INetworkListener? listener))
 				{
-					this.logger.LogWarning($"Unable to find appropriate listener for {endPointInstance.GetType().Name}");
+					this.logger.LogWarning($"Unable to find appropriate listener for {uri}");
 
 					continue;
 				}

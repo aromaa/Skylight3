@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Skylight.API.Net.EndPoint;
 using Skylight.API.Net.Listener;
 
 namespace Skylight.Server.Net.Listener.Ip;
@@ -8,10 +7,10 @@ internal sealed class TcpNetworkListenerFactory(IServiceProvider serviceProvider
 {
 	private readonly IServiceProvider serviceProvider = serviceProvider;
 
-	public bool CanHandle(INetworkEndPoint endPoint) => endPoint is IIpNetworkEndPoint;
+	public bool CanHandle(Uri endPoint) => endPoint.Scheme == "tcp";
 
-	public INetworkListener CreateListener(INetworkEndPoint endPoint)
+	public INetworkListener CreateListener(Uri endPoint)
 	{
-		return ActivatorUtilities.CreateInstance<TcpNetworkListener>(this.serviceProvider, [((IIpNetworkEndPoint)endPoint).IpEndPoint]);
+		return ActivatorUtilities.CreateInstance<TcpNetworkListener>(this.serviceProvider, [endPoint]);
 	}
 }
