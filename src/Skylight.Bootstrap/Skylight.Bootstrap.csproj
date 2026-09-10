@@ -64,13 +64,11 @@
 				<ProtocolName>%(ProtocolReference.Identity)</ProtocolName>
 				<ProjectPath>..\submodules\Skylight.Protocol\src\Skylight.Protocol.X\Skylight.Protocol.%(ProtocolReference.Identity)\Skylight.Protocol.%(ProtocolReference.Identity).csproj</ProjectPath>
 				<TouchCachePath>$(IntermediateOutputPath)Skylight.Protocol.%(ProtocolReference.Identity).cache</TouchCachePath>
-				<DllLocationCachePath>$(IntermediateOutputPath)Skylight.Protocol.%(ProtocolReference.Identity).Dll.cache</DllLocationCachePath>
 			</ResolvedProtocolReference>
 
 			<UpToDateCheckBuilt Include="%(ResolvedProtocolReference.TouchCachePath)" Original="%(ResolvedProtocolReference.Identity)" />
 
 			<FileWrites Include="%(ResolvedProtocolReference.TouchCachePath)" />
-			<FileWrites Include="%(ResolvedProtocolReference.DllLocationCachePath)" />
 		</ItemGroup>
 
 		<ItemGroup>
@@ -82,43 +80,26 @@
 
 	<Target Name="RetrieveProtocolDlls"
 			AfterTargets="ResolveProtocolReferences"
-			Returns="@(CachedProtocolDll)">
-
-		<ReadLinesFromFile File="$(IntermediateOutputPath)Skylight.Protocols.Dlls.cache">
-			<Output TaskParameter="Lines" ItemName="CachedProtocolDll" />
-		</ReadLinesFromFile>
-
-		<ItemGroup Condition="'@(CachedProtocolDll)' != ''">
-			<UpToDateCheckBuilt Include="@(CachedProtocolDll)" Original="$(IntermediateOutputPath)Skylight.Protocols.LastRebuild.cache" />
-		</ItemGroup>
-	</Target>
-
-	<Target Name="RebuildBuildProtocols"
-			AfterTargets="BeforeCompile"
-			Condition="'@(ResolvedProtocolReference)' != ''"
-			Inputs="$(IntermediateOutputPath)Skylight.Protocols.LastRebuild.cache"
-			Outputs="@(CachedProtocolDll)">
-
-		<ItemGroup>
-			<FileWrites Include="$(IntermediateOutputPath)Skylight.Protocols.LastRebuild.cache" />
-		</ItemGroup>
-
-		<Touch Files="$(IntermediateOutputPath)Skylight.Protocols.LastRebuild.cache" AlwaysCreate="true" />
+			Inputs="$(IntermediateOutputPath)Skylight.Protocols.Selected.cache"
+			Outputs="$(IntermediateOutputPath)Skylight.Protocols.Dlls.cache">
 
 		<MSBuild Projects="@(ResolvedProtocolReference->'%(ProjectPath)')"
+				 Targets="GetTargetPath"
 				 BuildInParallel="true"
-				 Targets="Restore;Rebuild"
 				 Properties="Configuration=$(Configuration);Platform=$(Platform);HotSwap=True">
 
-			<Output TaskParameter="TargetOutputs" ItemName="ProtocolAssemblies" />
+			<Output TaskParameter="TargetOutputs" ItemName="ProtocolDll" />
 		</MSBuild>
 
-		<Touch Files="%(ProtocolAssemblies.TouchCachePath)" AlwaysCreate="true" />
-		<WriteLinesToFile File="%(ProtocolAssemblies.DllLocationCachePath)" Lines="%(ProtocolAssemblies.Identity)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+		<ItemGroup>
+			<FileWrites Include="$(IntermediateOutputPath)Skylight.Protocols.Dlls.cache" />
+		</ItemGroup>
+
+		<WriteLinesToFile File="$(IntermediateOutputPath)Skylight.Protocols.Dlls.cache" Lines="@(ProtocolDll)" Overwrite="true" WriteOnlyWhenDifferent="true" />
 	</Target>
 
 	<Target Name="IncrementalBuildProtocols"
-			AfterTargets="RebuildBuildProtocols"
+			AfterTargets="BeforeCompile"
 			Condition="'@(ResolvedProtocolReference)' != ''"
 			Inputs="@(ResolvedProtocolReference)"
 			Outputs="@(ResolvedProtocolReference->'%(TouchCachePath)')">
@@ -132,32 +113,10 @@
 		</MSBuild>
 
 		<Touch Files="%(ProtocolAssemblies.TouchCachePath)" AlwaysCreate="true" />
-		<WriteLinesToFile File="%(ProtocolAssemblies.DllLocationCachePath)" Lines="%(ProtocolAssemblies.Identity)" Overwrite="true" WriteOnlyWhenDifferent="true" />
-	</Target>
-
-	<Target Name="CacheProtocolDlls"
-			AfterTargets="IncrementalBuildProtocols"
-			Inputs="$(IntermediateOutputPath)Skylight.Protocols.Selected.cache;@(ResolvedProtocolReference->'%(DllLocationCachePath)')"
-			Outputs="$(IntermediateOutputPath)Skylight.Protocols.Dlls.cache">
-
-		<ReadLinesFromFile File="%(ResolvedProtocolReference.DllLocationCachePath)" Condition="'%(ResolvedProtocolReference.DllLocationCachePath)' != ''">
-			<Output TaskParameter="Lines" ItemName="ProtocolDll" />
-		</ReadLinesFromFile>
-
-		<ItemGroup Condition="'@(ProtocolDll)' != ''">
-			<UpToDateCheckBuilt Remove="@(CachedProtocolDll)" />
-			<UpToDateCheckBuilt Include="@(ProtocolDll)" Original="$(IntermediateOutputPath)Skylight.Protocols.LastRebuild.cache" />
-		</ItemGroup>
-
-		<ItemGroup>
-			<FileWrites Include="$(IntermediateOutputPath)Skylight.Protocols.Dlls.cache" />
-		</ItemGroup>
-
-		<WriteLinesToFile File="$(IntermediateOutputPath)Skylight.Protocols.Dlls.cache" Lines="@(ProtocolDll)" Overwrite="true" />
 	</Target>
 
 	<Target Name="WriteProtocolLibraryPathAttribute"
-			AfterTargets="CacheProtocolDlls"
+			AfterTargets="IncrementalBuildProtocols"
 			Inputs="$(IntermediateOutputPath)Skylight.Protocols.Dlls.cache"
 			Outputs="$(IntermediateOutputPath)Skylight.Protocols.InternalProtocolLibraryPathAttribute.cs">
 
