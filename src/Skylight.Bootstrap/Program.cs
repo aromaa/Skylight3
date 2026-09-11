@@ -12,8 +12,8 @@ using Skylight.Bootstrap.DependencyInjection;
 using Skylight.Infrastructure;
 using Skylight.Plugin.WebSockets;
 using Skylight.Server.Extensions;
-using Skylight.Server.Host;
 using Skylight.Server.Redis;
+using Skylight.Settings.Configuration;
 
 long now = Stopwatch.GetTimestamp();
 
@@ -36,7 +36,7 @@ builder.ConfigureContainer(new LayeredServiceProviderFactory(), layeredBuilder =
 	{
 		provider.GetRequiredService<RedisConnector>().GetDatabaseAsync().Preserve();
 
-		builder.Configuration.Sources.Insert(0, new ServerConfigurationSource(provider.GetRequiredService<IDbContextFactory<SkylightContext>>()));
+		builder.Configuration.Sources.Insert(0, new SkylightDatabaseConfigurationSource(provider.GetRequiredService<IDbContextFactory<SkylightContext>>()));
 
 		AddDebugProtocols(builder);
 	});

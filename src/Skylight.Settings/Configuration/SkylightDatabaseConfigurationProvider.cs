@@ -2,13 +2,13 @@
 using Microsoft.Extensions.Configuration;
 using Skylight.Infrastructure;
 
-namespace Skylight.Server.Host;
+namespace Skylight.Settings.Configuration;
 
-internal sealed class ServerConfigurationProvider : ConfigurationProvider
+internal sealed class SkylightDatabaseConfigurationProvider : ConfigurationProvider
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
 
-	internal ServerConfigurationProvider(IDbContextFactory<SkylightContext> dbContextFactory)
+	internal SkylightDatabaseConfigurationProvider(IDbContextFactory<SkylightContext> dbContextFactory)
 	{
 		this.dbContextFactory = dbContextFactory;
 	}
