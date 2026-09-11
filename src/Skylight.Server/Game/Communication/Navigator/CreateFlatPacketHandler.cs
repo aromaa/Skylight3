@@ -41,17 +41,6 @@ internal sealed partial class CreateFlatPacketHandler<T>(IDbContextFactory<Skyli
 			return;
 		}
 
-		string model = user.Client.Encoding.GetString(packet.LayoutId);
-		if (!this.navigatorManager.TryGetLayout(model, out IRoomLayout? layout))
-		{
-			return;
-		}
-
-		if (!this.navigatorManager.TryGetNode(packet.CategoryId, out INavigatorNode? node) || node is not INavigatorCategoryNode)
-		{
-			return;
-		}
-
 		if (packet.MaxUserCount % 5 != 0 || packet.MaxUserCount is < 10 or > 75)
 		{
 			return;
@@ -60,10 +49,24 @@ internal sealed partial class CreateFlatPacketHandler<T>(IDbContextFactory<Skyli
 		string roomName = user.Client.Encoding.GetString(packet.RoomName);
 		string description = user.Client.Encoding.GetString(packet.Description);
 
+		string model = user.Client.Encoding.GetString(packet.LayoutId);
+		int categoryId = packet.CategoryId;
+
 		int maxUserCount = packet.MaxUserCount;
 
 		user.Client.ScheduleTask(async client =>
 		{
+			INavigatorSnapshot navigatorSnapshot = await this.navigatorManager.GetAsync().ConfigureAwait(false);
+			if (!navigatorSnapshot.TryGetLayout(model, out IRoomLayout? layout))
+			{
+				return;
+			}
+
+			if (!navigatorSnapshot.TryGetNode(categoryId, out INavigatorNode? node) || node is not INavigatorCategoryNode)
+			{
+				return;
+			}
+
 			PrivateRoomEntity room;
 			await using (SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false))
 			{

@@ -8,8 +8,8 @@ using Skylight.Server.DependencyInjection;
 
 namespace Skylight.Server.Game.Achievements;
 
-internal sealed partial class AchievementManager(IDbContextFactory<SkylightContext> dbContextFactory, IBadgeManager badgeManager)
-	: LoadableServiceBase<IAchievementSnapshot>(new Snapshot(Cache.CreateBuilder().ToImmutable(badgeManager.Current))), IAchievementManager
+internal sealed partial class AchievementManager(IDbContextFactory<SkylightContext> dbContextFactory)
+	: LoadableServiceBase<IAchievementSnapshot>(), IAchievementManager
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 

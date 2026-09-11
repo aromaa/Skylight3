@@ -28,7 +28,7 @@ internal sealed class GetWardrobePacketHandler<T>(IDbContextFactory<SkylightCont
 		{
 			await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
-			IFigureConfigurationSnapshot figureConfigurationSnapshot = this.figureConfigurationManager.Current;
+			IFigureConfigurationSnapshot figureConfigurationSnapshot = await this.figureConfigurationManager.GetAsync().ConfigureAwait(false);
 
 			List<WardrobeSlotData<IFigureDataContainer>> wardrobe = dbContext.UserWardrobeSlots
 				.Where(e => e.UserId == user.Id)

@@ -17,6 +17,11 @@ internal sealed partial class PurchaseFromCatalogPacketHandler<T>(ICatalogManage
 
 	internal override void Handle(IUser user, in T packet)
 	{
+		int pageId = packet.PageId;
+		int offerId = packet.OfferId;
+		int amount = packet.Amount;
+		string extraData = user.Client.Encoding.GetString(packet.ExtraData);
+
 		if (packet.Amount is < 1 or > 100)
 		{
 			user.SendAsync(new PurchaseNotAllowedOutgoingPacket(PurchaseNotAllowedReason.Generic));
@@ -24,36 +29,36 @@ internal sealed partial class PurchaseFromCatalogPacketHandler<T>(ICatalogManage
 			return;
 		}
 
-		ICatalogSnapshot catalog = this.catalogManager.Current;
-
-		if (!catalog.TryGetPage(packet.PageId, out ICatalogPage? page)
-			|| !page.CanAccess(user)
-			|| !page.TryGetOffer(packet.OfferId, out ICatalogOffer? offer))
+		user.Client.ScheduleTask(async _ =>
 		{
-			user.SendAsync(new PurchaseNotAllowedOutgoingPacket(PurchaseNotAllowedReason.Generic));
+			ICatalogSnapshot catalog = await this.catalogManager.GetAsync().ConfigureAwait(false);
 
-			return;
-		}
-		else if (!offer.CanEffort(user.Purse))
-		{
-			return;
-		}
+			if (!catalog.TryGetPage(pageId, out ICatalogPage? page)
+				|| !page.CanAccess(user)
+				|| !page.TryGetOffer(offerId, out ICatalogOffer? offer))
+			{
+				user.SendAsync(new PurchaseNotAllowedOutgoingPacket(PurchaseNotAllowedReason.Generic));
 
-		string extraData = user.Client.Encoding.GetString(packet.ExtraData);
-		int amount = packet.Amount;
+				return;
+			}
+			else if (!offer.CanEffort(user.Purse))
+			{
+				return;
+			}
 
-		bool scheduled = user.Client.ScheduleTask(async client =>
-		{
-			ICatalogTransactionResult result = await catalog.PurchaseOfferAsync(client.User!, offer, extraData, amount).ConfigureAwait(false);
-			if (result.Result != ICatalogTransactionResult.ResultType.Success)
+			bool scheduled = user.Client.ScheduleTask(async client =>
+			{
+				ICatalogTransactionResult result = await catalog.PurchaseOfferAsync(client.User!, offer, extraData, amount).ConfigureAwait(false);
+				if (result.Result != ICatalogTransactionResult.ResultType.Success)
+				{
+					user.SendAsync(new PurchaseErrorOutgoingPacket(PurchaseErrorReason.Generic));
+				}
+			});
+
+			if (!scheduled)
 			{
 				user.SendAsync(new PurchaseErrorOutgoingPacket(PurchaseErrorReason.Generic));
 			}
 		});
-
-		if (!scheduled)
-		{
-			user.SendAsync(new PurchaseErrorOutgoingPacket(PurchaseErrorReason.Generic));
-		}
 	}
 }

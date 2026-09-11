@@ -8,7 +8,7 @@ using Skylight.Server.DependencyInjection;
 
 namespace Skylight.Server.Game.Figure;
 
-internal sealed partial class FigureConfigurationManager(IDbContextFactory<SkylightContext> dbContextFactory) : LoadableServiceBase<IFigureConfigurationSnapshot>(new Snapshot(Cache.CreateBuilder().ToImmutable())), IFigureConfigurationManager
+internal sealed partial class FigureConfigurationManager(IDbContextFactory<SkylightContext> dbContextFactory) : LoadableServiceBase<IFigureConfigurationSnapshot>(), IFigureConfigurationManager
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 

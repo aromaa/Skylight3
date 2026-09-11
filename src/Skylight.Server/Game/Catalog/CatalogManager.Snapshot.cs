@@ -10,13 +10,6 @@ namespace Skylight.Server.Game.Catalog;
 
 internal partial class CatalogManager
 {
-	public ImmutableArray<ICatalogPage> RootPages => this.Current.RootPages;
-
-	public bool TryGetPage(int pageId, [NotNullWhen(true)] out ICatalogPage? page) => this.Current.TryGetPage(pageId, out page);
-	public bool TryGetOffer(int offerId, [NotNullWhen(true)] out ICatalogOffer? offer) => this.Current.TryGetOffer(offerId, out offer);
-
-	public Task<ICatalogTransactionResult> PurchaseOfferAsync(IUser user, ICatalogOffer offer, string extraData, int amount, CancellationToken cancellationToken) => this.Current.PurchaseOfferAsync(user, offer, extraData, amount, cancellationToken);
-
 	private sealed class Snapshot : ICatalogSnapshot
 	{
 		private readonly ICatalogTransactionFactory catalogTransactionFactory;

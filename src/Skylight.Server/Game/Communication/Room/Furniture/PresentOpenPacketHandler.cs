@@ -45,7 +45,9 @@ internal sealed partial class PresentOpenPacketHandler<T>(IRegistryHolder regist
 
 			if (present is IFurniMaticGiftRoomItem roomItem && roomItem.CanOpen(user))
 			{
-				IFurniMaticPrize? prize = await this.furniMaticManager.OpenGiftAsync(roomUnit.User, roomItem).ConfigureAwait(false);
+				IFurniMaticSnapshot furniMaticSnapshot = await this.furniMaticManager.GetAsync().ConfigureAwait(false);
+
+				IFurniMaticPrize? prize = await furniMaticSnapshot.OpenGiftAsync(roomUnit.User, roomItem).ConfigureAwait(false);
 				if (prize is null)
 				{
 					return;

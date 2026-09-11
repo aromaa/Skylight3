@@ -97,7 +97,7 @@ internal sealed class LoadableServiceContext : ILoadableServiceContext
 		Task? task = await this.LoadServiceAsync(service, cancellationToken).ConfigureAwait(false);
 
 		return task is null
-			? service.Current
+			? service.GetAsync().Result
 			: ((Task<T>)task).Result;
 	}
 

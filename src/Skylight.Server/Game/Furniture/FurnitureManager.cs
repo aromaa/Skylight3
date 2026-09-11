@@ -8,7 +8,7 @@ using Skylight.Server.DependencyInjection;
 
 namespace Skylight.Server.Game.Furniture;
 
-internal sealed partial class FurnitureManager(IDbContextFactory<SkylightContext> dbContextFactory, IRegistryHolder registryHolder) : LoadableServiceBase<IFurnitureSnapshot>(new Snapshot(Cache.CreateBuilder().ToImmutable(registryHolder))), IFurnitureManager
+internal sealed partial class FurnitureManager(IDbContextFactory<SkylightContext> dbContextFactory, IRegistryHolder registryHolder) : LoadableServiceBase<IFurnitureSnapshot>(), IFurnitureManager
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 

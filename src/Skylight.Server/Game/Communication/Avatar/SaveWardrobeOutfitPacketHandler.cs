@@ -30,11 +30,15 @@ internal sealed class SaveWardrobeOutfitPacketHandler<T>(IDbContextFactory<Skyli
 			return;
 		}
 
-		IFigureDataContainer figure = this.figureConfigurationManager.Parse(packet.Figure, new FigureValidationOptions(null, user.PermissionSubject));
 		FigureSexType sex = Encoding.ASCII.GetString(packet.Gender) == "M" ? FigureSexType.Male : FigureSexType.Female;
+		string figureData = Encoding.ASCII.GetString(packet.Figure);
 
 		user.Client.ScheduleTask(async _ =>
 		{
+			IFigureConfigurationSnapshot figureConfiguration = await this.figureConfigurationManager.GetAsync().ConfigureAwait(false);
+
+			IFigureDataContainer figure = figureConfiguration.Parse(figureData, new FigureValidationOptions(null, user.PermissionSubject));
+
 			// TODO: Retry on deadlock?
 			await using SkylightContext dbContext = await this.dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 			await using IDbContextTransaction transaction = await dbContext.Database.BeginTransactionAsync().ConfigureAwait(false);

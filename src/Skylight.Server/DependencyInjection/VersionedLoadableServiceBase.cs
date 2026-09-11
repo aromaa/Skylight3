@@ -4,7 +4,7 @@ namespace Skylight.Server.DependencyInjection;
 
 internal abstract class VersionedLoadableServiceBase
 {
-	internal abstract VersionedServiceSnapshot Current { get; }
+	internal abstract VersionedServiceSnapshot? Current { get; }
 }
 
 internal abstract class VersionedLoadableServiceBase<TInterface, TImplementation> : VersionedLoadableServiceBase, ILoadableService<TInterface>
@@ -15,17 +15,15 @@ internal abstract class VersionedLoadableServiceBase<TInterface, TImplementation
 
 	private ValueTask<TInterface> currentValueTask;
 
-	private TImplementation current;
+	private TImplementation? current;
 
 	private int nextVersion;
 
-	protected VersionedLoadableServiceBase(TImplementation current)
+	protected VersionedLoadableServiceBase()
 	{
 		this.initialLoadTaskCompletionSource = new TaskCompletionSource<TInterface>(TaskCreationOptions.RunContinuationsAsynchronously);
 
 		this.currentValueTask = new ValueTask<TInterface>(this.initialLoadTaskCompletionSource.Task);
-
-		this.current = current;
 	}
 
 	internal abstract Task<VersionedServiceSnapshot.Transaction<TImplementation>> LoadAsyncCore(ILoadableServiceContext context, CancellationToken cancellationToken = default);
@@ -56,9 +54,7 @@ internal abstract class VersionedLoadableServiceBase<TInterface, TImplementation
 		return transaction.Current;
 	}
 
-	internal override TImplementation Current => this.current;
-
-	TInterface ILoadableService<TInterface>.Current => this.current;
+	internal override TImplementation? Current => this.current;
 
 	public ValueTask<TInterface> GetAsync() => this.currentValueTask;
 }

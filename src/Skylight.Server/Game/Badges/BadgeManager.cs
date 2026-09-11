@@ -7,7 +7,7 @@ using Skylight.Server.DependencyInjection;
 
 namespace Skylight.Server.Game.Badges;
 
-internal sealed partial class BadgeManager(IDbContextFactory<SkylightContext> dbContextFactory) : LoadableServiceBase<IBadgeSnapshot>(new Snapshot(Cache.CreateBuilder().ToImmutable())), IBadgeManager
+internal sealed partial class BadgeManager(IDbContextFactory<SkylightContext> dbContextFactory) : LoadableServiceBase<IBadgeSnapshot>(), IBadgeManager
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory = dbContextFactory;
 

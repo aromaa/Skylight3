@@ -7,9 +7,6 @@ namespace Skylight.Server.Game.Furniture;
 
 internal partial class FurnitureManager
 {
-	public bool TryGetFloorFurniture(int furnitureId, [NotNullWhen(true)] out IFloorFurniture? furniture) => this.Current.TryGetFloorFurniture(furnitureId, out furniture);
-	public bool TryGetWallFurniture(int furnitureId, [NotNullWhen(true)] out IWallFurniture? furniture) => this.Current.TryGetWallFurniture(furnitureId, out furniture);
-
 	private sealed class Snapshot : IFurnitureSnapshot
 	{
 		private readonly Cache cache;

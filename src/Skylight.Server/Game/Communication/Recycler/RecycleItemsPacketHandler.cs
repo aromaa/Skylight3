@@ -16,40 +16,45 @@ internal sealed partial class RecycleItemsPacketHandler<T>(IFurniMaticManager fu
 
 	internal override void Handle(IUser user, in T packet)
 	{
-		IFurniMaticSnapshot snapshot = this.furniMaticManager.Current;
-		if (packet.StripIds.Count != snapshot.ItemsRequiredToRecycle)
-		{
-			user.SendAsync(new RecyclerFinishedOutgoingPacket(2, 0));
-			return;
-		}
+		IList<int> stripIds = packet.StripIds;
 
-		IFurnitureInventoryItem[] items = new IFurnitureInventoryItem[snapshot.ItemsRequiredToRecycle];
-		for (int i = 0; i < items.Length; i++)
+		user.Client.ScheduleTask(async _ =>
 		{
-			int stripId = packet.StripIds[i];
-
-			if (!user.Inventory.TryGetFurnitureItem(stripId, out IFurnitureInventoryItem? item))
+			IFurniMaticSnapshot snapshot = await this.furniMaticManager.GetAsync().ConfigureAwait(false);
+			if (stripIds.Count != snapshot.ItemsRequiredToRecycle)
 			{
+				user.SendAsync(new RecyclerFinishedOutgoingPacket(2, 0));
 				return;
 			}
 
-			items[i] = item;
-		}
+			IFurnitureInventoryItem[] items = new IFurnitureInventoryItem[snapshot.ItemsRequiredToRecycle];
+			for (int i = 0; i < items.Length; i++)
+			{
+				int stripId = stripIds[i];
 
-		bool scheduled = user.Client.ScheduleTask(async client =>
-		{
-			IFurniMaticPrize? prize = await snapshot.RecycleAsync(client.User!, items).ConfigureAwait(false);
+				if (!user.Inventory.TryGetFurnitureItem(stripId, out IFurnitureInventoryItem? item))
+				{
+					return;
+				}
 
-			//1 completed
-			//2 closed
-			client.SendAsync(new RecyclerFinishedOutgoingPacket(prize is not null ? 1 : 2, 0));
+				items[i] = item;
+			}
+
+			bool scheduled = user.Client.ScheduleTask(async client =>
+			{
+				IFurniMaticPrize? prize = await snapshot.RecycleAsync(client.User!, items).ConfigureAwait(false);
+
+				//1 completed
+				//2 closed
+				client.SendAsync(new RecyclerFinishedOutgoingPacket(prize is not null ? 1 : 2, 0));
+			});
+
+			if (!scheduled)
+			{
+				//1 completed
+				//2 closed
+				user.SendAsync(new RecyclerFinishedOutgoingPacket(2, 0));
+			}
 		});
-
-		if (!scheduled)
-		{
-			//1 completed
-			//2 closed
-			user.SendAsync(new RecyclerFinishedOutgoingPacket(2, 0));
-		}
 	}
 }

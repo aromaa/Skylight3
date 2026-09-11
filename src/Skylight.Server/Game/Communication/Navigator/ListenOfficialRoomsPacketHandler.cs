@@ -17,15 +17,20 @@ internal sealed class ListenOfficialRoomsPacketHandler<T>(INavigatorManager navi
 
 	internal override void Handle(IUser user, in T packet)
 	{
-		List<NavigatorNodeData> nodes = [];
-		foreach (INavigatorNode node in this.navigatorManager.Nodes)
+		user.Client.ScheduleTask(async _ =>
 		{
-			if (node is INavigatorPublicRoomNode publicRoom)
-			{
-				nodes.Add(new NavigatorPublicRoomNode(publicRoom.Id, publicRoom.Parent?.Id ?? 0, publicRoom.Caption, 0, 0, publicRoom.Name, publicRoom.InstanceId, publicRoom.WorldId, string.Empty, 0, string.Join(',', publicRoom.Casts)));
-			}
-		}
+			INavigatorSnapshot navigatorSnapshot = await this.navigatorManager.GetAsync().ConfigureAwait(false);
 
-		user.SendAsync(new OfficialRoomsOutgoingPacket(0, nodes));
+			List<NavigatorNodeData> nodes = [];
+			foreach (INavigatorNode node in navigatorSnapshot.Nodes)
+			{
+				if (node is INavigatorPublicRoomNode publicRoom)
+				{
+					nodes.Add(new NavigatorPublicRoomNode(publicRoom.Id, publicRoom.Parent?.Id ?? 0, publicRoom.Caption, 0, 0, publicRoom.Name, publicRoom.InstanceId, publicRoom.WorldId, string.Empty, 0, string.Join(',', publicRoom.Casts)));
+				}
+			}
+
+			user.SendAsync(new OfficialRoomsOutgoingPacket(0, nodes));
+		});
 	}
 }

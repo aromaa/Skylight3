@@ -144,7 +144,7 @@ internal partial class NavigatorSnapshot
 			return new NavigatorSnapshot(cache, this.BuildHolders(cache));
 		}
 
-		internal override Transaction<NavigatorSnapshot> BuildAndStartTransaction(VersionedLoadableServiceBase instance, NavigatorSnapshot current)
+		internal override Transaction<NavigatorSnapshot> BuildAndStartTransaction(VersionedLoadableServiceBase instance, NavigatorSnapshot? current)
 		{
 			Cache cache = this.BuildCache();
 

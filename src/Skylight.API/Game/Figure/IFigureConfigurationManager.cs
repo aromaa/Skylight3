@@ -2,4 +2,4 @@
 
 namespace Skylight.API.Game.Figure;
 
-public interface IFigureConfigurationManager : IFigureConfiguration, ILoadableService<IFigureConfigurationSnapshot>;
+public interface IFigureConfigurationManager : ILoadableService<IFigureConfigurationSnapshot>;

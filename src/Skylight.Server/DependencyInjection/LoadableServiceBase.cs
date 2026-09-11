@@ -3,19 +3,16 @@
 namespace Skylight.Server.DependencyInjection;
 
 internal abstract class LoadableServiceBase<T> : ILoadableService<T>
-	where T : IServiceSnapshot
+	where T : class, IServiceSnapshot
 {
 	private readonly TaskCompletionSource<T> initialLoadTaskCompletionSource;
 
 	private ValueTask<T> currentValueTask;
 
-	public T Current { get; private set; }
-
-	private protected LoadableServiceBase(T current)
+	private protected LoadableServiceBase()
 	{
 		this.initialLoadTaskCompletionSource = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-		this.Current = current;
 		this.currentValueTask = new ValueTask<T>(this.initialLoadTaskCompletionSource.Task);
 	}
 
@@ -30,7 +27,6 @@ internal abstract class LoadableServiceBase<T> : ILoadableService<T>
 			//Ensure race conditions do not store different references
 			lock (this)
 			{
-				this.Current = current;
 				this.currentValueTask = new ValueTask<T>(current);
 
 				this.initialLoadTaskCompletionSource.TrySetResult(current);

@@ -21,23 +21,32 @@ internal sealed class GetCatalogPagePacketHandler<T>(IRegistryHolder registryHol
 
 	internal override void Handle(IUser user, in T packet)
 	{
-		if (packet.PageId < 0 || !this.catalogManager.TryGetPage(packet.PageId, out ICatalogPage? page) || !page.CanAccess(user))
-		{
-			return;
-		}
+		int pageId = packet.PageId;
+		string catalogType = Encoding.ASCII.GetString(packet.CatalogType);
+		int offerId = packet.OfferId;
 
-		//TODO: Caching
-		user.SendAsync(new CatalogPageOutgoingPacket
+		user.Client.ScheduleTask(async _ =>
 		{
-			PageId = packet.PageId,
-			CatalogType = Encoding.ASCII.GetString(packet.CatalogType),
-			LayoutCode = page.Layout,
-			Images = page.Images,
-			Texts = page.Texts,
-			Offers = page.BuildOffersData(this.registryHolder.Registry(RegistryTypes.Currency)),
-			OfferId = packet.OfferId,
-			AcceptSeasonCurrencyAsCredits = false,
-			FrontPageItems = Array.Empty<CatalogFrontPageItemData>()
+			ICatalogSnapshot catalogSnapshot = await this.catalogManager.GetAsync().ConfigureAwait(false);
+
+			if (pageId < 0 || !catalogSnapshot.TryGetPage(pageId, out ICatalogPage? page) || !page.CanAccess(user))
+			{
+				return;
+			}
+
+			//TODO: Caching
+			user.SendAsync(new CatalogPageOutgoingPacket
+			{
+				PageId = pageId,
+				CatalogType = catalogType,
+				LayoutCode = page.Layout,
+				Images = page.Images,
+				Texts = page.Texts,
+				Offers = page.BuildOffersData(this.registryHolder.Registry(RegistryTypes.Currency)),
+				OfferId = offerId,
+				AcceptSeasonCurrencyAsCredits = false,
+				FrontPageItems = Array.Empty<CatalogFrontPageItemData>()
+			});
 		});
 	}
 }

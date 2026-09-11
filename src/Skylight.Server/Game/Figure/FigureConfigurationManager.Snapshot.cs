@@ -9,15 +9,6 @@ namespace Skylight.Server.Game.Figure;
 
 internal partial class FigureConfigurationManager
 {
-	public IFigureDataContainer Parse(ReadOnlySequence<byte> figure, FigureValidationOptions validationOptions = default) => this.Current.Parse(figure, validationOptions);
-	public IFigureDataContainer Parse(ReadOnlySpan<char> figure, FigureValidationOptions validationOptions = default) => this.Current.Parse(figure, validationOptions);
-
-	public bool TryGetColorPaletteColor(int id, [NotNullWhen(true)] out IFigureColorPaletteColor? colorPaletteColor) => this.Current.TryGetColorPaletteColor(id, out colorPaletteColor);
-	public bool TryGetFigureSetType(int id, [NotNullWhen(true)] out IFigureSetType? figureSetType) => this.Current.TryGetFigureSetType(id, out figureSetType);
-	public bool TryGetFigureSet(int id, [NotNullWhen(true)] out IFigureSet? figureSet) => this.Current.TryGetFigureSet(id, out figureSet);
-
-	public bool TryGetFigureValidator(string name, FigureSex sex, [NotNullWhen(true)] out IFigureValidator? validator) => this.Current.TryGetFigureValidator(name, sex, out validator);
-
 	private sealed class Snapshot : IFigureConfigurationSnapshot
 	{
 		private readonly Cache cache;

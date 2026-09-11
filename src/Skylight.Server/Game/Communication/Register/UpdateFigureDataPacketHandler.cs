@@ -16,11 +16,17 @@ internal sealed class UpdateFigureDataPacketHandler<T>(IFigureConfigurationManag
 	internal override void Handle(IUser user, in T packet)
 	{
 		FigureSex sex = Encoding.ASCII.GetString(packet.Gender) == "M" ? FigureSex.Male : FigureSex.Female;
+		string figureData = Encoding.ASCII.GetString(packet.Figure);
 
-		this.figureConfigurationManager.TryGetFigureValidator("user", sex, out IFigureValidator? validator);
+		user.Client.ScheduleTask(async _ =>
+		{
+			IFigureConfigurationSnapshot figureValidator = await this.figureConfigurationManager.GetAsync().ConfigureAwait(false);
 
-		IFigureDataContainer figure = this.figureConfigurationManager.Parse(packet.Figure, new FigureValidationOptions(validator, user.PermissionSubject));
+			figureValidator.TryGetFigureValidator("user", sex, out IFigureValidator? validator);
 
-		user.Info.Avatar = new FigureAvatar(sex, figure);
+			IFigureDataContainer figure = figureValidator.Parse(figureData, new FigureValidationOptions(validator, user.PermissionSubject));
+
+			user.Info.Avatar = new FigureAvatar(sex, figure);
+		});
 	}
 }

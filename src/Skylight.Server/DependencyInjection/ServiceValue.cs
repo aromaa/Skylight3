@@ -47,7 +47,7 @@ internal sealed class ServiceValue<T>(T value) : ServiceValue, IServiceValue<T>
 
 		internal T NewValue { get; } = newValue;
 
-		internal T Value => this.instance.Current.Version > this.oldVersion
+		internal T Value => this.instance.Current is null || this.instance.Current.Version > this.oldVersion
 			? this.NewValue
 			: this.oldValue;
 	}

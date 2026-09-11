@@ -11,8 +11,8 @@ using Skylight.Server.DependencyInjection;
 
 namespace Skylight.Server.Game.Catalog;
 
-internal sealed partial class CatalogManager(IDbContextFactory<SkylightContext> dbContextFactory, IRegistryHolder registryHolder, IFurnitureManager furnitureManager, ICatalogTransactionFactory catalogTransactionFactory)
-	: LoadableServiceBase<ICatalogSnapshot>(new Snapshot(catalogTransactionFactory, Cache.CreateBuilder().ToImmutable(registryHolder, furnitureManager.Current))), ICatalogManager
+internal sealed partial class CatalogManager(IDbContextFactory<SkylightContext> dbContextFactory, IRegistryHolder registryHolder, ICatalogTransactionFactory catalogTransactionFactory)
+	: LoadableServiceBase<ICatalogSnapshot>(), ICatalogManager
 {
 	private readonly IRegistryHolder registryHolder = registryHolder;
 

@@ -34,6 +34,19 @@ internal sealed partial class NavigatorSnapshot : VersionedServiceSnapshot, INav
 		return false;
 	}
 
+	public bool TryGetNode<T>(int nodeId, [NotNullWhen(true)] out IServiceValue<T>? node)
+		where T : class, INavigatorNode
+	{
+		if (this.holders.Nodes.TryGetValue(nodeId, out IServiceValue<INavigatorNode>? holder) && holder is ServiceValue<T> holderOfT)
+		{
+			node = holderOfT;
+			return true;
+		}
+
+		node = null;
+		return false;
+	}
+
 	public bool TryGetLayout(string id, [NotNullWhen(true)] out IRoomLayout? layout) => this.cache.Layouts.TryGetValue(id, out layout);
 
 	private readonly struct Cache(FrozenDictionary<string, IRoomLayout> layouts, FrozenDictionary<int, INavigatorNode> nodes)

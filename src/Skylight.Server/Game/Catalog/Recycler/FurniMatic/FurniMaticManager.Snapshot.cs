@@ -22,13 +22,6 @@ namespace Skylight.Server.Game.Catalog.Recycler.FurniMatic;
 
 internal partial class FurniMaticManager
 {
-	public IFurniMaticPrizes Prizes => this.Current.Prizes;
-
-	public int ItemsRequiredToRecycle => this.Current.ItemsRequiredToRecycle;
-
-	public Task<IFurniMaticPrize?> RecycleAsync(IUser user, IEnumerable<IFurnitureInventoryItem> items, CancellationToken cancellationToken) => this.Current.RecycleAsync(user, items, cancellationToken);
-	public Task<IFurniMaticPrize?> OpenGiftAsync(IUser user, IFurniMaticGiftRoomItem gift, CancellationToken cancellationToken) => this.Current.OpenGiftAsync(user, gift, cancellationToken);
-
 	private sealed class Snapshot : IFurniMaticSnapshot
 	{
 		private readonly IRegistry<ICurrencyType> currencyRegistry;
@@ -157,7 +150,7 @@ internal partial class FurniMaticManager
 				return null;
 			}
 
-			await using ICatalogTransaction transaction = await this.catalogTransactionFactory.CreateTransactionAsync(this.currencyRegistry, this.furnitureManager.Current, dbContext.Database.GetDbConnection(), user, string.Empty, cancellationToken).ConfigureAwait(false);
+			await using ICatalogTransaction transaction = await this.catalogTransactionFactory.CreateTransactionAsync(this.currencyRegistry, await this.furnitureManager.GetAsync().ConfigureAwait(false), dbContext.Database.GetDbConnection(), user, string.Empty, cancellationToken).ConfigureAwait(false);
 
 			transaction.Context.AddConstraint(async (_, t, cancellationToken) =>
 			{

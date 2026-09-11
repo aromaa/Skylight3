@@ -35,11 +35,6 @@ internal sealed class SaveRoomSettingsPacketHandler<T>(IRegistryHolder registryH
 
 	internal override void Handle(IUser user, in T packet)
 	{
-		if (!this.navigatorManager.TryGetNode(packet.CategoryId, out IServiceValue<INavigatorCategoryNode>? category))
-		{
-			return;
-		}
-
 		if (packet.Tags.Count > 2)
 		{
 			return;
@@ -79,6 +74,7 @@ internal sealed class SaveRoomSettingsPacketHandler<T>(IRegistryHolder registryH
 			_ => throw new NotSupportedException()
 		};
 
+		int categoryId = packet.CategoryId;
 		bool walkThrough = packet.WalkThrough;
 		bool allowPets = packet.AllowPets;
 		bool allowPetsToEat = packet.AllowPetsToEat;
@@ -87,6 +83,12 @@ internal sealed class SaveRoomSettingsPacketHandler<T>(IRegistryHolder registryH
 
 		user.Client.ScheduleTask(async client =>
 		{
+			INavigatorSnapshot navigatorSnapshot = await this.navigatorManager.GetAsync().ConfigureAwait(false);
+			if (!navigatorSnapshot.TryGetNode(categoryId, out IServiceValue<INavigatorCategoryNode>? category))
+			{
+				return;
+			}
+
 			IPrivateRoomInfo? roomInfo = await this.navigatorManager.GetPrivateRoomInfoAsync(roomId).ConfigureAwait(false);
 			if (roomInfo is null)
 			{

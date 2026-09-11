@@ -2,4 +2,4 @@
 
 namespace Skylight.API.Game.Catalog;
 
-public interface ICatalogManager : ICatalog, ILoadableService<ICatalogSnapshot>;
+public interface ICatalogManager : ILoadableService<ICatalogSnapshot>;

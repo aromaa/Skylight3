@@ -303,7 +303,9 @@ internal sealed class PublicRoomTypeManager : RoomTypeManager, IRoomTypeManager<
 			{
 				try
 				{
-					if (!instance.publicInstance.Manager.navigatorManager.TryGetLayout(world.LayoutId, out IRoomLayout? layout))
+					INavigatorSnapshot navigatorSnapshot = await instance.publicInstance.Manager.navigatorManager.GetAsync().ConfigureAwait(false);
+
+					if (!navigatorSnapshot.TryGetLayout(world.LayoutId, out IRoomLayout? layout))
 					{
 						throw new InvalidOperationException($"Missing room layout data for {world.LayoutId}");
 					}

@@ -18,7 +18,7 @@ using Skylight.Server.Game.Rooms.Private;
 
 namespace Skylight.Server.Game.Navigator;
 
-internal sealed partial class NavigatorManager : VersionedLoadableServiceBase<INavigatorSnapshot, NavigatorSnapshot>, INavigatorManager
+internal sealed class NavigatorManager : VersionedLoadableServiceBase<INavigatorSnapshot, NavigatorSnapshot>, INavigatorManager
 {
 	private readonly IDbContextFactory<SkylightContext> dbContextFactory;
 
@@ -27,7 +27,6 @@ internal sealed partial class NavigatorManager : VersionedLoadableServiceBase<IN
 	private readonly AsyncCache<int, IPrivateRoomInfo> roomData;
 
 	public NavigatorManager(IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager)
-		: base(NavigatorSnapshot.CreateBuilder().Build())
 	{
 		this.dbContextFactory = dbContextFactory;
 
@@ -100,12 +99,14 @@ internal sealed partial class NavigatorManager : VersionedLoadableServiceBase<IN
 			return null;
 		}
 
-		if (!this.TryGetLayout(entity.LayoutId, out IRoomLayout? layout))
+		INavigatorSnapshot snapshot = await this.GetAsync().ConfigureAwait(false);
+
+		if (!snapshot.TryGetLayout(entity.LayoutId, out IRoomLayout? layout))
 		{
 			throw new InvalidOperationException($"Missing room layout data for {entity.LayoutId}");
 		}
 
-		if (!this.TryGetNode(entity.CategoryId, out IServiceValue<INavigatorCategoryNode>? category))
+		if (!snapshot.TryGetNode(entity.CategoryId, out IServiceValue<INavigatorCategoryNode>? category))
 		{
 			throw new InvalidOperationException($"Missing category {entity.CategoryId}");
 		}

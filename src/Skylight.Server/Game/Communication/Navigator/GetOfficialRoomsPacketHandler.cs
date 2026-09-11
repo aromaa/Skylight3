@@ -17,43 +17,49 @@ internal sealed class GetOfficialRoomsPacketHandler<T>(INavigatorManager navigat
 
 	internal override void Handle(IUser user, in T packet)
 	{
+		int nodeId = packet.NodeId;
 		int nodeMask = packet.NodeMask;
 
-		if (!this.navigatorManager.TryGetNode(packet.NodeId, out INavigatorNode? node))
+		user.Client.ScheduleTask(async _ =>
 		{
-			return;
-		}
+			INavigatorSnapshot navigatorSnapshot = await this.navigatorManager.GetAsync().ConfigureAwait(false);
 
-		List<NavigatorNodeData> nodes = [];
-		if (node is INavigatorCategoryNode category)
-		{
-			nodes.Add(new NavigatorCategoryNodeData(category.Id, category.Parent?.Id ?? 0, category.Caption, 0, 0));
-
-			foreach (INavigatorNode childNode in category.Children)
+			if (!navigatorSnapshot.TryGetNode(nodeId, out INavigatorNode? node))
 			{
-				if (childNode is INavigatorCategoryNode childCategory)
+				return;
+			}
+
+			List<NavigatorNodeData> nodes = [];
+			if (node is INavigatorCategoryNode category)
+			{
+				nodes.Add(new NavigatorCategoryNodeData(category.Id, category.Parent?.Id ?? 0, category.Caption, 0, 0));
+
+				foreach (INavigatorNode childNode in category.Children)
 				{
-					nodes.Add(new NavigatorCategoryNodeData(childCategory.Id, childCategory.Parent?.Id ?? 0, childCategory.Caption, 0, 0));
-				}
-				else if (childNode is INavigatorPublicRoomNode publicRoom)
-				{
-					nodes.Add(new NavigatorPublicRoomNode(publicRoom.Id, publicRoom.Parent?.Id ?? 0, publicRoom.Caption, 0, 0, publicRoom.Name, publicRoom.InstanceId, publicRoom.WorldId, string.Empty, 0, string.Join(',', publicRoom.Casts)));
-				}
-				else
-				{
-					throw new NotSupportedException();
+					if (childNode is INavigatorCategoryNode childCategory)
+					{
+						nodes.Add(new NavigatorCategoryNodeData(childCategory.Id, childCategory.Parent?.Id ?? 0, childCategory.Caption, 0, 0));
+					}
+					else if (childNode is INavigatorPublicRoomNode publicRoom)
+					{
+						nodes.Add(new NavigatorPublicRoomNode(publicRoom.Id, publicRoom.Parent?.Id ?? 0, publicRoom.Caption, 0, 0, publicRoom.Name, publicRoom.InstanceId, publicRoom.WorldId, string.Empty, 0, string.Join(',', publicRoom.Casts)));
+					}
+					else
+					{
+						throw new NotSupportedException();
+					}
 				}
 			}
-		}
-		else if (node is INavigatorPublicRoomNode publicRoom)
-		{
-			nodes.Add(new NavigatorPublicRoomNode(publicRoom.Id, publicRoom.Parent?.Id ?? 0, publicRoom.Caption, 0, 0, publicRoom.Name, publicRoom.InstanceId, publicRoom.WorldId, string.Empty, 0, string.Join(',', publicRoom.Casts)));
-		}
-		else
-		{
-			return;
-		}
+			else if (node is INavigatorPublicRoomNode publicRoom)
+			{
+				nodes.Add(new NavigatorPublicRoomNode(publicRoom.Id, publicRoom.Parent?.Id ?? 0, publicRoom.Caption, 0, 0, publicRoom.Name, publicRoom.InstanceId, publicRoom.WorldId, string.Empty, 0, string.Join(',', publicRoom.Casts)));
+			}
+			else
+			{
+				return;
+			}
 
-		user.SendAsync(new OfficialRoomsOutgoingPacket(nodeMask, nodes));
+			user.SendAsync(new OfficialRoomsOutgoingPacket(nodeMask, nodes));
+		});
 	}
 }
