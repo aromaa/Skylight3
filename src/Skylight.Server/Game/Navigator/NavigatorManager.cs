@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Skylight.API.Collections.Cache;
 using Skylight.API.DependencyInjection;
 using Skylight.API.Game.Navigator;
@@ -15,6 +16,7 @@ using Skylight.Infrastructure;
 using Skylight.Server.Collections.Cache;
 using Skylight.Server.DependencyInjection;
 using Skylight.Server.Game.Rooms.Private;
+using Skylight.Settings.Game.Navigator;
 
 namespace Skylight.Server.Game.Navigator;
 
@@ -26,13 +28,17 @@ internal sealed class NavigatorManager : VersionedLoadableServiceBase<INavigator
 
 	private readonly AsyncCache<int, IPrivateRoomInfo> roomData;
 
-	public NavigatorManager(IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager)
+	private readonly NavigatorSettings settings;
+
+	public NavigatorManager(IDbContextFactory<SkylightContext> dbContextFactory, IUserManager userManager, IOptions<NavigatorSettings> settings)
 	{
 		this.dbContextFactory = dbContextFactory;
 
 		this.userManager = userManager;
 
 		this.roomData = new AsyncCache<int, IPrivateRoomInfo>(this.InternalLoadRoomDataAsync);
+
+		this.settings = settings.Value;
 	}
 
 	internal override async Task<VersionedServiceSnapshot.Transaction<NavigatorSnapshot>> LoadAsyncCore(ILoadableServiceContext context, CancellationToken cancellationToken = default)
@@ -74,6 +80,9 @@ internal sealed class NavigatorManager : VersionedLoadableServiceBase<INavigator
 
 				builder.AddFlatCat(node);
 			}
+
+			builder.PublicRoomsRootNodeId = this.settings.PublicRoomsRootNodeId;
+			builder.PrivateRoomsRootNodeId = this.settings.PrivateRoomsRootNodeId;
 		}
 
 		return builder.BuildAndStartTransaction(this, this.Current);

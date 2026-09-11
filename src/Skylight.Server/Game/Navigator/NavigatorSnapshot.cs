@@ -21,6 +21,9 @@ internal sealed partial class NavigatorSnapshot : VersionedServiceSnapshot, INav
 
 	public IEnumerable<INavigatorNode> Nodes => this.cache.Nodes.Values;
 
+	public INavigatorCategoryNode PublicRoomsRootNode => this.cache.PublicRoomsRootNode;
+	public INavigatorCategoryNode PrivateRoomsRootNode => this.cache.PrivateRoomsRootNode;
+
 	public bool TryGetNode<T>(int id, [NotNullWhen(true)] out T? node)
 		where T : class, INavigatorNode
 	{
@@ -49,10 +52,13 @@ internal sealed partial class NavigatorSnapshot : VersionedServiceSnapshot, INav
 
 	public bool TryGetLayout(string id, [NotNullWhen(true)] out IRoomLayout? layout) => this.cache.Layouts.TryGetValue(id, out layout);
 
-	private readonly struct Cache(FrozenDictionary<string, IRoomLayout> layouts, FrozenDictionary<int, INavigatorNode> nodes)
+	private readonly struct Cache(FrozenDictionary<string, IRoomLayout> layouts, FrozenDictionary<int, INavigatorNode> nodes, INavigatorCategoryNode publicRoomsRootNode, INavigatorCategoryNode privateRoomsRootNode)
 	{
 		internal FrozenDictionary<string, IRoomLayout> Layouts { get; } = layouts;
 		internal FrozenDictionary<int, INavigatorNode> Nodes { get; } = nodes;
+
+		internal INavigatorCategoryNode PublicRoomsRootNode { get; } = publicRoomsRootNode;
+		internal INavigatorCategoryNode PrivateRoomsRootNode { get; } = privateRoomsRootNode;
 	}
 
 	private readonly struct Holders(FrozenDictionary<int, IServiceValue<INavigatorNode>> nodes)

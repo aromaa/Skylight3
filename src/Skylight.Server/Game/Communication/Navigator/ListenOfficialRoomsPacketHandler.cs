@@ -22,7 +22,7 @@ internal sealed class ListenOfficialRoomsPacketHandler<T>(INavigatorManager navi
 			INavigatorSnapshot navigatorSnapshot = await this.navigatorManager.GetAsync().ConfigureAwait(false);
 
 			List<NavigatorNodeData> nodes = [];
-			foreach (INavigatorNode node in navigatorSnapshot.Nodes)
+			foreach (INavigatorNode node in navigatorSnapshot.PublicRoomsRootNode.Children)
 			{
 				if (node is INavigatorPublicRoomNode publicRoom)
 				{

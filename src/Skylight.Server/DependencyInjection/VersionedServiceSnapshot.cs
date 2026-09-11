@@ -7,8 +7,6 @@ internal abstract class VersionedServiceSnapshot
 	internal abstract class Builder<T>
 		where T : VersionedServiceSnapshot
 	{
-		internal abstract T Build();
-
 		internal abstract Transaction<T> BuildAndStartTransaction(VersionedLoadableServiceBase instance, T current);
 	}
 

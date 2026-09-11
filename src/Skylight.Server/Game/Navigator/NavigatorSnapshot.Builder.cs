@@ -21,6 +21,9 @@ internal partial class NavigatorSnapshot
 		private readonly Dictionary<int, PublicRoomEntity> publicRooms;
 		private readonly Dictionary<int, NavigatorNodeEntity> rootNodes;
 
+		internal int PublicRoomsRootNodeId { get; set; }
+		internal int PrivateRoomsRootNodeId { get; set; }
+
 		internal Builder()
 		{
 			this.layouts = [];
@@ -62,7 +65,7 @@ internal partial class NavigatorSnapshot
 				AddNode(entity);
 			}
 
-			return new Cache(layouts.ToFrozenDictionary(), nodes.ToFrozenDictionary());
+			return new Cache(layouts.ToFrozenDictionary(), nodes.ToFrozenDictionary(), (INavigatorCategoryNode)nodes[this.PublicRoomsRootNodeId], (INavigatorCategoryNode)nodes[this.PrivateRoomsRootNodeId]);
 
 			NavigatorNode AddNode(NavigatorNodeEntity entity, INavigatorNode? parent = null)
 			{
@@ -135,13 +138,6 @@ internal partial class NavigatorSnapshot
 
 				return holder;
 			}
-		}
-
-		internal override NavigatorSnapshot Build()
-		{
-			Cache cache = this.BuildCache();
-
-			return new NavigatorSnapshot(cache, this.BuildHolders(cache));
 		}
 
 		internal override Transaction<NavigatorSnapshot> BuildAndStartTransaction(VersionedLoadableServiceBase instance, NavigatorSnapshot? current)

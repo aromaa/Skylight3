@@ -9,6 +9,9 @@ public interface INavigator
 {
 	public IEnumerable<INavigatorNode> Nodes { get; }
 
+	public INavigatorCategoryNode PublicRoomsRootNode { get; }
+	public INavigatorCategoryNode PrivateRoomsRootNode { get; }
+
 	public bool TryGetNode<T>(int nodeId, [NotNullWhen(true)] out T? node)
 		where T : class, INavigatorNode;
 

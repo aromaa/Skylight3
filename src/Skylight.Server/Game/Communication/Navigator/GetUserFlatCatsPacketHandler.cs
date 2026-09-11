@@ -22,7 +22,7 @@ internal sealed class GetUserFlatCatsPacketHandler<T>(INavigatorManager navigato
 			INavigatorSnapshot navigator = await this.navigatorManager.GetAsync().ConfigureAwait(false);
 
 			List<FlatCategoryData> cats = [];
-			foreach (INavigatorNode node in navigator.Nodes)
+			foreach (INavigatorNode node in navigator.PrivateRoomsRootNode.Children)
 			{
 				if (node is INavigatorCategoryNode)
 				{
