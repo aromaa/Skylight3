@@ -7,7 +7,7 @@ public sealed class NetworkSettings
 
 	public int TimeoutInSeconds { get; set; } = 30;
 
-	public List<ListenerSettings> Listeners { get; set; } = [];
+	public Dictionary<string, ListenerSettings> Listeners { get; set; } = [];
 
 	public List<string> AdditionalProtocols { get; set; } = [];
 

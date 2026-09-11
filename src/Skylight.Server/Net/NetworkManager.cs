@@ -16,7 +16,7 @@ internal sealed class NetworkManager(ILogger<NetworkManager> logger, IOptions<Ne
 
 	public void Start()
 	{
-		foreach (NetworkSettings.ListenerSettings listenerSettings in this.Settings.Listeners)
+		foreach (NetworkSettings.ListenerSettings listenerSettings in this.Settings.Listeners.Values)
 		{
 			foreach (string endPoint in listenerSettings.EndPoints)
 			{
